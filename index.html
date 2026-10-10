@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luz de luna</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #05070d; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+  #hud {
+    position: fixed; left: 14px; bottom: 12px;
+    display: flex; gap: 20px; align-items: flex-end;
+    font: 12px system-ui, sans-serif; color: #8a97b8;
+    pointer-events: none; user-select: none;
+  }
+  .grupo { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+  .teclas {
+    display: grid;
+    grid-template-columns: repeat(3, 28px);
+    grid-template-rows: repeat(2, 28px);
+    gap: 4px;
+  }
+  kbd {
+    display: flex; align-items: center; justify-content: center;
+    font: 600 13px system-ui, sans-serif; color: #8a97b8;
+    background: rgba(20, 26, 40, .75);
+    border: 1px solid #2c3550; border-bottom-width: 3px; border-radius: 6px;
+    transition: background .06s, color .06s, transform .06s, box-shadow .06s;
+  }
+  kbd.on {
+    background: #c9d6ff; color: #0b1020; border-color: #e8eeff;
+    border-bottom-width: 1px; transform: translateY(2px);
+    box-shadow: 0 0 12px rgba(170, 195, 255, .6);
+  }
+
+  .mouse {
+    position: relative; overflow: hidden;
+    width: 38px; height: 60px;
+    background: rgba(20, 26, 40, .75);
+    border: 1px solid #2c3550; border-radius: 19px 19px 16px 16px;
+    transition: border-color .06s, box-shadow .06s;
+  }
+  .mouse .btn {
+    position: absolute; top: 0; width: 50%; height: 42%;
+    border-bottom: 1px solid #2c3550;
+    transition: background .06s;
+  }
+  .mouse .izq { left: 0; border-right: 1px solid #2c3550; }
+  .mouse .der { right: 0; }
+  .mouse.on { border-color: #ffd27a; box-shadow: 0 0 12px rgba(255, 190, 90, .6); }
+  .mouse.on .izq { background: #ffd27a; }
+
+  #stats {
+    position: fixed; left: 14px; top: 12px;
+    display: flex; gap: 8px; align-items: baseline;
+    font: 13px system-ui, sans-serif; color: #8a97b8;
+    pointer-events: none; user-select: none;
+  }
+  #stats b { color: #c9d6ff; font-weight: 600; }
+
+  /* Pantalla de muerte */
+  #muerte {
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+    padding: 16px;
+    background: radial-gradient(ellipse at center, rgba(60, 0, 0, .55), rgba(5, 0, 0, .88));
+    opacity: 0; pointer-events: none;
+    transition: opacity .6s ease;
+  }
+  #muerte.visible { opacity: 1; pointer-events: auto; }
+  .tarjeta {
+    text-align: center; color: #e9dcc0;
+    font-family: system-ui, sans-serif;
+    transform: translateY(12px); transition: transform .6s ease;
+  }
+  #muerte.visible .tarjeta { transform: none; }
+  .frase {
+    margin: 0 0 8px;
+    font: 800 clamp(34px, 7vw, 64px)/1.05 Georgia, 'Times New Roman', serif;
+    color: #f0e2c2;
+    text-shadow: 0 0 24px rgba(200, 20, 20, .6), 0 3px 0 #5a0808;
+  }
+  .sub { margin: 0 0 26px; color: #b9a78a; font-size: 15px; }
+  .cifras {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    justify-content: center; margin-bottom: 28px;
+  }
+  .cifras div {
+    min-width: 96px; padding: 12px 16px;
+    border: 1px solid rgba(233, 220, 192, .18); border-radius: 10px;
+    background: rgba(0, 0, 0, .35);
+  }
+  .cifras span {
+    display: block; margin-bottom: 4px;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #a8977b;
+  }
+  .cifras b {
+    font: 700 26px system-ui, sans-serif; color: #f0e2c2;
+    font-variant-numeric: tabular-nums;
+  }
+  #reiniciar {
+    font: 600 16px system-ui, sans-serif;
+    padding: 12px 32px; border-radius: 999px;
+    border: 1px solid #ffd27a; background: #ffd27a; color: #2a1606;
+    cursor: pointer; box-shadow: 0 0 18px rgba(255, 190, 90, .35);
+  }
+  #reiniciar:hover { filter: brightness(1.08); }
+  #reiniciar:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .tip { margin: 10px 0 0; font-size: 12px; color: #8a7a62; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="stats">
+  Oleada <b id="st-wave">1</b><span>·</span>
+  Restantes <b id="st-left">9</b><span>·</span>
+  Bajas <b id="st-kills">0</b>
+  <b id="st-event"></b>
+</div>
+<div id="hud">
+  <div class="grupo">
+    <div class="teclas">
+      <kbd data-k="KeyW" style="grid-column: 2; grid-row: 1;">W</kbd>
+      <kbd data-k="KeyA" style="grid-column: 1; grid-row: 2;">A</kbd>
+      <kbd data-k="KeyS" style="grid-column: 2; grid-row: 2;">S</kbd>
+      <kbd data-k="KeyD" style="grid-column: 3; grid-row: 2;">D</kbd>
+    </div>
+    <span>Mover</span>
+  </div>
+  <div class="grupo">
+    <div class="mouse" id="hud-raton">
+      <div class="btn izq"></div>
+      <div class="btn der"></div>
+    </div>
+    <span>Disparar</span>
+  </div>
+</div>
+<div id="muerte">
+  <div class="tarjeta">
+    <p class="frase" id="frase">¡Ya te petateaste!</p>
+    <p class="sub">Los caídos de la Revolución ganaron esta vez.</p>
+    <div class="cifras">
+      <div><span>Oleada</span><b id="m-oleada">1</b></div>
+      <div><span>Bajas</span><b id="m-bajas">0</b></div>
+      <div><span>Tiempo</span><b id="m-tiempo">0:00</b></div>
+    </div>
+    <button id="reiniciar">Reiniciar</button>
+    <p class="tip">o presiona Enter</p>
+  </div>
+</div>
+
+<script>
+// ------------------------------------------------------------
+// Canvas principal + capas fuera de pantalla
+// ------------------------------------------------------------
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+const fog = document.createElement('canvas');   // capa de oscuridad
+const fctx = fog.getContext('2d');
+
+const floor = document.createElement('canvas'); // cuarto pre-renderizado
+const flctx = floor.getContext('2d');
+
+let W = 0, H = 0, DPR = 1;
+const WALL = 28;
+const room = { x: 0, y: 0, w: 0, h: 0 };
+const moon = { x: 0, y: 0, r: 0 };
+
+// Puertas: centro sobre el borde interior del muro, normal hacia dentro,
+// ancho del vano, intensidad de la luz (s) y alcance del haz (L)
+let doors = [];
+
+function inner() {
+  return { x: room.x + WALL, y: room.y + WALL, w: room.w - WALL * 2, h: room.h - WALL * 2 };
+}
+
+// ------------------------------------------------------------
+// Sprite SVG inline (vista cenital, mirando hacia +X)
+// ------------------------------------------------------------
+const SPRITE_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect x="40" y="33" width="22" height="6" rx="1.5" fill="#1e2128" stroke="#0b0d12" stroke-width="1"/>
+  <rect x="43" y="38" width="5" height="5" rx="1" fill="#1e2128"/>
+  <path d="M30 20 Q42 24 44 34" stroke="#3b4a6b" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M30 44 Q40 42 44 38" stroke="#3b4a6b" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <circle cx="44" cy="35" r="3.4" fill="#d3a27f"/>
+  <circle cx="45" cy="39" r="3.2" fill="#d3a27f"/>
+  <ellipse cx="27" cy="32" rx="10" ry="16" fill="#46587f" stroke="#151b29" stroke-width="2"/>
+  <circle cx="29" cy="32" r="8" fill="#d3a27f"/>
+  <path d="M21 32 A8 8 0 0 1 33 25 Q30 32 33 39 A8 8 0 0 1 21 32Z" fill="#2b1d14"/>
+</svg>`;
+
+// Copia del sprite teñida de un color, para el destello al recibir daño
+function makeFlash(img, color) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d');
+  g.drawImage(img, 0, 0, 128, 128);
+  g.globalCompositeOperation = 'source-atop';
+  g.fillStyle = color;
+  g.fillRect(0, 0, 128, 128);
+  return c;
+}
+
+const sprite = new Image();
+let spriteReady = false;
+let playerFlash = null;
+sprite.onload = () => {
+  spriteReady = true;
+  playerFlash = makeFlash(sprite, 'rgba(255,90,90,0.75)');
+};
+sprite.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(SPRITE_SVG);
+
+const SPRITE_SIZE = 64;
+const MUZZLE = { x: 30, y: 4 }; // punta del arma relativa al centro del sprite
+
+// ------------------------------------------------------------
+// Sprites de zombis (vista cenital, mirando hacia +X)
+// 0: revolucionario con camisa de manta, sombrero y cananas
+// 1: soldado federal con uniforme gris azulado y quepí
+// ------------------------------------------------------------
+const ZOMBIE_SVGS = [`
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <ellipse cx="28" cy="32" rx="11" ry="18" fill="#d6c9a8" stroke="#3a2f22" stroke-width="2"/>
+  <path d="M20 16 L38 46" stroke="#5a3a1e" stroke-width="4.5"/>
+  <path d="M20 48 L38 18" stroke="#5a3a1e" stroke-width="4.5"/>
+  <path d="M20 16 L38 46" stroke="#d1ad4c" stroke-width="2" stroke-dasharray="1.5 2"/>
+  <path d="M20 48 L38 18" stroke="#d1ad4c" stroke-width="2" stroke-dasharray="1.5 2"/>
+  <path d="M33 25 q5 -2 5 3 q1 5 -3 5 q-2 4 -4 1 q-3 -4 2 -9z" fill="#8b0f0f"/>
+  <path d="M36 33 l1 6" stroke="#8b0f0f" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="22" cy="44" r="3" fill="#7a0a0a"/>
+  <circle cx="24" cy="32" r="12.5" fill="#b8955a" stroke="#5c4524" stroke-width="1.5"/>
+  <circle cx="24" cy="32" r="10" fill="none" stroke="#9c7a44" stroke-width="1"/>
+  <circle cx="24" cy="32" r="6.5" fill="#a07c45" stroke="#5c4524" stroke-width="1.2"/>
+  <circle cx="24" cy="32" r="6.5" fill="none" stroke="#3b2a16" stroke-width="1.6" stroke-dasharray="2 1.5"/>
+  <path d="M27 20 q4 0 4 4 q-3 2 -5 -1z" fill="#7a0a0a"/>
+  <path d="M12.5 35 l3 1 l-3 2z" fill="#3a2f22"/>
+</svg>`, `
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <ellipse cx="28" cy="32" rx="11" ry="18" fill="#4b5a6e" stroke="#1e252f" stroke-width="2"/>
+  <path d="M19 18 L37 45" stroke="#c8b48a" stroke-width="3"/>
+  <rect x="25" y="14" width="7" height="4" rx="1" fill="#c9a94a"/>
+  <rect x="25" y="46" width="7" height="4" rx="1" fill="#c9a94a"/>
+  <path d="M31 38 q6 -1 5 5 q-4 3 -7 0 q-2 -3 2 -5z" fill="#7a0a0a"/>
+  <path d="M20 22 q3 -1 3 2 q-2 2 -3 -2z" fill="#8b0f0f"/>
+  <circle cx="29" cy="32" r="8" fill="#7f9a6b"/>
+  <rect x="21.5" y="25" width="13" height="14" rx="5" fill="#3d4a5c" stroke="#1e252f" stroke-width="1.2"/>
+  <path d="M34 26 Q41 32 34 38 Z" fill="#15181d"/>
+  <circle cx="32" cy="32" r="1.6" fill="#c9a94a"/>
+  <circle cx="26" cy="37" r="2" fill="#7a0a0a"/>
+</svg>`];
+
+const ZOMBIE_SIZE = 60;
+const zombieSprites = ZOMBIE_SVGS.map(svg => {
+  const s = { img: new Image(), flash: null, tinted: {}, ready: false };
+  s.img.onload = () => {
+    // Versión blanquecina del sprite para el destello al recibir un disparo
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const g = c.getContext('2d');
+    g.drawImage(s.img, 0, 0, 128, 128);
+    g.globalCompositeOperation = 'source-atop';
+    g.fillStyle = 'rgba(255,225,225,0.85)';
+    g.fillRect(0, 0, 128, 128);
+    s.flash = c;
+    s.ready = true;
+  };
+  s.img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  return s;
+});
+
+// ------------------------------------------------------------
+// Estado del juego
+// ------------------------------------------------------------
+const player = {
+  x: 0, y: 0, angle: 0, speed: 240, radius: 16,
+  hp: 5, invuln: 0, regenDelay: 0, hitFlash: 0, kx: 0, ky: 0
+};
+const keys = new Set();
+const mouse = { x: 0, y: 0, down: false };
+const bullets = [];
+const sparks = [];
+
+const FIRE_RATE = 0.12;     // segundos entre disparos al mantener el clic
+const BULLET_SPEED = 900;   // px/s
+let fireCooldown = 0;
+let flash = 0;
+let initialized = false;
+
+// Zombis
+const WAVE_PAUSE = 3;         // descanso entre oleadas
+const zombies = [];
+const blood = [];             // gotas de sangre en el aire
+const stains = [];            // gotas que ya cayeron al piso
+const decals = [];            // charcos y sombreros caídos
+const MAX_STAINS = 300;
+const MAX_DECALS = 80;
+let spawnQueue = [];          // tipos de zombi que faltan por salir en esta oleada
+let currentWave = null;       // plan de la oleada actual (ver planWave)
+let spawnTimer = 0;
+let waveCleared = false;
+let wave = 0, kills = 0, wavePause = 0, gameTime = 0;
+let banner = null;            // aviso en pantalla: { title, sub, t, dur, color }
+
+// Tipos de zombi. cost = cuánto "presupuesto" de la oleada consume cada uno
+const ZTYPES = {
+  normal:   { r: 15, hp: 5,  speed: [55, 85],   scale: 1,    cost: 1,   knock: 1,   tint: null },
+  corredor: { r: 13, hp: 2,  speed: [125, 145], scale: 0.85, cost: 1.5, knock: 0.8, variant: 1, tint: 'rgba(170,25,25,0.38)' },
+  tanque:   { r: 21, hp: 14, speed: [36, 44],   scale: 1.4,  cost: 4,   knock: 1.5, variant: 0, tint: 'rgba(25,15,35,0.4)' },
+  coronel:  { r: 24, hp: 45, speed: [48, 52],   scale: 1.6,  cost: 0,   knock: 1.8, variant: 1, tint: 'rgba(150,110,20,0.32)', boss: true }
+};
+
+// Embestida del Coronel
+const CHARGE_PREP = 0.7;      // aviso antes de embestir
+const CHARGE_TIME = 0.7;
+const CHARGE_SPEED = 270;
+
+// ------------------------------------------------------------
+// Ajustes de dificultad (ver planWave y evaluateWave)
+// ------------------------------------------------------------
+const DIFF = {
+  baseBudget: 9,        // oleada 1: 9 zombis normales (3 por puerta)
+  budgetGrowth: 3.2,    // crecimiento del presupuesto...
+  budgetCurve: 0.85,    // ...con curva menor que lineal (nada de exponencial)
+  baseInterval: 3,      // segundos entre apariciones en la oleada 1
+  intervalDecay: 0.93,  // cada oleada salen un poco más seguido
+  minInterval: 0.9,
+  speedStep: 0.025,     // +2.5 % de velocidad por oleada...
+  maxSpeedMult: 1.35,   // ...con tope
+  baseCap: 6,           // máximo de zombis vivos a la vez: 6 + oleada...
+  maxCap: 18,           // ...con tope, para que nunca sea una pared imposible
+  bossEvery: 5,         // jefe cada 5 oleadas
+  eventHeat: 0.68,      // comodidad a partir de la cual llegan los eventos
+  reliefHeat: 0.45,     // comodidad por debajo de la cual hay respiro
+  streakBonus: 0.08,    // +8 % de presupuesto por cada oleada cómoda seguida...
+  maxPressure: 1.6      // ...hasta +60 %
+};
+const EVENT_INFO = {
+  jefe:      { title: 'El Coronel', color: '#ffd27a' },
+  eclipse:   { title: 'Eclipse',    color: '#ff8a7a' },
+  estampida: { title: 'Estampida',  color: '#ff8a7a' },
+  asedio:    { title: 'Asedio',     color: '#ff8a7a' },
+  respiro:   { title: 'Respiro',    color: '#9fe0a8' }
+};
+let heat = 0.5;               // qué tan cómodo va el jugador: 0 sufriendo, 1 sobrado
+let streak = 0;               // oleadas cómodas seguidas
+let lastEvent = null, lastEventWave = -10;
+let waveStats = { hits: 0, minHp: 5, start: 0, spawnEnd: null };
+let moonLevel = 1, moonTarget = 1;  // 1 = luna llena, menos = eclipse
+
+// Ataque de los zombis (zarpazo con las manos)
+const ATTACK_RANGE = 8;       // distancia extra, además de los radios, para iniciar el zarpazo
+const HIT_RANGE = 14;         // alcance al momento del golpe (si te alejas a tiempo, falla)
+const ATTACK_WINDUP = 0.18;   // echa los brazos hacia atrás
+const ATTACK_STRIKE = 0.10;   // lanza las manos al frente
+const ATTACK_HIT = 0.24;      // instante en que el golpe conecta
+const ATTACK_TOTAL = 0.5;     // duración completa con la recuperación
+
+// Jugador
+const PLAYER_HP = 5;          // golpes que aguanta
+const REGEN_DELAY = 3;        // segundos sin recibir daño antes de regenerar
+const REGEN_RATE = 0.35;      // vida por segundo al regenerar
+const INVULN_TIME = 0.6;      // invulnerabilidad breve tras un golpe
+const KNOCKBACK = 280;        // fuerza del empujón
+const MAX_KNOCKBACK = 340;    // tope aunque se acumulen empujones
+
+let state = 'playing';        // 'playing' | 'dead'
+let survivalTime = 0, shake = 0, hurtVignette = 0, deathTimer = 0;
+
+const DEATH_PHRASES = [
+  '¡Ya te petateaste!',
+  '¡Colgaste los tenis!',
+  '¡Chupaste faros!',
+  '¡Estiraste la pata!',
+  '¡Te cargó el zombie!',
+  '¡Te llevó la huesuda!',
+  '¡Ya valiste!',
+  '¡Entregaste el equipo!'
+];
+
+// ------------------------------------------------------------
+// Utilidades
+// ------------------------------------------------------------
+function rand(n) {
+  const r = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
+  return r - Math.floor(r);
+}
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+function muzzleWorld() {
+  const c = Math.cos(player.angle), s = Math.sin(player.angle);
+  return {
+    x: player.x + MUZZLE.x * c - MUZZLE.y * s,
+    y: player.y + MUZZLE.x * s + MUZZLE.y * c
+  };
+}
+
+// ------------------------------------------------------------
+// Tamaño de pantalla y construcción del cuarto
+// ------------------------------------------------------------
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = innerWidth;
+  H = innerHeight;
+
+  for (const c of [canvas, fog, floor]) {
+    c.width = Math.round(W * DPR);
+    c.height = Math.round(H * DPR);
+  }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  fctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  flctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  const m = Math.max(16, Math.min(W, H) * 0.05);
+  room.x = m; room.y = m; room.w = W - m * 2; room.h = H - m * 2;
+
+  moon.x = room.x + room.w * 0.62;
+  moon.y = room.y + room.h * 0.45;
+  moon.r = Math.min(room.w, room.h) * 0.38;
+
+  const f = inner();
+  if (!initialized) {
+    player.x = f.x + f.w * 0.35;
+    player.y = f.y + f.h * 0.6;
+    mouse.x = player.x + 100;
+    mouse.y = player.y;
+    initialized = true;
+  }
+  player.x = clamp(player.x, f.x + player.radius, f.x + f.w - player.radius);
+  player.y = clamp(player.y, f.y + player.radius, f.y + f.h - player.radius);
+
+  // La luna está arriba: las puertas laterales reciben poca luz
+  // y la de abajo todavía menos.
+  const DW = 72;
+  doors = [
+    { cx: f.x,              cy: f.y + f.h * 0.62, nx: 1,  ny: 0,  w: DW, s: 0.42, L: moon.r * 0.95 },
+    { cx: f.x + f.w,        cy: f.y + f.h * 0.38, nx: -1, ny: 0,  w: DW, s: 0.42, L: moon.r * 0.95 },
+    { cx: f.x + f.w * 0.3,  cy: f.y + f.h,        nx: 0,  ny: -1, w: DW, s: 0.28, L: moon.r * 0.75 }
+  ];
+
+  buildFloor();
+}
+
+function drawDoor(g, d) {
+  const h = d.w / 2;
+  g.save();
+  g.translate(d.cx, d.cy);
+  g.rotate(Math.atan2(d.ny, d.nx)); // eje X local apunta hacia dentro del cuarto
+
+  // Exterior iluminado por la luna, que se desvanece hacia fuera
+  const ext = g.createLinearGradient(-WALL, 0, -WALL - 70, 0);
+  ext.addColorStop(0, '#1c2538');
+  ext.addColorStop(1, '#07090f');
+  g.fillStyle = ext;
+  g.fillRect(-WALL - 70, -h, 70, d.w);
+
+  // Vano de la puerta (umbral)
+  g.fillStyle = '#2e2116';
+  g.fillRect(-WALL, -h, WALL, d.w);
+  g.fillStyle = 'rgba(0,0,0,0.35)';
+  g.fillRect(-WALL / 2, -h, 1.5, d.w);
+
+  // Jambas
+  g.fillStyle = '#1a1f2b';
+  g.fillRect(-WALL, -h - 5, WALL, 5);
+  g.fillRect(-WALL, h, WALL, 5);
+
+  // Hoja abierta hacia dentro, recargada cerca del muro
+  g.translate(0, -h);       // bisagra
+  g.rotate(-Math.PI / 3);
+  g.fillStyle = 'rgba(0,0,0,0.35)';
+  g.fillRect(3, 1, d.w - 2, 7);
+  g.fillStyle = '#4a3523';
+  g.fillRect(0, -3, d.w - 2, 6);
+  g.strokeStyle = '#1e140c';
+  g.lineWidth = 1.5;
+  g.strokeRect(0, -3, d.w - 2, 6);
+  g.fillStyle = '#b59a5a';
+  g.beginPath();
+  g.arc(d.w - 12, 0, 2, 0, Math.PI * 2);
+  g.fill();
+
+  g.restore();
+}
+
+// Abanico de luz que entra por una puerta (en coordenadas locales de la puerta)
+function doorFan(c, d, spread, makeFill) {
+  c.save();
+  c.translate(d.cx, d.cy);
+  c.rotate(Math.atan2(d.ny, d.nx));
+  const x0 = -WALL - 4;
+  c.beginPath();
+  c.moveTo(x0, -d.w / 2);
+  c.lineTo(d.L, -d.w / 2 - d.L * spread);
+  c.lineTo(d.L, d.w / 2 + d.L * spread);
+  c.lineTo(x0, d.w / 2);
+  c.closePath();
+  c.fillStyle = makeFill(c);
+  c.fill();
+  c.restore();
+}
+
+function throughDoor(d, b, f) {
+  const half = d.w / 2 - 3;
+  if (d.nx === 1)  return b.x < f.x       && Math.abs(b.y - d.cy) < half;
+  if (d.nx === -1) return b.x > f.x + f.w && Math.abs(b.y - d.cy) < half;
+  if (d.ny === -1) return b.y > f.y + f.h && Math.abs(b.x - d.cx) < half;
+  return false;
+}
+
+// Coordenadas locales de una puerta: lx hacia dentro del cuarto, ly a lo largo del muro
+function doorToWorld(d, lx, ly) {
+  const a = Math.atan2(d.ny, d.nx), c = Math.cos(a), s = Math.sin(a);
+  return { x: d.cx + lx * c - ly * s, y: d.cy + lx * s + ly * c };
+}
+function worldToDoor(d, x, y) {
+  const a = Math.atan2(d.ny, d.nx), c = Math.cos(a), s = Math.sin(a);
+  const dx = x - d.cx, dy = y - d.cy;
+  return { lx: dx * c + dy * s, ly: -dx * s + dy * c };
+}
+function lerpAngle(a, b, t) {
+  const diff = ((b - a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+  return a + diff * t;
+}
+
+// ------------------------------------------------------------
+// Zombis: oleadas, aparición, movimiento y colisiones
+// ------------------------------------------------------------
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showBanner(title, sub, dur, color) {
+  banner = { title, sub, t: dur, dur, color };
+}
+
+// ------------------------------------------------------------
+// Diseño de cada oleada
+//   1) Presupuesto que crece de forma menor que lineal.
+//   2) Mezcla de tipos que se va desbloqueando (corredores, tanques).
+//   3) Ritmo: jefe cada 5 oleadas y oleada más ligera justo después.
+//   4) Dificultad adaptativa: si vas sobrado llegan eventos y más presión;
+//      si vas sufriendo, una oleada de respiro.
+// ------------------------------------------------------------
+function planWave(w) {
+  const plan = { event: null, sub: '', queue: [] };
+  const pressure = Math.min(DIFF.maxPressure, 1 + streak * DIFF.streakBonus);
+  let budget = (DIFF.baseBudget + DIFF.budgetGrowth * Math.pow(w - 1, DIFF.budgetCurve)) * pressure;
+  plan.interval = Math.max(DIFF.minInterval, DIFF.baseInterval * Math.pow(DIFF.intervalDecay, w - 1));
+  plan.cap = Math.min(DIFF.maxCap, DIFF.baseCap + w);
+  plan.speedMult = Math.min(DIFF.maxSpeedMult, 1 + DIFF.speedStep * (w - 1));
+  let pRunner = w < 3 ? 0 : Math.min(0.35, 0.1 + 0.04 * (w - 3));
+  let pTank = w < 6 ? 0 : Math.min(0.15, 0.05 + 0.015 * (w - 6));
+
+  const isBoss = w % DIFF.bossEvery === 0;
+  const afterBoss = w > 1 && (w - 1) % DIFF.bossEvery === 0;
+
+  if (isBoss) {
+    plan.event = 'jefe';
+    plan.sub = 'Se levantó de su tumba con todo y escolta';
+    budget *= 0.55;
+  } else if (heat < DIFF.reliefHeat) {
+    plan.event = 'respiro';
+    plan.sub = 'Los muertos dan tregua… por ahora';
+    budget *= 0.75;
+    plan.interval *= 1.3;
+    pRunner *= 0.5;
+    pTank = 0;
+  } else if (w >= 3 && heat >= DIFF.eventHeat && w - lastEventWave >= 2) {
+    const options = ['eclipse', 'estampida', 'asedio'].filter(e => e !== lastEvent);
+    plan.event = options[Math.floor(Math.random() * options.length)];
+    lastEvent = plan.event;
+    lastEventWave = w;
+    if (plan.event === 'eclipse') {
+      plan.sub = 'La luna se oculta. Busca sus ojos en la oscuridad';
+      budget *= 0.9;
+    } else if (plan.event === 'estampida') {
+      plan.sub = '¡Vienen corriendo!';
+      pRunner = 0.75;
+      plan.interval *= 0.6;
+      plan.cap = Math.min(DIFF.maxCap + 4, plan.cap + 4);
+    } else {
+      plan.sub = 'Entran por todas las puertas a la vez';
+      budget *= 1.1;
+    }
+  } else if (afterBoss) {
+    budget *= 0.8;   // descanso natural después del jefe
+  }
+
+  while (budget > 0.5) {
+    const r = Math.random();
+    const t = r < pTank ? 'tanque' : r < pTank + pRunner ? 'corredor' : 'normal';
+    plan.queue.push(t);
+    budget -= ZTYPES[t].cost;
+  }
+  shuffle(plan.queue);
+  // Un tanque nunca abre la oleada
+  if (plan.queue[0] === 'tanque') {
+    const j = plan.queue.findIndex(t => t !== 'tanque');
+    if (j > 0) [plan.queue[0], plan.queue[j]] = [plan.queue[j], plan.queue[0]];
+  }
+  if (isBoss) {
+    // El Coronel sale después de la primera parte de su escolta
+    const n = 1 + Math.floor((w - DIFF.bossEvery) / (DIFF.bossEvery * 2));
+    const at = Math.floor(plan.queue.length * 0.35);
+    for (let i = 0; i < n; i++) plan.queue.splice(at + i * 3, 0, 'coronel');
+  }
+  return plan;
+}
+
+function startWave() {
+  wave++;
+  wavePause = 0;
+  waveCleared = false;
+  currentWave = planWave(wave);
+  spawnQueue = currentWave.queue.slice();
+  spawnTimer = wave === 1 ? 3 : 1.5;
+  waveStats = { hits: 0, minHp: player.hp, start: survivalTime, spawnEnd: null };
+  moonTarget = currentWave.event === 'eclipse' ? 0.38 : 1;
+  const ev = currentWave.event && EVENT_INFO[currentWave.event];
+  showBanner(ev ? `Oleada ${wave} · ${ev.title}` : `Oleada ${wave}`,
+             currentWave.sub, ev ? 3.4 : 2.5, ev ? ev.color : '#c9d6ff');
+}
+
+// Mide qué tan cómodo jugó la oleada y ajusta la presión de las siguientes
+function evaluateWave() {
+  const lag = survivalTime - (waveStats.spawnEnd ?? survivalTime);
+  const hitsScore = 1 - Math.min(waveStats.hits, 4) / 4;   // golpes recibidos
+  const hpScore = waveStats.minHp / PLAYER_HP;              // qué tan cerca estuvo de morir
+  const speedScore = clamp(1 - lag / 15, 0, 1);             // si los liquidó conforme salían
+  const comfort = 0.45 * hitsScore + 0.35 * hpScore + 0.2 * speedScore;
+
+  heat = heat * 0.5 + comfort * 0.5;
+  if (comfort >= 0.75) streak++;
+  else if (comfort < 0.45) streak = Math.max(0, streak - 2);
+  else streak = Math.max(0, streak - 1);
+
+  moonTarget = 1;
+  // Superar un evento o un jefe da recompensa
+  const ev = currentWave && currentWave.event;
+  if (ev && ev !== 'respiro') {
+    const before = player.hp;
+    player.hp = Math.min(PLAYER_HP, player.hp + 2);
+    showBanner('¡Superada!', before < PLAYER_HP - 0.01 ? '+2 de vida' : 'Ni un rasguño… nada mal', 2, '#9fe0a8');
+  }
+}
+
+// Intenta sacar un zombi del tipo indicado por la puerta i
+function spawnAt(i, typeName) {
+  const T = ZTYPES[typeName];
+  const d = doors[i];
+  const ly = (Math.random() * 2 - 1) * Math.max(0, d.w / 2 - T.r - 2);
+  const p = doorToWorld(d, -WALL - T.r - 2, ly);
+  // Nunca aparece encima de otro zombi
+  if (zombies.some(z => Math.hypot(z.x - p.x, z.y - p.y) < z.r + T.r + 4)) return false;
+  const sm = currentWave ? currentWave.speedMult : 1;
+  zombies.push({
+    x: p.x, y: p.y, r: T.r, T,
+    hp: T.hp, maxHp: T.hp,
+    mass: (T.r / 15) * (T.r / 15),
+    door: i, entering: true,
+    angle: Math.atan2(d.ny, d.nx),
+    speed: (T.speed[0] + Math.random() * (T.speed[1] - T.speed[0])) * (T.boss ? 1 : sm),
+    phase: Math.random() * Math.PI * 2,
+    variant: T.variant ?? (Math.random() < 0.6 ? 0 : 1),
+    hitFlash: 0, kx: 0, ky: 0,
+    attackT: -1, attackCd: 0,
+    charge: null, chargeT: 0, chargeCd: 3, chargeDir: 0
+  });
+  return true;
+}
+
+// Embestida del jefe: avisa, se lanza en línea recta y descansa
+function updateCharge(z, dt, dist, toPlayer) {
+  z.chargeCd -= dt;
+  if (z.charge === 'prep') {
+    z.chargeT -= dt;
+    z.chargeDir = lerpAngle(z.chargeDir, toPlayer, Math.min(1, dt * 4)); // apunta mientras avisa
+    if (z.chargeT <= 0) { z.charge = 'go'; z.chargeT = CHARGE_TIME; }
+    return true;
+  }
+  if (z.charge === 'go') {
+    z.chargeT -= dt;
+    z.x += Math.cos(z.chargeDir) * CHARGE_SPEED * dt;
+    z.y += Math.sin(z.chargeDir) * CHARGE_SPEED * dt;
+    if (dist <= z.r + player.radius + 4) { hurtPlayer(z); z.chargeT = 0; }
+    if (z.chargeT <= 0) { z.charge = null; z.chargeCd = 5 + Math.random() * 2; }
+    return true;
+  }
+  if (z.chargeCd <= 0 && z.attackT < 0 && dist > 90 && dist < 420) {
+    z.charge = 'prep';
+    z.chargeT = CHARGE_PREP;
+    z.chargeDir = toPlayer;
+    return true;
+  }
+  return false;
+}
+
+function updateZombies(dt, f) {
+  gameTime += dt;
+
+  // Aparición según el plan de la oleada
+  if (state !== 'playing') {
+    // Sin apariciones ni oleadas nuevas mientras el jugador está muerto
+  } else if (spawnQueue.length > 0) {
+    spawnTimer -= dt;
+    // Respeta el máximo de zombis vivos a la vez
+    if (spawnTimer <= 0 && zombies.length < currentWave.cap) {
+      const want = currentWave.event === 'asedio' ? 3 : 1;
+      let spawned = 0;
+      for (const i of shuffle(doors.map((_, k) => k))) {
+        if (spawned >= want || !spawnQueue.length || zombies.length >= currentWave.cap) break;
+        if (spawnAt(i, spawnQueue[0])) { spawnQueue.shift(); spawned++; }
+      }
+      // Si las entradas están ocupadas se reintenta en el siguiente cuadro
+      if (spawned) spawnTimer = currentWave.interval * (want > 1 ? 2.2 : 1);
+      if (!spawnQueue.length) waveStats.spawnEnd = survivalTime;
+    }
+  } else if (zombies.length === 0) {
+    if (!waveCleared) { waveCleared = true; evaluateWave(); }
+    wavePause += dt;
+    if (wavePause >= WAVE_PAUSE) startWave();
+  }
+  if (banner) {
+    banner.t -= dt;
+    if (banner.t <= 0) banner = null;
+  }
+
+  const damp = Math.exp(-8 * dt);
+  for (const z of zombies) {
+    z.hitFlash = Math.max(0, z.hitFlash - dt);
+    let target;
+    if (z.entering) {
+      // Cruza el vano en línea recta hacia dentro
+      const d = doors[z.door];
+      target = Math.atan2(d.ny, d.nx);
+      z.x += d.nx * z.speed * dt;
+      z.y += d.ny * z.speed * dt;
+    } else {
+      const dx = player.x - z.x, dy = player.y - z.y;
+      const dist = Math.hypot(dx, dy);
+      const toPlayer = Math.atan2(dy, dx);
+      z.attackCd = Math.max(0, z.attackCd - dt);
+
+      if (z.T.boss && updateCharge(z, dt, dist, toPlayer)) {
+        target = z.chargeDir;
+      } else if (z.attackT >= 0) {
+        // Zarpazo en curso: encara al jugador y no avanza
+        target = toPlayer;
+        const prev = z.attackT;
+        z.attackT += dt;
+        if (prev < ATTACK_HIT && z.attackT >= ATTACK_HIT &&
+            dist <= z.r + player.radius + HIT_RANGE) {
+          hurtPlayer(z);
+        }
+        if (z.attackT >= ATTACK_TOTAL) z.attackT = -1;
+      } else {
+        // Va directo al jugador, con un ligero bamboleo
+        target = toPlayer + Math.sin(gameTime * 3 + z.phase) * 0.25;
+        // Se detiene al alcanzarlo para no temblar contra él
+        if (dist > z.r + player.radius + 2) {
+          z.x += Math.cos(target) * z.speed * dt;
+          z.y += Math.sin(target) * z.speed * dt;
+        }
+        // Lo bastante cerca: inicia el zarpazo
+        if (z.attackCd <= 0 && dist <= z.r + player.radius + ATTACK_RANGE) {
+          z.attackT = 0;
+          z.attackCd = 1.1 + Math.random() * 0.4;
+        }
+      }
+    }
+    // Retroceso por los impactos
+    z.x += z.kx * dt;
+    z.y += z.ky * dt;
+    z.kx *= damp;
+    z.ky *= damp;
+    z.angle = lerpAngle(z.angle, target, Math.min(1, dt * 6));
+  }
+
+  resolveCollisions(f);
+}
+
+// Mantiene a cada zombi dentro de un espacio válido
+function constrainZombie(z, f) {
+  if (z.entering) {
+    // Dentro del vano: no puede atravesar las jambas ni salir hacia fuera
+    const d = doors[z.door];
+    const p = worldToDoor(d, z.x, z.y);
+    const lim = d.w / 2 - z.r - 1;
+    p.ly = clamp(p.ly, -lim, lim);
+    p.lx = Math.max(p.lx, -WALL - z.r - 40);
+    if (p.lx >= z.r + 1) z.entering = false;
+    const w = doorToWorld(d, p.lx, p.ly);
+    z.x = w.x;
+    z.y = w.y;
+  } else {
+    z.x = clamp(z.x, f.x + z.r, f.x + f.w - z.r);
+    z.y = clamp(z.y, f.y + z.r, f.y + f.h - z.r);
+  }
+}
+
+// Separación círculo-círculo con varias iteraciones para que no se encimen
+function resolveCollisions(f) {
+  for (let it = 0; it < 8; it++) {
+    for (let i = 0; i < zombies.length; i++) {
+      const a = zombies[i];
+      for (let j = i + 1; j < zombies.length; j++) {
+        const b = zombies[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        const min = a.r + b.r;
+        const d2 = dx * dx + dy * dy;
+        if (d2 >= min * min) continue;
+        let d = Math.sqrt(d2);
+        if (d < 1e-4) {
+          // Exactamente encimados: se separan en una dirección al azar
+          const ang = Math.random() * Math.PI * 2;
+          dx = Math.cos(ang); dy = Math.sin(ang); d = 0;
+        } else {
+          dx /= d; dy /= d;
+        }
+        // Los más pesados empujan más de lo que son empujados
+        const push = min - d;
+        const wa = b.mass / (a.mass + b.mass), wb = a.mass / (a.mass + b.mass);
+        a.x -= dx * push * wa; a.y -= dy * push * wa;
+        b.x += dx * push * wb; b.y += dy * push * wb;
+      }
+    }
+    for (const z of zombies) {
+      // El jugador no es empujado por los zombis
+      let dx = z.x - player.x, dy = z.y - player.y;
+      const min = z.r + player.radius;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < min * min) {
+        let d = Math.sqrt(d2);
+        if (d < 1e-4) { dx = 1; dy = 0; } else { dx /= d; dy /= d; }
+        z.x = player.x + dx * min;
+        z.y = player.y + dy * min;
+      }
+      constrainZombie(z, f);
+    }
+  }
+
+  // Si un zombi quedó acorralado contra un muro, el jugador es quien cede
+  for (const z of zombies) {
+    let dx = player.x - z.x, dy = player.y - z.y;
+    const min = z.r + player.radius;
+    const d2 = dx * dx + dy * dy;
+    if (d2 < min * min) {
+      let d = Math.sqrt(d2);
+      if (d < 1e-4) { dx = 1; dy = 0; } else { dx /= d; dy /= d; }
+      player.x = z.x + dx * min;
+      player.y = z.y + dy * min;
+    }
+  }
+  player.x = clamp(player.x, f.x + player.radius, f.x + f.w - player.radius);
+  player.y = clamp(player.y, f.y + player.radius, f.y + f.h - player.radius);
+}
+
+// Primer punto (0..1) donde el segmento toca el círculo, o -1 si no lo toca
+function segmentCircle(x0, y0, x1, y1, cx, cy, r) {
+  const dx = x1 - x0, dy = y1 - y0;
+  const fx = x0 - cx, fy = y0 - cy;
+  const c = fx * fx + fy * fy - r * r;
+  if (c <= 0) return 0;
+  const a = dx * dx + dy * dy;
+  if (a === 0) return -1;
+  const b = 2 * (fx * dx + fy * dy);
+  const disc = b * b - 4 * a * c;
+  if (disc < 0) return -1;
+  const t = (-b - Math.sqrt(disc)) / (2 * a);
+  return t >= 0 && t <= 1 ? t : -1;
+}
+
+function damageZombie(z, b, hx, hy) {
+  const sp = Math.hypot(b.vx, b.vy) || 1;
+  const ux = b.vx / sp, uy = b.vy / sp;
+  z.hp--;
+  z.hitFlash = 0.12;
+  // Un disparo durante la preparación interrumpe el zarpazo
+  if (z.attackT >= 0 && z.attackT < ATTACK_HIT) {
+    z.attackT = -1;
+    z.attackCd = Math.max(z.attackCd, 0.35);
+  }
+  z.kx += ux * 110 / z.mass;
+  z.ky += uy * 110 / z.mass;
+  spawnBlood(hx, hy, ux, uy, 8);
+  if (z.hp <= 0) killZombie(z, ux, uy);
+}
+
+function killZombie(z, ux, uy) {
+  zombies.splice(zombies.indexOf(z), 1);
+  kills++;
+  const s = z.T.scale;
+  spawnBlood(z.x, z.y, ux, uy, Math.round(22 * s));
+  const blobs = [];
+  for (let k = 0; k < 7; k++) {
+    blobs.push({
+      dx: ((Math.random() - 0.5) * 26 + ux * 8) * s,
+      dy: ((Math.random() - 0.5) * 26 + uy * 8) * s,
+      r: (6 + Math.random() * 10) * s
+    });
+  }
+  addDecal({ type: 'pool', x: z.x, y: z.y, blobs });
+  addDecal({
+    type: z.variant === 0 ? 'hat' : 'kepi', s,
+    x: z.x + ux * 14 * s + (Math.random() - 0.5) * 10,
+    y: z.y + uy * 14 * s + (Math.random() - 0.5) * 10,
+    a: Math.random() * Math.PI * 2
+  });
+  if (z.T.boss) shake = 0.25;
+}
+
+function addDecal(d) {
+  decals.push(d);
+  if (decals.length > MAX_DECALS) decals.splice(0, decals.length - MAX_DECALS);
+}
+
+function spawnBlood(x, y, ux, uy, n) {
+  const base = Math.atan2(uy, ux);
+  for (let i = 0; i < n; i++) {
+    const a = base + (Math.random() - 0.5) * 1.6;
+    const sp = 60 + Math.random() * 220;
+    blood.push({
+      x, y,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp,
+      life: 0.2 + Math.random() * 0.35,
+      size: 1.5 + Math.random() * 2.5
+    });
+  }
+}
+
+function updateBlood(dt) {
+  const damp = Math.exp(-6 * dt);
+  for (let i = blood.length - 1; i >= 0; i--) {
+    const p = blood[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vx *= damp;
+    p.vy *= damp;
+    p.life -= dt;
+    if (p.life <= 0) {
+      // Algunas gotas dejan mancha en el piso
+      if (Math.random() < 0.45) {
+        stains.push({ x: p.x, y: p.y, r: p.size * 0.9 });
+        if (stains.length > MAX_STAINS) stains.shift();
+      }
+      blood.splice(i, 1);
+    }
+  }
+}
+
+function drawGore() {
+  ctx.fillStyle = '#5e0909';
+  for (const s of stains) {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (const d of decals) {
+    if (d.type === 'pool') {
+      ctx.fillStyle = '#520707';
+      for (const b of d.blobs) {
+        ctx.beginPath();
+        ctx.arc(d.x + b.dx, d.y + b.dy, b.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(150,25,25,0.35)';
+      const b0 = d.blobs[0];
+      ctx.beginPath();
+      ctx.arc(d.x + b0.dx - 2, d.y + b0.dy - 2, b0.r * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      ctx.rotate(d.a);
+      ctx.scale(d.s || 1, d.s || 1);
+      if (d.type === 'hat') {
+        ctx.fillStyle = '#9c7f4c';
+        ctx.strokeStyle = '#4a3820';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#86683a';
+        ctx.beginPath();
+        ctx.arc(1, 0, 6.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#6b0a0a';
+        ctx.beginPath();
+        ctx.arc(-6, 5, 3, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#3d4a5c';
+        ctx.strokeStyle = '#1e252f';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.roundRect(-6.5, -7, 13, 14, 5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#15181d';
+        ctx.beginPath();
+        ctx.moveTo(6, -6);
+        ctx.quadraticCurveTo(12, 0, 6, 6);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
+  ctx.fillStyle = '#8b0f0f';
+  for (const p of blood) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// Sprite teñido por tipo de zombi (se genera una sola vez)
+function tintedSprite(spr, tint) {
+  if (!spr.tinted[tint]) spr.tinted[tint] = makeFlash(spr.img, tint);
+  return spr.tinted[tint];
+}
+
+function drawZombies() {
+  for (const z of zombies) {
+    const spr = zombieSprites[z.variant];
+    const sc = z.T.scale;
+    const size = ZOMBIE_SIZE * sc;
+    ctx.save();
+    ctx.translate(z.x, z.y);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(3 * sc, 5 * sc, 17 * sc, 15 * sc, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.rotate(z.angle);
+    drawArms(z);
+    if (spr.ready) {
+      const h = size / 2;
+      ctx.drawImage(z.T.tint ? tintedSprite(spr, z.T.tint) : spr.img, -h, -h, size, size);
+      // El Coronel parpadea en rojo mientras prepara la embestida
+      const prepGlow = z.charge === 'prep' ? 0.35 + 0.35 * Math.sin(gameTime * 30) : 0;
+      const fl = Math.max(z.hitFlash / 0.12, prepGlow);
+      if (fl > 0) {
+        ctx.globalAlpha = Math.min(1, fl);
+        ctx.drawImage(spr.flash, -h, -h, size, size);
+        ctx.globalAlpha = 1;
+      }
+    }
+    ctx.restore();
+  }
+}
+
+// Vida restante: solo se muestra cuando el zombi ya recibió daño
+function drawZombieHealth() {
+  for (const z of zombies) {
+    if (z.T.boss || z.hp >= z.maxHp) continue;
+    const y0 = z.y - z.r - 14;
+    if (z.maxHp <= 5) {
+      const w = 4, gap = 1.5;
+      const total = z.maxHp * w + (z.maxHp - 1) * gap;
+      const x0 = z.x - total / 2;
+      for (let k = 0; k < z.maxHp; k++) {
+        ctx.fillStyle = k < z.hp ? 'rgba(220,60,60,0.9)' : 'rgba(255,255,255,0.15)';
+        ctx.fillRect(x0 + k * (w + gap), y0, w, 3);
+      }
+    } else {
+      const w = z.r * 2;
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.fillRect(z.x - w / 2, y0, w, 3);
+      ctx.fillStyle = 'rgba(220,60,60,0.9)';
+      ctx.fillRect(z.x - w / 2, y0, w * z.hp / z.maxHp, 3);
+    }
+  }
+}
+
+// Barra del jefe arriba de la pantalla
+function drawBossBar() {
+  const bosses = zombies.filter(z => z.T.boss);
+  if (!bosses.length) return;
+  const hp = bosses.reduce((a, z) => a + z.hp, 0);
+  const max = bosses.reduce((a, z) => a + z.maxHp, 0);
+  const w = Math.min(320, W - 80), x = (W - w) / 2, y = 52;
+  ctx.font = '600 13px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillStyle = '#ffd27a';
+  ctx.fillText(bosses.length > 1 ? `El Coronel ×${bosses.length}` : 'El Coronel', W / 2, y - 6);
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(x - 2, y - 2, w + 4, 12);
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.fillRect(x, y, w, 8);
+  ctx.fillStyle = '#c8402f';
+  ctx.fillRect(x, y, w * hp / max, 8);
+}
+
+// Franja roja en el piso que avisa hacia dónde va a embestir el Coronel
+function drawChargeWarnings() {
+  for (const z of zombies) {
+    if (z.charge !== 'prep') continue;
+    const a = 0.16 + 0.1 * Math.sin(gameTime * 30);
+    const len = CHARGE_SPEED * CHARGE_TIME;
+    ctx.save();
+    ctx.translate(z.x, z.y);
+    ctx.rotate(z.chargeDir);
+    const g = ctx.createLinearGradient(0, 0, len, 0);
+    g.addColorStop(0, `rgba(220,40,30,${a + 0.1})`);
+    g.addColorStop(1, 'rgba(220,40,30,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(z.r * 0.5, -z.r, len, z.r * 2);
+    ctx.restore();
+  }
+}
+
+// Durante el eclipse los ojos de los zombis brillan para poder ubicarlos
+function drawEyes() {
+  const glow = clamp((1 - moonLevel) / 0.6, 0, 1);
+  if (glow <= 0.02) return;
+  for (const z of zombies) {
+    const k = ZOMBIE_SIZE * z.T.scale / 64;
+    const c = Math.cos(z.angle), s = Math.sin(z.angle);
+    for (const side of [-1, 1]) {
+      const lx = 4 * k, ly = side * 3 * k;
+      const x = z.x + lx * c - ly * s, y = z.y + lx * s + ly * c;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, 5 * k);
+      g.addColorStop(0, `rgba(255,60,40,${0.9 * glow})`);
+      g.addColorStop(1, 'rgba(255,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, 5 * k, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function drawBanner() {
+  if (!banner) return;
+  const el = banner.dur - banner.t;
+  const a = Math.max(0, Math.min(1, banner.t / 0.6, el / 0.3));
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.7)';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = banner.color;
+  ctx.font = '600 34px system-ui, sans-serif';
+  ctx.fillText(banner.title, W / 2, H * 0.2);
+  if (banner.sub) {
+    ctx.fillStyle = '#c3cbe0';
+    ctx.font = '15px system-ui, sans-serif';
+    ctx.fillText(banner.sub, W / 2, H * 0.2 + 32);
+  }
+  ctx.restore();
+}
+
+// ------------------------------------------------------------
+// Brazos animados de los zombis (dibujados en el marco ya rotado del zombi)
+// ------------------------------------------------------------
+const ZOMBIE_ARMS = ['#d6c9a8', '#4b5a6e']; // manga: manta / uniforme federal
+const ZOMBIE_SKIN = '#7f9a6b';
+
+// ext: cuánto se estiran · spread: se abren hacia fuera · swing: cierran hacia dentro
+function armPose(z) {
+  // El Coronel abre los brazos y tiembla antes de embestir
+  if (z.charge === 'prep') return { ext: -4 + Math.sin(gameTime * 40) * 1.5, spread: 1, swing: 0 };
+  if (z.charge === 'go') return { ext: 7, spread: 0, swing: 0.25 };
+  const t = z.attackT;
+  if (t < 0) return { ext: 0, spread: 0, swing: 0 };
+  if (t < ATTACK_WINDUP) {
+    const w = t / ATTACK_WINDUP;
+    return { ext: -5 * w, spread: w, swing: 0 };
+  }
+  if (t < ATTACK_WINDUP + ATTACK_STRIKE) {
+    const u = (t - ATTACK_WINDUP) / ATTACK_STRIKE;
+    return { ext: -5 + 14 * u, spread: 1 - u, swing: u };
+  }
+  const v = Math.min(1, (t - ATTACK_WINDUP - ATTACK_STRIKE) / (ATTACK_TOTAL - ATTACK_WINDUP - ATTACK_STRIKE));
+  return { ext: 9 * (1 - v), spread: 0, swing: 1 - v };
+}
+
+function drawArms(z) {
+  const k = ZOMBIE_SIZE * z.T.scale / 64;
+  const pose = armPose(z);
+  const walk = z.entering || z.attackT >= 0 ? 0 : Math.sin(gameTime * 7 + z.phase);
+  ctx.lineCap = 'round';
+  for (const side of [-1, 1]) {
+    const sx = -3 * k, sy = side * 13 * k;
+    const a = -side * 0.06 + side * 0.32 * pose.spread - side * 0.42 * pose.swing;
+    const len = (27 + pose.ext + walk * side * 1.5) * k;
+    const cx = Math.cos(a), cy = Math.sin(a);
+    const hx = sx + cx * len, hy = sy + cy * len;
+
+    // Manga
+    ctx.strokeStyle = ZOMBIE_ARMS[z.variant];
+    ctx.lineWidth = 7 * k;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + cx * len * 0.66, sy + cy * len * 0.66);
+    ctx.stroke();
+
+    // Antebrazo y mano podrida
+    ctx.strokeStyle = ZOMBIE_SKIN;
+    ctx.lineWidth = 5 * k;
+    ctx.beginPath();
+    ctx.moveTo(sx + cx * len * 0.6, sy + cy * len * 0.6);
+    ctx.lineTo(hx, hy);
+    ctx.stroke();
+
+    // Garras
+    ctx.strokeStyle = '#3c4a33';
+    ctx.lineWidth = 1.2 * k;
+    for (const f of [-1, 0, 1]) {
+      const fx = hx - cy * f * 1.6 * k, fy = hy + cx * f * 1.6 * k;
+      ctx.beginPath();
+      ctx.moveTo(fx, fy);
+      ctx.lineTo(fx + cx * 3 * k, fy + cy * 3 * k);
+      ctx.stroke();
+    }
+
+    // Sangre en las manos
+    ctx.fillStyle = '#7a0a0a';
+    ctx.beginPath();
+    ctx.arc(hx - cx * 1.5 * k, hy - cy * 1.5 * k, 1.8 * k, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ------------------------------------------------------------
+// Vida del jugador, daño, muerte y reinicio
+// ------------------------------------------------------------
+function hurtPlayer(z) {
+  if (state !== 'playing' || player.invuln > 0) return;
+
+  player.hp = Math.max(0, player.hp - 1);
+  waveStats.hits++;
+  player.invuln = INVULN_TIME;     // evita que varios zombis te golpeen en el mismo instante
+  player.regenDelay = REGEN_DELAY;
+  player.hitFlash = 0.18;
+  shake = 0.2;
+  hurtVignette = 0.55;
+
+  let dx = player.x - z.x, dy = player.y - z.y;
+  const d = Math.hypot(dx, dy) || 1;
+  dx /= d; dy /= d;
+  spawnBlood(player.x - dx * 6, player.y - dy * 6, dx, dy, 10);
+
+  // Empujón: si detrás del jugador hay otro zombi, se reduce mucho
+  // para no lanzarlo contra la multitud ni dejarlo rebotando entre ellos
+  let force = KNOCKBACK * z.T.knock;   // tanques y jefe empujan más
+  for (const o of zombies) {
+    if (o === z) continue;
+    const ox = o.x - player.x, oy = o.y - player.y;
+    const od = Math.hypot(ox, oy) || 1;
+    if (od < o.r + player.radius + 12 && (ox * dx + oy * dy) / od > 0.3) {
+      force *= 0.3;
+      break;
+    }
+  }
+  player.kx += dx * force;
+  player.ky += dy * force;
+  const cap = MAX_KNOCKBACK * (z.T.knock > 1 ? 1.25 : 1);
+  const m = Math.hypot(player.kx, player.ky);
+  if (m > cap) {
+    player.kx *= cap / m;
+    player.ky *= cap / m;
+  }
+
+  if (player.hp <= 0) killPlayer();
+}
+
+function killPlayer() {
+  state = 'dead';
+  mouse.down = false;
+  player.kx = player.ky = 0;
+  player.hp = 0;
+  deathTimer = 1.2;   // deja ver el momento antes de mostrar la pantalla
+  const blobs = [];
+  for (let k = 0; k < 8; k++) {
+    blobs.push({ dx: (Math.random() - 0.5) * 30, dy: (Math.random() - 0.5) * 30, r: 7 + Math.random() * 11 });
+  }
+  addDecal({ type: 'pool', x: player.x, y: player.y, blobs });
+  const a = Math.random() * Math.PI * 2;
+  spawnBlood(player.x, player.y, Math.cos(a), Math.sin(a), 26);
+}
+
+function restartGame() {
+  if (state !== 'dead') return;
+  zombies.length = 0;
+  bullets.length = 0;
+  sparks.length = 0;
+  blood.length = 0;
+  stains.length = 0;
+  decals.length = 0;
+  wave = 0; kills = 0; gameTime = 0; survivalTime = 0;
+  shake = 0; hurtVignette = 0; flash = 0; fireCooldown = 0; deathTimer = 0;
+  spawnQueue = []; currentWave = null; banner = null;
+  heat = 0.5; streak = 0; lastEvent = null; lastEventWave = -10;
+  moonLevel = 1; moonTarget = 1;
+  const f = inner();
+  Object.assign(player, {
+    x: f.x + f.w * 0.35, y: f.y + f.h * 0.6,
+    hp: PLAYER_HP, invuln: 0, regenDelay: 0, hitFlash: 0, kx: 0, ky: 0
+  });
+  state = 'playing';
+  deathScreen.classList.remove('visible');
+  startWave();
+}
+
+// Barra de vida sobre la cabeza del jugador (los segmentos se rellenan al regenerar)
+function drawPlayerHealth() {
+  const w = 6, gap = 2, h = 4;
+  const total = PLAYER_HP * w + (PLAYER_HP - 1) * gap;
+  const x0 = player.x - total / 2, y0 = player.y - player.radius - 20;
+  const low = player.hp <= 1.5;
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(x0 - 2, y0 - 2, total + 4, h + 4);
+  for (let k = 0; k < PLAYER_HP; k++) {
+    const x = x0 + k * (w + gap);
+    const fill = clamp(player.hp - k, 0, 1);
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(x, y0, w, h);
+    if (fill > 0) {
+      const color = low ? '255,110,95' : '127,224,143';
+      ctx.fillStyle = fill >= 1 ? `rgb(${color})` : `rgba(${color},0.55)`;
+      ctx.fillRect(x, y0, w * fill, h);
+    }
+  }
+}
+
+// Borde rojo al recibir daño y latido cuando queda poca vida
+function drawVignette() {
+  const low = state === 'playing' && player.hp <= 1.5 ? 0.18 + Math.sin(gameTime * 5) * 0.06 : 0;
+  const a = Math.max(hurtVignette, low);
+  if (a <= 0.01) return;
+  const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75);
+  g.addColorStop(0, 'rgba(150,0,0,0)');
+  g.addColorStop(1, `rgba(150,0,0,${a})`);
+  ctx.fillStyle = g;
+  ctx.fillRect(-20, -20, W + 40, H + 40);
+}
+
+function buildFloor() {
+  const g = flctx;
+  const f = inner();
+
+  // Exterior
+  g.fillStyle = '#07090f';
+  g.fillRect(0, 0, W, H);
+
+  // Muros
+  g.fillStyle = '#262b38';
+  g.fillRect(room.x, room.y, room.w, room.h);
+  g.strokeStyle = '#11141c';
+  g.lineWidth = 2;
+  g.strokeRect(room.x + 1, room.y + 1, room.w - 2, room.h - 2);
+
+  // Piso de duela
+  g.save();
+  g.beginPath();
+  g.rect(f.x, f.y, f.w, f.h);
+  g.clip();
+
+  const ph = 34;
+  let row = 0;
+  for (let y = f.y; y < f.y + f.h; y += ph, row++) {
+    let x = f.x - rand(row + 1) * 160;
+    let i = 0;
+    while (x < f.x + f.w) {
+      const len = 120 + rand(row * 31 + i * 3 + 7) * 160;
+      const shade = rand(row * 17 + i * 7 + 3);
+      g.fillStyle = `hsl(${24 + shade * 8}, ${22 + shade * 12}%, ${22 + shade * 9}%)`;
+      g.fillRect(x, y, len, ph);
+
+      // vetas
+      g.strokeStyle = 'rgba(0,0,0,0.12)';
+      g.lineWidth = 1;
+      for (let k = 0; k < 3; k++) {
+        const gy = y + 6 + rand(row * 5 + i * 11 + k) * (ph - 12);
+        g.beginPath();
+        g.moveTo(x + 6, gy);
+        g.bezierCurveTo(x + len * 0.3, gy - 2, x + len * 0.6, gy + 2, x + len - 6, gy);
+        g.stroke();
+      }
+
+      // junta vertical
+      g.fillStyle = 'rgba(0,0,0,0.45)';
+      g.fillRect(x, y, 2, ph);
+      x += len;
+      i++;
+    }
+    // junta horizontal
+    g.fillStyle = 'rgba(0,0,0,0.5)';
+    g.fillRect(f.x, y, f.w, 1.5);
+  }
+
+  // Sombra interior junto a los muros
+  const sh = 26;
+  const sides = [
+    [f.x, f.y, f.x, f.y + sh, f.x, f.y, f.w, sh],
+    [f.x, f.y + f.h, f.x, f.y + f.h - sh, f.x, f.y + f.h - sh, f.w, sh],
+    [f.x, f.y, f.x + sh, f.y, f.x, f.y, sh, f.h],
+    [f.x + f.w, f.y, f.x + f.w - sh, f.y, f.x + f.w - sh, f.y, sh, f.h]
+  ];
+  for (const [x0, y0, x1, y1, rx, ry, rw, rh] of sides) {
+    const lg = g.createLinearGradient(x0, y0, x1, y1);
+    lg.addColorStop(0, 'rgba(0,0,0,0.55)');
+    lg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = lg;
+    g.fillRect(rx, ry, rw, rh);
+  }
+  g.restore();
+
+  // Ventana en el muro superior, alineada con la luz
+  const ww = 110;
+  const wx = moon.x - ww / 2;
+  const wy = room.y + 5;
+  const wh = WALL - 10;
+  g.fillStyle = '#a9bde6';
+  g.fillRect(wx, wy, ww, wh);
+  g.fillStyle = '#1a1f2b';
+  g.fillRect(wx + ww / 2 - 2, wy, 4, wh);
+  g.fillRect(wx + ww / 4 - 1.5, wy, 3, wh);
+  g.fillRect(wx + (ww * 3) / 4 - 1.5, wy, 3, wh);
+  g.strokeStyle = '#11141c';
+  g.lineWidth = 3;
+  g.strokeRect(wx, wy, ww, wh);
+
+  // Puertas en las otras tres paredes
+  for (const d of doors) drawDoor(g, d);
+}
+
+// ------------------------------------------------------------
+// Entrada
+// ------------------------------------------------------------
+addEventListener('keydown', e => {
+  if (e.code === 'Enter' && state === 'dead' && deathScreen.classList.contains('visible')) {
+    e.preventDefault();
+    restartGame();
+    return;
+  }
+  if (['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+    keys.add(e.code);
+    e.preventDefault();
+  }
+});
+addEventListener('keyup', e => keys.delete(e.code));
+addEventListener('blur', () => { keys.clear(); mouse.down = false; });
+
+canvas.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+canvas.addEventListener('mousedown', e => {
+  if (e.button !== 0 || state !== 'playing') return;
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  mouse.down = true;
+  if (fireCooldown <= 0) {
+    player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+    shoot();
+    fireCooldown = FIRE_RATE;
+  }
+});
+addEventListener('mouseup', e => { if (e.button === 0) mouse.down = false; });
+
+// ------------------------------------------------------------
+// Disparos y partículas
+// ------------------------------------------------------------
+function shoot() {
+  const m = muzzleWorld();
+  const spread = (Math.random() - 0.5) * 0.03;
+  const a = player.angle + spread;
+  bullets.push({
+    x: m.x, y: m.y,
+    vx: Math.cos(a) * BULLET_SPEED,
+    vy: Math.sin(a) * BULLET_SPEED,
+    life: 2
+  });
+  flash = 0.06;
+}
+
+function spawnSparks(x, y, nx, ny) {
+  for (let i = 0; i < 10; i++) {
+    const a = Math.atan2(ny, nx) + (Math.random() - 0.5) * 2.2;
+    const sp = 120 + Math.random() * 260;
+    sparks.push({
+      x, y,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp,
+      life: 0.25 + Math.random() * 0.25,
+      max: 0.5
+    });
+  }
+}
+
+// ------------------------------------------------------------
+// Actualización
+// ------------------------------------------------------------
+function update(dt) {
+  const f = inner();
+
+  const alive = state === 'playing';
+
+  // Movimiento WASD normalizado
+  let dx = 0, dy = 0;
+  if (alive) {
+    if (keys.has('KeyW')) dy -= 1;
+    if (keys.has('KeyS')) dy += 1;
+    if (keys.has('KeyA')) dx -= 1;
+    if (keys.has('KeyD')) dx += 1;
+  }
+  if (dx || dy) {
+    const l = Math.hypot(dx, dy);
+    player.x += (dx / l) * player.speed * dt;
+    player.y += (dy / l) * player.speed * dt;
+  }
+
+  // Empujón recibido: se disipa rápido
+  player.x += player.kx * dt;
+  player.y += player.ky * dt;
+  const kd = Math.exp(-10 * dt);
+  player.kx *= kd;
+  player.ky *= kd;
+
+  // Contra el muro el empujón se pierde (no se acumula ni rebota)
+  const px = clamp(player.x, f.x + player.radius, f.x + f.w - player.radius);
+  const py = clamp(player.y, f.y + player.radius, f.y + f.h - player.radius);
+  if (px !== player.x) player.kx = 0;
+  if (py !== player.y) player.ky = 0;
+  player.x = px;
+  player.y = py;
+
+  // Vida: invulnerabilidad breve y regeneración tras unos segundos sin daño
+  player.invuln = Math.max(0, player.invuln - dt);
+  player.hitFlash = Math.max(0, player.hitFlash - dt);
+  shake = Math.max(0, shake - dt);
+  hurtVignette = Math.max(0, hurtVignette - dt * 1.2);
+  if (alive) {
+    survivalTime += dt;
+    if (player.regenDelay > 0) player.regenDelay -= dt;
+    else player.hp = Math.min(PLAYER_HP, player.hp + REGEN_RATE * dt);
+    waveStats.minHp = Math.min(waveStats.minHp, player.hp);
+  } else if (deathTimer > 0) {
+    deathTimer -= dt;
+    if (deathTimer <= 0) showDeathScreen();
+  }
+
+  // La luna se oculta o reaparece poco a poco
+  moonLevel += (moonTarget - moonLevel) * Math.min(1, dt * 0.7);
+
+  // Zombis (aparición, persecución, ataques y colisiones)
+  updateZombies(dt, f);
+
+  // Apuntar al cursor
+  if (alive) player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+
+  // Disparo continuo al mantener el clic
+  fireCooldown -= dt;
+  if (alive && mouse.down && fireCooldown <= 0) {
+    shoot();
+    fireCooldown = FIRE_RATE;
+  }
+
+  // Balas
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    const px = b.x, py = b.y;
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+    b.life -= dt;
+
+    // Impacto contra zombis: se prueba todo el tramo recorrido en este cuadro
+    // para que una bala rápida no atraviese a un zombi sin tocarlo
+    let hitZ = null, hitT = 2;
+    for (const z of zombies) {
+      const t = segmentCircle(px, py, b.x, b.y, z.x, z.y, z.r);
+      if (t >= 0 && t < hitT) { hitT = t; hitZ = z; }
+    }
+    if (hitZ) {
+      damageZombie(hitZ, b, px + (b.x - px) * hitT, py + (b.y - py) * hitT);
+      bullets.splice(i, 1);
+      continue;
+    }
+
+    // Balas que ya salieron por una puerta: vuelan hasta salir de la pantalla
+    if (b.escaped) {
+      if (b.x < -40 || b.x > W + 40 || b.y < -40 || b.y > H + 40 || b.life <= 0) {
+        bullets.splice(i, 1);
+      }
+      continue;
+    }
+    const outside = b.x < f.x || b.x > f.x + f.w || b.y < f.y || b.y > f.y + f.h;
+    if (outside && doors.some(d => throughDoor(d, b, f))) {
+      b.escaped = true;
+      continue;
+    }
+
+    let hit = false, nx = 0, ny = 0;
+    if (b.x < f.x)            { b.x = f.x;       nx = 1;  hit = true; }
+    else if (b.x > f.x + f.w) { b.x = f.x + f.w; nx = -1; hit = true; }
+    if (b.y < f.y)            { b.y = f.y;       ny = 1;  hit = true; }
+    else if (b.y > f.y + f.h) { b.y = f.y + f.h; ny = -1; hit = true; }
+
+    if (hit) {
+      spawnSparks(b.x, b.y, nx, ny);
+      bullets.splice(i, 1);
+    } else if (b.life <= 0) {
+      bullets.splice(i, 1);
+    }
+  }
+
+  // Chispas
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i];
+    s.x += s.vx * dt;
+    s.y += s.vy * dt;
+    s.vx *= 0.9;
+    s.vy *= 0.9;
+    s.life -= dt;
+    if (s.life <= 0) sparks.splice(i, 1);
+  }
+
+  updateBlood(dt);
+
+  flash = Math.max(0, flash - dt);
+}
+
+// ------------------------------------------------------------
+// Dibujo
+// ------------------------------------------------------------
+function punch(x, y, r, strength) {
+  const g = fctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(0,0,0,${strength})`);
+  g.addColorStop(0.5, `rgba(0,0,0,${strength * 0.85})`);
+  g.addColorStop(0.8, `rgba(0,0,0,${strength * 0.35})`);
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  fctx.fillStyle = g;
+  fctx.beginPath();
+  fctx.arc(x, y, r, 0, Math.PI * 2);
+  fctx.fill();
+}
+
+function draw(t) {
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  // Sacudida de cámara al recibir un golpe
+  if (shake > 0) {
+    ctx.fillStyle = '#05070d';
+    ctx.fillRect(0, 0, W, H);
+    const s = 6 * (shake / 0.2);
+    ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+  }
+
+  // 1) Cuarto
+  ctx.drawImage(floor, 0, 0, W, H);
+
+  // Sangre en el piso y zombis (también quedan bajo la oscuridad)
+  drawGore();
+  drawZombies();
+
+  // 2) Personaje (queda bajo la oscuridad)
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(3, 5, 18, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.rotate(player.angle);
+  if (spriteReady) {
+    const h = SPRITE_SIZE / 2;
+    if (state === 'dead') ctx.globalAlpha = 0.6;
+    else if (player.invuln > 0 && Math.floor(player.invuln * 20) % 2) ctx.globalAlpha = 0.55; // parpadeo
+    ctx.drawImage(sprite, -h, -h, SPRITE_SIZE, SPRITE_SIZE);
+    ctx.globalAlpha = 1;
+    if (player.hitFlash > 0 && playerFlash) {
+      ctx.globalAlpha = player.hitFlash / 0.18;
+      ctx.drawImage(playerFlash, -h, -h, SPRITE_SIZE, SPRITE_SIZE);
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.restore();
+
+  // 3) Capa de oscuridad con huecos de luz
+  const breathe = 1 + Math.sin(t * 0.0006) * 0.015;
+  fctx.globalCompositeOperation = 'source-over';
+  fctx.clearRect(0, 0, W, H);
+  fctx.fillStyle = 'rgba(3,5,12,0.94)';
+  fctx.fillRect(0, 0, W, H);
+  fctx.globalCompositeOperation = 'destination-out';
+  const ml = moonLevel;
+  punch(moon.x, moon.y, moon.r * breathe * (0.55 + 0.45 * ml), 0.35 + 0.65 * ml);
+
+  // Luz más tenue que entra por las puertas (varias capas para bordes suaves)
+  const LAYERS = 4;
+  for (const d of doors) {
+    const a = d.s * ml / LAYERS;
+    for (let i = 0; i < LAYERS; i++) {
+      doorFan(fctx, d, 0.12 + i * 0.14, c => {
+        const g = c.createRadialGradient(0, 0, 0, 0, 0, d.L);
+        g.addColorStop(0, `rgba(0,0,0,${a})`);
+        g.addColorStop(0.4, `rgba(0,0,0,${a * 0.7})`);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        return g;
+      });
+    }
+  }
+  punch(player.x, player.y, 75, 0.3);
+  for (const b of bullets) punch(b.x, b.y, 45, 0.45);
+  for (const s of sparks) punch(s.x, s.y, 30, 0.3 * (s.life / s.max));
+  if (flash > 0) {
+    const m = muzzleWorld();
+    punch(m.x, m.y, 140, 0.8 * (flash / 0.06));
+  }
+  ctx.drawImage(fog, 0, 0, W, H);
+
+  // 4) Tinte azulado de la luna + haz desde la ventana
+  ctx.globalCompositeOperation = 'screen';
+  const wy = room.y + WALL;
+  const beam = ctx.createLinearGradient(0, wy, 0, moon.y);
+  beam.addColorStop(0, `rgba(150,175,230,${0.12 * ml})`);
+  beam.addColorStop(1, 'rgba(150,175,230,0)');
+  ctx.fillStyle = beam;
+  ctx.beginPath();
+  ctx.moveTo(moon.x - 55, wy);
+  ctx.lineTo(moon.x + 55, wy);
+  ctx.lineTo(moon.x + moon.r * 0.75, moon.y);
+  ctx.lineTo(moon.x - moon.r * 0.75, moon.y);
+  ctx.closePath();
+  ctx.fill();
+
+  const tint = ctx.createRadialGradient(moon.x, moon.y, 0, moon.x, moon.y, moon.r * breathe);
+  tint.addColorStop(0, `rgba(165,190,255,${0.16 * ml})`);
+  tint.addColorStop(0.6, `rgba(140,165,240,${0.08 * ml})`);
+  tint.addColorStop(1, 'rgba(120,150,230,0)');
+  ctx.fillStyle = tint;
+  ctx.beginPath();
+  ctx.arc(moon.x, moon.y, moon.r * breathe, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tinte azulado de la luz de las puertas
+  for (const d of doors) {
+    doorFan(ctx, d, 0.35, c => {
+      const g = c.createRadialGradient(0, 0, 0, 0, 0, d.L);
+      g.addColorStop(0, `rgba(150,175,230,${0.22 * d.s * ml})`);
+      g.addColorStop(1, 'rgba(150,175,230,0)');
+      return g;
+    });
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  drawChargeWarnings();
+  drawZombieHealth();
+  if (state === 'playing') drawPlayerHealth();
+
+  // 5) Elementos que emiten luz: ojos en el eclipse, balas, chispas, fogonazo
+  ctx.globalCompositeOperation = 'lighter';
+  drawEyes();
+  for (const b of bullets) {
+    const glow = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 12);
+    glow.addColorStop(0, 'rgba(255,210,120,0.9)');
+    glow.addColorStop(1, 'rgba(255,140,40,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#fff3c4';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(b.x - b.vx * 0.022, b.y - b.vy * 0.022);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
+
+  for (const s of sparks) {
+    const a = s.life / s.max;
+    ctx.strokeStyle = `rgba(255,200,110,${a})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(s.x - s.vx * 0.03, s.y - s.vy * 0.03);
+    ctx.stroke();
+  }
+
+  if (flash > 0) {
+    const m = muzzleWorld();
+    const k = flash / 0.06;
+    const fg = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, 22);
+    fg.addColorStop(0, `rgba(255,240,190,${0.95 * k})`);
+    fg.addColorStop(1, 'rgba(255,150,40,0)');
+    ctx.fillStyle = fg;
+    ctx.beginPath();
+    ctx.arc(m.x, m.y, 22, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  drawVignette();
+
+  drawBossBar();
+  drawBanner();
+}
+
+// ------------------------------------------------------------
+// HUD de teclas presionadas
+// ------------------------------------------------------------
+const hudKeys = [...document.querySelectorAll('#hud kbd')];
+const hudMouse = document.getElementById('hud-raton');
+
+const stWave = document.getElementById('st-wave');
+const stLeft = document.getElementById('st-left');
+const stKills = document.getElementById('st-kills');
+const stEvent = document.getElementById('st-event');
+
+function setText(el, v) {
+  const s = String(v);
+  if (el.textContent !== s) el.textContent = s;
+}
+
+// ------------------------------------------------------------
+// Pantalla de muerte
+// ------------------------------------------------------------
+const deathScreen = document.getElementById('muerte');
+document.getElementById('reiniciar').addEventListener('click', restartGame);
+
+function formatTime(s) {
+  const m = Math.floor(s / 60), r = Math.floor(s % 60);
+  return `${m}:${String(r).padStart(2, '0')}`;
+}
+
+function showDeathScreen() {
+  document.getElementById('frase').textContent =
+    DEATH_PHRASES[Math.floor(Math.random() * DEATH_PHRASES.length)];
+  document.getElementById('m-oleada').textContent = wave;
+  document.getElementById('m-bajas').textContent = kills;
+  document.getElementById('m-tiempo').textContent = formatTime(survivalTime);
+  deathScreen.classList.add('visible');
+}
+
+function syncHud() {
+  for (const k of hudKeys) k.classList.toggle('on', keys.has(k.dataset.k));
+  hudMouse.classList.toggle('on', mouse.down);
+  setText(stWave, wave);
+  setText(stLeft, zombies.length + spawnQueue.length);
+  setText(stKills, kills);
+  const ev = currentWave && currentWave.event;
+  setText(stEvent, ev ? '· ' + EVENT_INFO[ev].title : '');
+  stEvent.style.color = ev ? EVENT_INFO[ev].color : '';
+}
+
+// ------------------------------------------------------------
+// Bucle principal
+// ------------------------------------------------------------
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  update(dt);
+  draw(now);
+  syncHud();
+  requestAnimationFrame(loop);
+}
+
+addEventListener('resize', resize);
+resize();
+startWave();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
