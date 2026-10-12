@@ -6,7 +6,7 @@
 <title>Luz de luna</title>
 <style>
   html, body { margin: 0; height: 100%; background: #05070d; overflow: hidden; }
-  canvas { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+  #c { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
   #hud {
     position: fixed; left: 14px; bottom: 12px;
     display: flex; gap: 20px; align-items: flex-end;
@@ -108,9 +108,257 @@
   #reiniciar:hover { filter: brightness(1.08); }
   #reiniciar:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
   .tip { margin: 10px 0 0; font-size: 12px; color: #8a7a62; }
+
+  /* Pantalla de pausa */
+  #pausa {
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+    padding: 16px;
+    background: radial-gradient(ellipse at center, rgba(12, 18, 36, .55), rgba(3, 5, 12, .85));
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  #pausa.visible { opacity: 1; pointer-events: auto; }
+  #pausa .tarjeta { color: #dfe6f7; transform: none; }
+  #pausa .frase {
+    color: #dfe6f7;
+    text-shadow: 0 0 24px rgba(120, 150, 255, .5), 0 3px 0 #141c33;
+  }
+  #pausa .sub { color: #9aa6c4; }
+  #pausa .cifras div { border-color: rgba(201, 214, 255, .16); }
+  #pausa .cifras span { color: #8a97b8; }
+  #pausa .cifras b { color: #dfe6f7; }
+  .botones { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  #continuar {
+    font: 600 16px system-ui, sans-serif;
+    padding: 12px 32px; border-radius: 999px;
+    border: 1px solid #c9d6ff; background: #c9d6ff; color: #0b1020;
+    cursor: pointer; box-shadow: 0 0 18px rgba(170, 195, 255, .35);
+  }
+  #reiniciar-pausa {
+    font: 600 16px system-ui, sans-serif;
+    padding: 12px 28px; border-radius: 999px;
+    border: 1px solid rgba(201, 214, 255, .35); background: transparent; color: #c9d6ff;
+    cursor: pointer;
+  }
+  #continuar:hover, #reiniciar-pausa:hover { filter: brightness(1.1); }
+  #continuar:focus-visible, #reiniciar-pausa:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  #pausa .tip { color: #6f7a96; }
+  kbd.solo { width: 28px; height: 28px; }
+
+  /* En el menú no se muestran los indicadores del juego */
+  body.en-menu #stats, body.en-menu #hud { display: none; }
+
+  .boton-sec {
+    font: 600 16px system-ui, sans-serif;
+    padding: 12px 28px; border-radius: 999px;
+    border: 1px solid rgba(201, 214, 255, .35); background: transparent; color: #c9d6ff;
+    cursor: pointer;
+  }
+  .boton-sec:hover { filter: brightness(1.15); background: rgba(201, 214, 255, .06); }
+  .boton-sec:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+  /* ---------------- Menú principal ---------------- */
+  #menu {
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+    padding: 16px;
+    background: radial-gradient(ellipse at 50% 45%, rgba(5, 8, 18, .15), rgba(3, 5, 12, .8) 70%);
+    opacity: 0; pointer-events: none;
+    transition: opacity .35s ease;
+  }
+  #menu.visible { opacity: 1; pointer-events: auto; }
+  .menu-caja { text-align: center; color: #dfe6f7; font-family: system-ui, sans-serif; }
+  .menu-fecha {
+    margin: 0 0 6px;
+    font-size: 12px; letter-spacing: .28em; text-transform: uppercase; color: #8a97b8;
+  }
+  .menu-titulo {
+    margin: 0;
+    font: 700 clamp(52px, 11vw, 112px)/1 Georgia, 'Times New Roman', serif;
+    color: #eef2ff;
+    text-shadow: 0 0 30px rgba(150, 180, 255, .55), 0 0 80px rgba(120, 150, 255, .3), 0 4px 0 #141c33;
+  }
+  .menu-lema {
+    margin: 14px auto 34px; max-width: 30em;
+    font: italic 16px/1.5 Georgia, 'Times New Roman', serif; color: #a9b4d0;
+  }
+  .menu-opciones {
+    display: flex; flex-direction: column; gap: 12px;
+    width: min(300px, 100%); margin: 0 auto;
+  }
+  #menu-jugar {
+    font: 700 18px system-ui, sans-serif; letter-spacing: .04em;
+    padding: 14px 32px; border-radius: 999px;
+    border: 1px solid #c9d6ff; background: #c9d6ff; color: #0b1020;
+    cursor: pointer; box-shadow: 0 0 22px rgba(170, 195, 255, .4);
+  }
+  #menu-jugar:hover { filter: brightness(1.08); }
+  #menu-jugar:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .menu-pie { margin: 22px 0 0; font-size: 12px; color: #6f7a96; }
+
+  /* ---------------- Registro del Cuartel (periódico) ---------------- */
+  #registro {
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+    padding: 16px;
+    background: rgba(3, 5, 12, .82);
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s ease;
+  }
+  #registro.visible { opacity: 1; pointer-events: auto; }
+  .papel {
+    --tinta: #2a2118; --tinta-suave: #5d4f3c; --papel: #ece2c6; --rojo: #8b1a12;
+    width: min(980px, 100%); max-height: calc(100vh - 32px);
+    display: flex; flex-direction: column;
+    color: var(--tinta);
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255, 250, 230, .55), transparent 55%),
+      radial-gradient(ellipse at 85% 90%, rgba(120, 90, 40, .18), transparent 60%),
+      var(--papel);
+    border-radius: 3px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .6), inset 0 0 60px rgba(120, 90, 40, .25);
+    font-family: Georgia, 'Times New Roman', serif;
+    transform: translateY(10px) rotate(-.3deg);
+    transition: transform .35s ease;
+  }
+  #registro.visible .papel { transform: rotate(-.3deg); }
+  .cabecera { padding: 18px 28px 0; text-align: center; }
+  .cab-linea {
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--tinta-suave);
+    padding: 6px 0;
+  }
+  .cab-linea:first-child { border-bottom: 1px solid var(--tinta); }
+  .cab-linea:last-child { border-top: 3px double var(--tinta); }
+  .cabecera h1 {
+    margin: 6px 0 4px;
+    font: 900 clamp(34px, 6.5vw, 64px)/1 'Old English Text MT', 'UnifrakturMaguntia', Georgia, serif;
+    letter-spacing: .01em;
+  }
+  .secciones {
+    display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 22px;
+    padding: 8px 28px; border-bottom: 1px solid var(--tinta);
+  }
+  .secciones button {
+    font: 700 13px Georgia, serif; letter-spacing: .16em; text-transform: uppercase;
+    background: none; border: 0; padding: 4px 2px; color: var(--tinta-suave); cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .secciones button[aria-selected="true"] { color: var(--tinta); border-bottom-color: var(--rojo); }
+  .secciones button:focus-visible { outline: 2px solid var(--rojo); outline-offset: 2px; }
+  .secciones .pronto { font-weight: 400; font-style: italic; text-transform: none; letter-spacing: 0; color: var(--rojo); }
+
+  .cuerpo {
+    display: grid; grid-template-columns: 250px 1fr;
+    min-height: 0; overflow: auto;
+  }
+  .indice {
+    list-style: none; margin: 0; padding: 14px 18px 18px 28px;
+    border-right: 1px solid rgba(42, 33, 24, .35);
+  }
+  .indice-titulo {
+    margin: 0 0 8px; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--tinta-suave);
+  }
+  .indice button {
+    display: flex; align-items: baseline; gap: 8px; width: 100%;
+    text-align: left; font: 16px Georgia, serif; color: var(--tinta);
+    background: none; border: 0; border-bottom: 1px dotted rgba(42, 33, 24, .4);
+    padding: 9px 4px; cursor: pointer;
+  }
+  .indice button:hover { background: rgba(120, 90, 40, .1); }
+  .indice button[aria-current="true"] { background: rgba(139, 26, 18, .1); font-weight: 700; }
+  .indice button:focus-visible { outline: 2px solid var(--rojo); outline-offset: -2px; }
+  .indice .num { font-size: 12px; color: var(--tinta-suave); min-width: 1.6em; font-variant-numeric: tabular-nums; }
+  .indice .bloqueado { color: var(--tinta-suave); font-style: italic; }
+  .indice .grupo-faccion button {
+    margin-top: 10px; border-bottom: 2px solid var(--tinta);
+    font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  }
+  .marca-jefe {
+    margin-left: auto; padding: 1px 6px; border: 1px solid var(--rojo); color: var(--rojo);
+    font: 700 10px system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase;
+  }
+  .tactica { margin: 0 0 12px; font-size: 15px; font-weight: 700; }
+  .tactica span { font-weight: 400; font-style: italic; color: var(--tinta-suave); }
+  .consejo-2 { margin-top: 10px; }
+
+  .nota { padding: 18px 28px 22px; min-width: 0; }
+  .nota-volanta {
+    margin: 0; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--rojo);
+  }
+  .nota h2 { margin: 4px 0 2px; font: 900 clamp(26px, 4vw, 38px)/1.05 Georgia, serif; }
+  .nota-bajada { margin: 0 0 14px; font-style: italic; font-size: 16px; color: var(--tinta-suave); }
+  .nota-grid { display: grid; grid-template-columns: 200px 1fr; gap: 22px; align-items: start; }
+  .grabado {
+    margin: 0; padding: 8px; border: 1px solid var(--tinta);
+    background: repeating-linear-gradient(45deg, rgba(42, 33, 24, .05) 0 2px, transparent 2px 5px), #e4d8b8;
+  }
+  .grabado canvas {
+    display: block; width: 100%; aspect-ratio: 1;
+    filter: sepia(.55) contrast(1.08) saturate(.9);
+  }
+  .grabado figcaption {
+    margin-top: 6px; font-size: 11px; font-style: italic; text-align: center; color: var(--tinta-suave);
+  }
+  .nota-texto p { margin: 0 0 12px; font-size: 16px; line-height: 1.55; text-align: justify; hyphens: auto; }
+  .nota-texto p:first-child::first-letter {
+    float: left; font-size: 3.1em; line-height: .85; padding: 4px 6px 0 0; font-weight: 700;
+  }
+  .ficha {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0;
+    margin: 4px 0 14px; border-top: 2px solid var(--tinta); border-bottom: 1px solid var(--tinta);
+  }
+  .ficha div { padding: 8px 10px 8px 0; }
+  .ficha span { display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--tinta-suave); }
+  .ficha b { font-size: 17px; }
+  .consejo {
+    margin: 0; padding: 10px 14px;
+    border: 1px solid var(--rojo); border-left-width: 4px;
+    background: rgba(139, 26, 18, .06); font-size: 15px; line-height: 1.5;
+  }
+  .consejo strong { color: var(--rojo); letter-spacing: .08em; text-transform: uppercase; font-size: 12px; }
+  .sello {
+    display: inline-block; margin-top: 6px; padding: 3px 10px;
+    border: 2px solid var(--rojo); color: var(--rojo);
+    font: 700 12px system-ui, sans-serif; letter-spacing: .18em; text-transform: uppercase;
+    transform: rotate(-4deg); opacity: .85;
+  }
+  .pie-papel {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 10px 28px 16px; border-top: 3px double var(--tinta);
+    font-size: 12px; color: var(--tinta-suave);
+  }
+  #reg-volver {
+    font: 700 14px Georgia, serif; padding: 8px 18px;
+    border: 1px solid var(--tinta); border-radius: 2px; background: transparent; color: var(--tinta);
+    cursor: pointer;
+  }
+  #reg-volver:hover { background: rgba(42, 33, 24, .08); }
+  #reg-volver:focus-visible { outline: 2px solid var(--rojo); outline-offset: 2px; }
+
+  @media (max-width: 720px) {
+    .cabecera, .nota, .pie-papel { padding-left: 16px; padding-right: 16px; }
+    .cuerpo { grid-template-columns: 1fr; }
+    .indice { border-right: 0; border-bottom: 1px solid rgba(42, 33, 24, .35); padding: 10px 16px; }
+    .nota-grid { grid-template-columns: 1fr; }
+    .grabado { max-width: 220px; }
+  }
+
+  /* Aviso de nueva nota en el registro */
+  #aviso {
+    position: fixed; left: 50%; top: 44px; transform: translate(-50%, -8px);
+    padding: 8px 16px; border-radius: 3px;
+    background: #ece2c6; color: #2a2118;
+    font: 14px Georgia, serif; box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+    opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s;
+    white-space: nowrap;
+  }
+  #aviso.visible { opacity: 1; transform: translate(-50%, 0); }
+  #aviso b { color: #8b1a12; }
 </style>
 </head>
-<body>
+<body class="en-menu">
 <canvas id="c"></canvas>
 <div id="stats">
   Oleada <b id="st-wave">1</b><span>·</span>
@@ -135,6 +383,31 @@
     </div>
     <span>Disparar</span>
   </div>
+  <div class="grupo">
+    <kbd class="solo" id="hud-pausa">P</kbd>
+    <span>Pausa</span>
+  </div>
+  <div class="grupo">
+    <kbd class="solo" id="hud-sonido">M</kbd>
+    <span id="hud-sonido-txt">Sonido</span>
+  </div>
+</div>
+<div id="pausa">
+  <div class="tarjeta">
+    <p class="frase">En pausa</p>
+    <p class="sub">Los muertos te esperan… no por mucho.</p>
+    <div class="cifras">
+      <div><span>Oleada</span><b id="p-oleada">1</b></div>
+      <div><span>Bajas</span><b id="p-bajas">0</b></div>
+      <div><span>Tiempo</span><b id="p-tiempo">0:00</b></div>
+    </div>
+    <div class="botones">
+      <button id="continuar">Continuar</button>
+      <button id="reiniciar-pausa">Reiniciar</button>
+      <button class="boton-sec" id="menu-desde-pausa">Menú principal</button>
+    </div>
+    <p class="tip">P o Esc para continuar</p>
+  </div>
 </div>
 <div id="muerte">
   <div class="tarjeta">
@@ -145,10 +418,48 @@
       <div><span>Bajas</span><b id="m-bajas">0</b></div>
       <div><span>Tiempo</span><b id="m-tiempo">0:00</b></div>
     </div>
-    <button id="reiniciar">Reiniciar</button>
+    <div class="botones">
+      <button id="reiniciar">Reiniciar</button>
+      <button class="boton-sec" id="menu-desde-muerte">Menú principal</button>
+    </div>
     <p class="tip">o presiona Enter</p>
   </div>
 </div>
+
+<div id="menu" class="visible">
+  <div class="menu-caja">
+    <p class="menu-fecha">Palacio Nacional · 6 de diciembre de 1914</p>
+    <h1 class="menu-titulo">Luz de luna</h1>
+    <p class="menu-lema">Esa noche estalló el magnesio de la foto, y los caídos de la Revolución volvieron a cobrar.</p>
+    <div class="menu-opciones">
+      <button id="menu-jugar">Jugar</button>
+      <button class="boton-sec" id="menu-registro">Registro del Cuartel</button>
+      <button class="boton-sec" id="menu-sonido" aria-pressed="true">Sonido: activado</button>
+    </div>
+    <p class="menu-pie">Enter para jugar · M para silenciar</p>
+  </div>
+</div>
+
+<div id="registro" role="dialog" aria-modal="true" aria-labelledby="reg-titulo">
+  <div class="papel">
+    <header class="cabecera">
+      <div class="cab-linea"><span>Edición extraordinaria</span><span>Precio: 5 centavos</span></div>
+      <h1 id="reg-titulo">Registro del Cuartel</h1>
+      <div class="cab-linea"><span>México, D. F., lunes 7 de diciembre de 1914</span><span>Año I · Núm. 1</span></div>
+    </header>
+    <nav class="secciones" id="reg-secciones" role="tablist" aria-label="Secciones del registro"></nav>
+    <div class="cuerpo">
+      <ol class="indice" id="reg-indice"></ol>
+      <article class="nota" id="reg-nota" aria-live="polite"></article>
+    </div>
+    <footer class="pie-papel">
+      <button id="reg-volver">← Volver al menú</button>
+      <span>Esc para volver</span>
+    </footer>
+  </div>
+</div>
+
+<div id="aviso" role="status"></div>
 
 <script>
 // ------------------------------------------------------------
@@ -218,10 +529,11 @@ const MUZZLE = { x: 30, y: 4 }; // punta del arma relativa al centro del sprite
 
 // ------------------------------------------------------------
 // Sprites de zombis (vista cenital, mirando hacia +X)
-// 0: revolucionario con camisa de manta, sombrero y cananas
-// 1: soldado federal con uniforme gris azulado y quepí
+// Cada "piel" es un SVG. Las dos primeras están dibujadas a mano; las
+// demás se arman con skinSVG() combinando cuerpo, sombrero y equipo,
+// según cómo vestía cada facción en 1914 (ver el Registro del Cuartel).
 // ------------------------------------------------------------
-const ZOMBIE_SVGS = [`
+const SVG_SURIANO = `
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <ellipse cx="28" cy="32" rx="11" ry="18" fill="#d6c9a8" stroke="#3a2f22" stroke-width="2"/>
   <path d="M20 16 L38 46" stroke="#5a3a1e" stroke-width="4.5"/>
@@ -237,7 +549,8 @@ const ZOMBIE_SVGS = [`
   <circle cx="24" cy="32" r="6.5" fill="none" stroke="#3b2a16" stroke-width="1.6" stroke-dasharray="2 1.5"/>
   <path d="M27 20 q4 0 4 4 q-3 2 -5 -1z" fill="#7a0a0a"/>
   <path d="M12.5 35 l3 1 l-3 2z" fill="#3a2f22"/>
-</svg>`, `
+</svg>`;
+const SVG_FEDERAL = `
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <ellipse cx="28" cy="32" rx="11" ry="18" fill="#4b5a6e" stroke="#1e252f" stroke-width="2"/>
   <path d="M19 18 L37 45" stroke="#c8b48a" stroke-width="3"/>
@@ -250,33 +563,145 @@ const ZOMBIE_SVGS = [`
   <path d="M34 26 Q41 32 34 38 Z" fill="#15181d"/>
   <circle cx="32" cy="32" r="1.6" fill="#c9a94a"/>
   <circle cx="26" cy="37" r="2" fill="#7a0a0a"/>
-</svg>`];
+</svg>`;
 
-const ZOMBIE_SIZE = 60;
-const zombieSprites = ZOMBIE_SVGS.map(svg => {
-  const s = { img: new Image(), flash: null, tinted: {}, ready: false };
-  s.img.onload = () => {
+const SVG_HEAD = 'xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"';
+function hatSVG(h) {
+  switch (h.shape) {
+    case 'palma':     // sombrero de palma de ala ancha
+      return `<circle cx="24" cy="32" r="12.5" fill="${h.c1}" stroke="#5c4524" stroke-width="1.5"/>
+        <circle cx="24" cy="32" r="10" fill="none" stroke="${h.c2}" stroke-width="1"/>
+        <circle cx="24" cy="32" r="6.5" fill="${h.c2}" stroke="#5c4524" stroke-width="1.2"/>`;
+    case 'texana':    // sombrero de "cuatro pedradas" (copa con cuatro hundidos)
+      return `<circle cx="25" cy="32" r="11.5" fill="${h.c1}" stroke="#2e2416" stroke-width="1.4"/>
+        <path d="M25 25.5 Q29 28.5 31.5 32 Q29 35.5 25 38.5 Q21 35.5 18.5 32 Q21 28.5 25 25.5Z" fill="${h.c2}" stroke="#2e2416" stroke-width="1"/>
+        <path d="M25 27.5 L25 36.5 M20.5 32 L29.5 32" stroke="#2e2416" stroke-width=".8" opacity=".55"/>
+        <circle cx="25" cy="32" r="7.6" fill="none" stroke="${h.band}" stroke-width="1.6"/>
+        ${h.gold ? '<path d="M32.3 32 l1.8 -1.8 l1.8 1.8 l-1.8 1.8z" fill="#e2b93b" stroke="#7a5a10" stroke-width=".5"/>' : ''}`;
+    case 'charro':    // sombrero de charro de fieltro, ala muy ancha y galón
+      return `<circle cx="24" cy="32" r="14.5" fill="${h.c1}" stroke="#2b2b2b" stroke-width="1.3"/>
+        <circle cx="24" cy="32" r="12.6" fill="none" stroke="${h.trim}" stroke-width="1.2" stroke-dasharray="2 1.4"/>
+        <circle cx="24" cy="32" r="6.3" fill="${h.c2}" stroke="#2b2b2b" stroke-width="1"/>
+        <circle cx="24" cy="32" r="6.3" fill="none" stroke="${h.band || h.trim}" stroke-width="1.6"/>`;
+    case 'gorra':     // gorra de plato con visera
+      return `<circle cx="27" cy="32" r="7.6" fill="${h.c1}" stroke="#2a2a1a" stroke-width="1.2"/>
+        <path d="M33 26.6 Q39.5 32 33 37.4Z" fill="#1d1d14"/>
+        <circle cx="27" cy="32" r="5.4" fill="none" stroke="${h.c2}" stroke-width="1"/>
+        <circle cx="33.6" cy="32" r="1.2" fill="#c9a94a"/>`;
+    case 'salacot':   // casco de sol forrado de kaki
+      return `<ellipse cx="26" cy="32" rx="11.5" ry="10" fill="${h.c1}" stroke="#4a4630" stroke-width="1.3"/>
+        <ellipse cx="26.5" cy="32" rx="7.5" ry="6.5" fill="${h.c2}" stroke="#4a4630" stroke-width="1"/>
+        <path d="M19 32 L34 32" stroke="#4a4630" stroke-width="1"/>
+        <circle cx="33.5" cy="32" r="1.4" fill="#d9b44a"/>`;
+    case 'quepi':     // quepí kaki con banda blanca
+      return `<rect x="21.5" y="25" width="13" height="14" rx="5" fill="${h.c1}" stroke="#1e252f" stroke-width="1.2"/>
+        <rect x="23" y="26.5" width="10" height="11" rx="4" fill="none" stroke="${h.c2}" stroke-width="1.2"/>
+        <path d="M34 26 Q41 32 34 38 Z" fill="#15181d"/>`;
+  }
+  return '';
+}
+function packSVG(kind) {
+  switch (kind) {
+    case 'dinamita': return `<g stroke="#3a0a05" stroke-width=".8"><rect x="11" y="24" width="4" height="13" rx="1" fill="#b3261e"/><rect x="15.2" y="25" width="4" height="13" rx="1" fill="#c22f25"/><rect x="11.5" y="38" width="4" height="12" rx="1" fill="#a8231b"/></g>
+      <path d="M13 24 q-2 -3 1 -5 M17 25 q2 -3 -1 -5" stroke="#ddd2b0" stroke-width=".9" fill="none"/>`;
+    case 'alambre': return `<g fill="none" stroke="#8d9196" stroke-width="1.3"><circle cx="15" cy="32" r="6.5"/><circle cx="15" cy="32" r="4.6"/><circle cx="15" cy="32" r="2.6"/></g>
+      <g stroke="#5d6166" stroke-width="1"><path d="M8 28 l2 2 M8 36 l2 -2 M21 28 l-2 2 M21 36 l-2 -2"/></g>`;
+    case 'ametralladora': return `<rect x="6" y="45" width="34" height="4.5" rx="1.5" fill="#22262c" stroke="#0e1013" stroke-width=".8"/>
+      <rect x="9" y="43.5" width="10" height="7.5" rx="1.5" fill="#3a3f47"/><path d="M14 51 l-5 6 M14 51 l5 6" stroke="#22262c" stroke-width="1.6"/>`;
+    case 'antorchas': return `<path d="M12 22 L16 44 M16 21 L19 43" stroke="#5a3a1e" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M11 20 q1 -2 3 0 M15 19 q1 -2 3 0" stroke="#2a1a0a" stroke-width="2" fill="none"/>`;
+    case 'lazo': return `<g fill="none" stroke="#a5824c" stroke-width="1.5"><circle cx="30" cy="48.5" r="4.6"/><circle cx="30" cy="48.5" r="3"/></g>`;
+    case 'bandera': return `<path d="M13 32 L4 32" stroke="#5a3a1e" stroke-width="2"/><path d="M5 32 L5 20 L14 23 L5 26" fill="#b3201a" stroke="#5a0f0a" stroke-width=".8"/>`;
+  }
+  return '';
+}
+const BLOOD_SPOTS = `<path d="M33 25 q5 -2 5 3 q1 5 -3 5 q-2 4 -4 1 q-3 -4 2 -9z" fill="#8b0f0f"/>
+  <path d="M36 33 l1 6" stroke="#8b0f0f" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="22" cy="44" r="3" fill="#7a0a0a"/>`;
+function skinSVG(o) {
+  return `<svg ${SVG_HEAD}>
+  ${o.pack && o.pack !== 'lazo' && o.pack !== 'ametralladora' ? packSVG(o.pack) : ''}
+  <ellipse cx="28" cy="32" rx="11" ry="18" fill="${o.body}" stroke="${o.edge || '#2a2418'}" stroke-width="2"/>
+  ${o.cananas ? `<path d="M20 16 L38 46 M20 48 L38 18" stroke="#5a3a1e" stroke-width="4.5"/>
+    <path d="M20 16 L38 46 M20 48 L38 18" stroke="#d1ad4c" stroke-width="2" stroke-dasharray="1.5 2"/>` : ''}
+  ${o.strap ? `<path d="M19 18 L37 45" stroke="${o.strap}" stroke-width="3"/>` : ''}
+  ${o.sash ? `<path d="M18.5 19 L37.5 44" stroke="${o.sash}" stroke-width="5.5"/>` : ''}
+  ${o.epaulets ? `<rect x="25" y="14" width="7" height="4" rx="1" fill="${o.epaulets}"/><rect x="25" y="46" width="7" height="4" rx="1" fill="${o.epaulets}"/>` : ''}
+  ${o.pack === 'lazo' || o.pack === 'ametralladora' ? packSVG(o.pack) : ''}
+  ${o.noBlood ? '' : BLOOD_SPOTS}
+  <circle cx="29" cy="32" r="8" fill="#7f9a6b"/>
+  ${o.bandana ? `<path d="M34.5 26.5 Q39 32 34.5 37.5" stroke="${o.bandana}" stroke-width="3.2" fill="none" stroke-linecap="round"/>` : ''}
+  ${hatSVG(o.hat)}
+  <path d="M27 20 q4 0 4 4 q-3 2 -5 -1z" fill="#7a0a0a"/>
+</svg>`;
+}
+// El Capitán de Dorados va montado: caballo visto desde arriba con su jinete
+const SVG_CAPITAN = `<svg ${SVG_HEAD}>
+  <path d="M6 32 Q2 30 1 34 Q4 33 6 35Z" fill="#2a1a10"/>
+  <ellipse cx="27" cy="32" rx="21" ry="10.5" fill="#6b4226" stroke="#2a1a10" stroke-width="1.6"/>
+  <path d="M44 28.5 Q52 30 58 31 Q62 32 58 33 Q52 34 44 35.5Z" fill="#6b4226" stroke="#2a1a10" stroke-width="1.4"/>
+  <path d="M45 31.2 L57 31.6" stroke="#1e120a" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M57 30 l3 -2 M57 34 l3 2" stroke="#2a1a10" stroke-width="1.3"/>
+  <circle cx="40" cy="27" r="1.6" fill="#7a0a0a"/><path d="M14 37 q3 2 6 0" stroke="#7a0a0a" stroke-width="1.6" fill="none"/>
+  <ellipse cx="27" cy="32" rx="9" ry="12.5" fill="#7c7550" stroke="#2a2418" stroke-width="1.6"/>
+  <path d="M21 21 L33 43 M21 43 L33 21" stroke="#5a3a1e" stroke-width="3.4"/>
+  <path d="M21 21 L33 43 M21 43 L33 21" stroke="#d1ad4c" stroke-width="1.4" stroke-dasharray="1.2 1.6"/>
+  <path d="M29 26 L38 30 M29 38 L38 34" stroke="#7f9a6b" stroke-width="3" stroke-linecap="round"/>
+  <path d="M38 30 L45 31 M38 34 L45 33" stroke="#3a2412" stroke-width="1"/>
+  <circle cx="27.5" cy="32" r="6" fill="#7f9a6b"/>
+  <circle cx="26" cy="32" r="9.5" fill="#55452f" stroke="#2e2416" stroke-width="1.3"/>
+  <path d="M26 26.5 Q29.5 29 31.5 32 Q29.5 35 26 37.5 Q22.5 35 20.5 32 Q22.5 29 26 26.5Z" fill="#46382a" stroke="#2e2416" stroke-width=".9"/>
+  <circle cx="26" cy="32" r="6.3" fill="none" stroke="#c9a23a" stroke-width="1.5"/>
+  <path d="M32.6 32 l1.7 -1.7 l1.7 1.7 l-1.7 1.7z" fill="#e2b93b"/>
+</svg>`;
+
+// Pieles: svg + color de manga (brazos animados) + sombrero que cae al morir
+const SKINS = {
+  suriano:     { svg: SVG_SURIANO, sleeve: '#d6c9a8', hat: { shape: 'palma', c1: '#b8955a', c2: '#a07c45' } },
+  federal:     { svg: SVG_FEDERAL, sleeve: '#4b5a6e', hat: { shape: 'kepi', c1: '#3d4a5c' } },
+  villista:    { sleeve: '#8a7558', o: { body: '#8a7558', cananas: true, bandana: '#a8352a', hat: { shape: 'texana', c1: '#6b5236', c2: '#5a4329', band: '#3a2a1a' } } },
+  carrancista: { sleeve: '#76734a', o: { body: '#76734a', strap: '#4a3f2a', hat: { shape: 'gorra', c1: '#6f6c45', c2: '#55532f' } } },
+  colorado:    { sleeve: '#a39579', o: { body: '#a39579', sash: '#b3201a', cananas: false, bandana: '#c0281f', hat: { shape: 'texana', c1: '#7a6448', c2: '#6a553b', band: '#c0281f' } } },
+  liebre:      { sleeve: '#ece6d2', o: { body: '#ece6d2', edge: '#6b6250', bandana: null, hat: { shape: 'palma', c1: '#d8c08a', c2: '#c4a86e' } } },
+  rural:       { sleeve: '#8d8f93', o: { body: '#8d8f93', edge: '#2e3033', epaulets: '#e3e3e3', bandana: '#a01c1c', pack: 'lazo', hat: { shape: 'charro', c1: '#9a9ca0', c2: '#86888c', trim: '#ececec' } } },
+  dinamitero:  { sleeve: '#6f6250', o: { body: '#6f6250', cananas: true, bandana: '#7a5a2a', pack: 'dinamita', hat: { shape: 'texana', c1: '#4f3f2c', c2: '#3f3223', band: '#2a1e12' } } },
+  dorado:      { sleeve: '#7c7550', o: { body: '#7c7550', cananas: true, epaulets: '#d9b24a', hat: { shape: 'texana', c1: '#5a4a35', c2: '#4a3c2b', band: '#c9a23a', gold: true } } },
+  ametrallador:{ sleeve: '#3f4d6b', o: { body: '#3f4d6b', edge: '#1e252f', strap: '#c8b48a', pack: 'ametralladora', hat: { shape: 'quepi', c1: '#8a7f5a', c2: '#e8e4d6' } } },
+  alambrista:  { sleeve: '#76734a', o: { body: '#76734a', strap: '#4a3f2a', pack: 'alambre', hat: { shape: 'gorra', c1: '#6f6c45', c2: '#55532f' } } },
+  incendiario: { sleeve: '#9a8a6c', o: { body: '#9a8a6c', sash: '#b3201a', bandana: '#c0281f', pack: 'antorchas', hat: { shape: 'texana', c1: '#6a553b', c2: '#5a472f', band: '#c0281f' } } },
+  capitan:     { svg: SVG_CAPITAN, sleeve: '#7c7550', hat: { shape: 'texana', c1: '#55452f', c2: '#46382a' } },
+  jefe:        { sleeve: '#efe8d6', o: { body: '#efe8d6', edge: '#5d5446', cananas: true, epaulets: '#c9a23a', hat: { shape: 'charro', c1: '#e3d6b4', c2: '#d4c49c', trim: '#6b4a2a', band: '#3a2a1a' } } },
+  general:     { sleeve: '#7b7a52', o: { body: '#7b7a52', strap: '#4a3f2a', epaulets: '#d9b24a', hat: { shape: 'salacot', c1: '#b9ad7d', c2: '#a89c6c' } } },
+  cabecilla:   { sleeve: '#9b8c72', o: { body: '#9b8c72', sash: '#b3201a', cananas: true, bandana: '#c0281f', pack: 'bandera', hat: { shape: 'charro', c1: '#6a553b', c2: '#5a472f', trim: '#c0281f', band: '#c0281f' } } }
+};
+for (const [k, sk] of Object.entries(SKINS)) {
+  if (!sk.svg) sk.hat = sk.o.hat;
+  const svg = sk.svg || skinSVG(sk.o);
+  sk.img = new Image();
+  sk.flash = null; sk.tinted = {}; sk.ready = false;
+  sk.img.onload = () => {
     // Versión blanquecina del sprite para el destello al recibir un disparo
     const c = document.createElement('canvas');
     c.width = c.height = 128;
     const g = c.getContext('2d');
-    g.drawImage(s.img, 0, 0, 128, 128);
+    g.drawImage(sk.img, 0, 0, 128, 128);
     g.globalCompositeOperation = 'source-atop';
     g.fillStyle = 'rgba(255,225,225,0.85)';
     g.fillRect(0, 0, 128, 128);
-    s.flash = c;
-    s.ready = true;
+    sk.flash = c;
+    sk.ready = true;
   };
-  s.img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-  return s;
-});
+  sk.img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+const ZOMBIE_SIZE = 60;
 
 // ------------------------------------------------------------
 // Estado del juego
 // ------------------------------------------------------------
 const player = {
   x: 0, y: 0, angle: 0, speed: 240, radius: 16,
-  hp: 5, invuln: 0, regenDelay: 0, hitFlash: 0, kx: 0, ky: 0
+  hp: 5, invuln: 0, regenDelay: 0, hitFlash: 0, kx: 0, ky: 0,
+  slowT: 0, pullT: 0, pullFrom: null, inWire: false, vx: 0, vy: 0, burnT: 0.25
 };
 const keys = new Set();
 const mouse = { x: 0, y: 0, down: false };
@@ -304,13 +729,53 @@ let waveCleared = false;
 let wave = 0, kills = 0, wavePause = 0, gameTime = 0;
 let banner = null;            // aviso en pantalla: { title, sub, t, dur, color }
 
-// Tipos de zombi. cost = cuánto "presupuesto" de la oleada consume cada uno
+// Tipos de zombi. cost = cuánto "presupuesto" de la oleada consume cada uno.
+// reg = id de su nota en el Registro del Cuartel; ai = comportamiento especial.
 const ZTYPES = {
-  normal:   { r: 15, hp: 5,  speed: [55, 85],   scale: 1,    cost: 1,   knock: 1,   tint: null },
-  corredor: { r: 13, hp: 2,  speed: [125, 145], scale: 0.85, cost: 1.5, knock: 0.8, variant: 1, tint: 'rgba(170,25,25,0.38)' },
-  tanque:   { r: 21, hp: 14, speed: [36, 44],   scale: 1.4,  cost: 4,   knock: 1.5, variant: 0, tint: 'rgba(25,15,35,0.4)' },
-  coronel:  { r: 24, hp: 45, speed: [48, 52],   scale: 1.6,  cost: 0,   knock: 1.8, variant: 1, tint: 'rgba(150,110,20,0.32)', boss: true }
+  // --- base de cada facción ---
+  suriano:     { reg: 'revolucionario', faction: 'zapatistas',   skin: 'suriano',     r: 15, hp: 5, speed: [55, 85], scale: 1, cost: 1, knock: 1 },
+  federal:     { reg: 'federal',        faction: 'federales',    skin: 'federal',     r: 15, hp: 5, speed: [55, 85], scale: 1, cost: 1, knock: 1 },
+  villista:    { reg: 'villista',       faction: 'villistas',    skin: 'villista',    r: 15, hp: 5, speed: [62, 90], scale: 1, cost: 1, knock: 1 },
+  carrancista: { reg: 'carrancista',    faction: 'carrancistas', skin: 'carrancista', r: 15, hp: 6, speed: [55, 75], scale: 1, cost: 1.2, knock: 1 },
+  colorado:    { reg: 'colorado',       faction: 'colorados',    skin: 'colorado',    r: 15, hp: 4, speed: [72, 96], scale: 1, cost: 1, knock: 1 },
+  // --- especiales ---
+  desertor:    { reg: 'desertor',     faction: 'federales',    skin: 'federal',      r: 13, hp: 2, speed: [125, 145], scale: 0.85, cost: 1.5, knock: 0.8, tint: 'rgba(170,25,25,0.38)', fast: true },
+  liebre:      { reg: 'liebre',       faction: 'zapatistas',   skin: 'liebre',       r: 13, hp: 3, speed: [112, 128], scale: 0.88, cost: 1.5, knock: 0.7, ai: 'hitrun', fast: true },
+  rural:       { reg: 'rural',        faction: 'federales',    skin: 'rural',        r: 15, hp: 5, speed: [60, 75],   scale: 1,    cost: 2,   knock: 1,   ai: 'lasso' },
+  dinamitero:  { reg: 'dinamitero',   faction: 'villistas',    skin: 'dinamitero',   r: 15, hp: 4, speed: [50, 65],   scale: 1,    cost: 2.5, knock: 1,   ai: 'thrower', payload: 'dinamita', heavy: true },
+  dorado:      { reg: 'dorado',       faction: 'villistas',    skin: 'dorado',       r: 21, hp: 14, speed: [36, 44],  scale: 1.4,  cost: 4,   knock: 1.5, heavy: true },
+  ametrallador:{ reg: 'ametrallador', faction: 'federales',    skin: 'ametrallador', r: 15, hp: 6, speed: [40, 50],   scale: 1,    cost: 3,   knock: 1,   ai: 'shooter', heavy: true },
+  alambrista:  { reg: 'alambrista',   faction: 'carrancistas', skin: 'alambrista',   r: 15, hp: 5, speed: [50, 65],   scale: 1,    cost: 2.5, knock: 1,   ai: 'thrower', payload: 'alambre' },
+  incendiario: { reg: 'incendiario',  faction: 'colorados',    skin: 'incendiario',  r: 15, hp: 4, speed: [60, 75],   scale: 1,    cost: 2.5, knock: 1,   ai: 'thrower', payload: 'antorcha', torch: true },
+  // --- jefes, uno por facción ---
+  coronel:   { reg: 'coronel',     faction: 'federales',    skin: 'federal',  r: 24, hp: 45, speed: [48, 52], scale: 1.6,  knock: 1.8, boss: true, ai: 'coronel', name: 'El Coronel', pace: 'Lenta; embiste', tint: 'rgba(150,110,20,0.32)' },
+  capitan:   { reg: 'capitan',     faction: 'villistas',    skin: 'capitan',  r: 26, hp: 60, speed: [55, 60], scale: 1.9,  knock: 2,   boss: true, ai: 'jinete',  name: 'El Capitán de Dorados', pace: 'Al galope', noArms: true },
+  jefe:      { reg: 'jefesuriano', faction: 'zapatistas',   skin: 'jefe',     r: 22, hp: 40, speed: [70, 76], scale: 1.5,  knock: 1.6, boss: true, ai: 'sombra',  name: 'El Jefe Suriano', pace: 'Se esfuma' },
+  general:   { reg: 'general',     faction: 'carrancistas', skin: 'general',  r: 23, hp: 55, speed: [42, 46], scale: 1.55, knock: 1.6, boss: true, ai: 'general', name: 'El General Constitucionalista', pace: 'Lenta' },
+  cabecilla: { reg: 'cabecilla',   faction: 'colorados',    skin: 'cabecilla', r: 23, hp: 50, speed: [55, 60], scale: 1.55, knock: 1.7, boss: true, ai: 'bandera', name: 'El Cabecilla Colorado', pace: 'Normal' }
 };
+
+// Facciones: su tipo base y el aviso cuando protagonizan una oleada
+const FACTIONS = {
+  federales:    { nombre: 'Federales',    grito: 'Huele a pólvora vieja: vuelven los federales' },
+  zapatistas:   { nombre: 'Zapatistas',   grito: 'Bajan del sur, de manta y huarache' },
+  villistas:    { nombre: 'Villistas',    grito: 'Retumban cascos del norte: los villistas' },
+  carrancistas: { nombre: 'Carrancistas', grito: 'Marchan en orden: los carrancistas' },
+  colorados:    { nombre: 'Colorados',    grito: 'Ondea la bandera roja: los colorados' }
+};
+
+// Desde qué oleada aparece cada tipo y con qué peso relativo
+const ROSTER = [
+  { t: 'federal',     from: 1, base: true }, { t: 'suriano', from: 1, base: true },
+  { t: 'villista',    from: 2, base: true }, { t: 'carrancista', from: 4, base: true },
+  { t: 'colorado',    from: 6, base: true },
+  { t: 'desertor',    from: 3, w: 1 },   { t: 'liebre',      from: 3, w: 1 },
+  { t: 'rural',       from: 4, w: 0.8 }, { t: 'dinamitero',  from: 5, w: 0.7 },
+  { t: 'dorado',      from: 6, w: 0.5 }, { t: 'ametrallador', from: 7, w: 0.6 },
+  { t: 'alambrista',  from: 8, w: 0.6 }, { t: 'incendiario', from: 9, w: 0.7 }
+];
+// Un jefe cada 5 oleadas, rotando facciones
+const BOSS_ORDER = ['coronel', 'capitan', 'jefe', 'general', 'cabecilla'];
 
 // Embestida del Coronel
 const CHARGE_PREP = 0.7;      // aviso antes de embestir
@@ -338,7 +803,7 @@ const DIFF = {
   maxPressure: 1.6      // ...hasta +60 %
 };
 const EVENT_INFO = {
-  jefe:      { title: 'El Coronel', color: '#ffd27a' },
+  jefe:      { title: 'Jefe', color: '#ffd27a' },
   eclipse:   { title: 'Eclipse',    color: '#ff8a7a' },
   estampida: { title: 'Estampida',  color: '#ff8a7a' },
   asedio:    { title: 'Asedio',     color: '#ff8a7a' },
@@ -366,7 +831,9 @@ const INVULN_TIME = 0.6;      // invulnerabilidad breve tras un golpe
 const KNOCKBACK = 280;        // fuerza del empujón
 const MAX_KNOCKBACK = 340;    // tope aunque se acumulen empujones
 
-let state = 'playing';        // 'playing' | 'dead'
+let state = 'menu';           // 'menu' | 'playing' | 'paused' | 'dead'
+let redrawWhilePaused = false;
+let playerStepT = 0; // vuelve a pintar el cuadro congelado si cambia el tamaño
 let survivalTime = 0, shake = 0, hurtVignette = 0, deathTimer = 0;
 
 const DEATH_PHRASES = [
@@ -396,6 +863,719 @@ function muzzleWorld() {
     y: player.y + MUZZLE.x * s + MUZZLE.y * c
   };
 }
+
+// ============================================================
+// SONIDO
+// Todo se sintetiza en el momento con la Web Audio API del navegador:
+// no hay archivos de audio ni librerías.
+//
+// Para que no se vuelva insoportable cuando la pantalla se llena:
+//   1. Cada tipo de sonido tiene un máximo de voces simultáneas y una
+//      separación mínima entre dos iguales; lo que pasa del límite no suena.
+//   2. Los pasos de los zombis no son un sonido por zombi: son una sola
+//      "capa de multitud" cuyo volumen crece con el logaritmo de cuántos
+//      hay cerca (10 zombis no suenan 10 veces más fuerte).
+//   3. Los gemidos tienen un ritmo total limitado: con más zombis gimen
+//      un poco más seguido, pero nunca más de uno por segundo, y se
+//      elige de preferencia a los que están cerca.
+//   7. Todo lo de los zombis pasa por su propio canal (ZOMBIE_VOLUME),
+//      que además baja un poco cuando hay muchos en pantalla.
+//   4. Lo lejano suena más bajo, más apagado y del lado de donde viene.
+//   5. Al recibir un golpe o al morir, el resto de los efectos baja un
+//      momento para que se escuche lo importante.
+//   6. Un compresor al final evita que la suma de todo sature la salida.
+// ============================================================
+const Sfx = (() => {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  let ac = null, out, comp, duckNode, sfxBus, stingBus, zombieBus, verb, crowd = null, noise = null, distCurve = null;
+  let muted = false, paused = false;
+  try { muted = localStorage.getItem('luzdeluna.mudo') === '1'; } catch (e) { /* sin almacenamiento */ }
+  const VOLUME = 0.8;
+  // Volumen de todo lo que hacen los zombis (gemidos, pasos, muertes).
+  // Es el número a mover si se quieren más o menos presentes.
+  const ZOMBIE_VOLUME = 0.5;
+
+  // Voces simultáneas por tipo y separación mínima (segundos) entre dos iguales
+  const LIMIT = { disparo: 4, impacto: 5, pared: 3, paso: 2, arrastre: 1, gemido: 2, muerte: 2, zarpazo: 2, golpe: 1, rugido: 1, toque: 2,
+                  balaEnemiga: 4, mecha: 2, explosion: 2, lanzar: 2, lazo: 2, fuego: 2, chispa: 2, alambre: 2, raspa: 1, bandera: 2, madera: 3, galope: 2, relincho: 1, corneta: 1, sombra: 1, cerrojo: 2 };
+  const GAP   = { disparo: 0.05, impacto: 0.025, pared: 0.06, paso: 0.1, arrastre: 0.2, gemido: 0.6, muerte: 0.12, zarpazo: 0.1, golpe: 0.2, rugido: 0.4, toque: 0,
+                  balaEnemiga: 0.06, mecha: 0.2, explosion: 0.05, lanzar: 0.15, lazo: 0.3, fuego: 0.3, chispa: 0.08, alambre: 0.2, raspa: 0.6, bandera: 0.3, madera: 0.04, galope: 0.06, relincho: 1, corneta: 1, sombra: 0.5, cerrojo: 0.3 };
+  const active = {}, lastAt = {};
+  const stats = { played: 0, dropped: 0, peak: {} };
+
+  // Voz de cada enemigo: tono base y dos formantes (la "vocal" del gemido)
+  const VOICES = {
+    revolucionario: { f0: 92,  f1: 520, f2: 880 },
+    federal:        { f0: 104, f1: 640, f2: 1080 },
+    desertor:       { f0: 150, f1: 720, f2: 1350 },
+    dorado:         { f0: 60,  f1: 420, f2: 760 },
+    coronel:        { f0: 48,  f1: 360, f2: 680, dist: true },
+    villista:       { f0: 98,  f1: 560, f2: 950 },
+    carrancista:    { f0: 100, f1: 600, f2: 1000 },
+    colorado:       { f0: 112, f1: 660, f2: 1160 },
+    liebre:         { f0: 160, f1: 760, f2: 1420 },
+    rural:          { f0: 88,  f1: 500, f2: 850 },
+    dinamitero:     { f0: 84,  f1: 480, f2: 820 },
+    ametrallador:   { f0: 96,  f1: 600, f2: 1050 },
+    alambrista:     { f0: 102, f1: 580, f2: 980 },
+    incendiario:    { f0: 116, f1: 700, f2: 1250 },
+    capitan:        { f0: 58,  f1: 420, f2: 760, dist: true },
+    jefesuriano:    { f0: 70,  f1: 450, f2: 800 },
+    general:        { f0: 54,  f1: 400, f2: 720, dist: true },
+    cabecilla:      { f0: 62,  f1: 430, f2: 780, dist: true }
+  };
+
+  function init() {
+    if (!AC) return;
+    paused = false;
+    if (ac) {
+      if (ac.state === 'suspended') ac.resume();
+      duckNode.gain.cancelScheduledValues(ac.currentTime);
+      duckNode.gain.setTargetAtTime(1, ac.currentTime, 0.05);
+      return;
+    }
+    ac = new AC();
+
+    comp = ac.createDynamicsCompressor();
+    comp.threshold.value = -16; comp.knee.value = 10; comp.ratio.value = 8;
+    comp.attack.value = 0.003; comp.release.value = 0.25;
+    out = ac.createGain();
+    out.gain.value = muted ? 0 : VOLUME;
+    comp.connect(out);
+    out.connect(ac.destination);
+
+    // Eco del salón: respuesta al impulso sintética (ruido que se apaga)
+    verb = ac.createConvolver();
+    const len = Math.floor(ac.sampleRate * 1.6);
+    const ir = ac.createBuffer(2, len, ac.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = ir.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    }
+    verb.buffer = ir;
+    const verbLevel = ac.createGain();
+    verbLevel.gain.value = 0.22;
+    verb.connect(verbLevel).connect(comp);
+
+    duckNode = ac.createGain();
+    duckNode.connect(comp);
+    sfxBus = ac.createGain();
+    sfxBus.gain.value = 0.9;
+    sfxBus.connect(duckNode);
+    const sfxSend = ac.createGain(); sfxSend.gain.value = 0.25;
+    sfxBus.connect(sfxSend).connect(verb);
+
+    zombieBus = ac.createGain();
+    zombieBus.gain.value = ZOMBIE_VOLUME;
+    zombieBus.connect(sfxBus);
+
+    stingBus = ac.createGain();
+    stingBus.gain.value = 0.7;
+    stingBus.connect(comp);
+    const stingSend = ac.createGain(); stingSend.gain.value = 0.8;
+    stingBus.connect(stingSend).connect(verb);
+
+    // Ruido blanco reutilizable
+    noise = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+    const nd = noise.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+
+    distCurve = new Float32Array(1024);
+    for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; distCurve[i] = Math.tanh(x * 6); }
+
+    buildCrowd();
+  }
+
+  // ---------- utilidades ----------
+  function can(cat) {
+    if (!ac || muted || paused) return false;
+    const t = ac.currentTime;
+    const list = (active[cat] = (active[cat] || []).filter(end => end > t));
+    if (list.length >= LIMIT[cat] || t - (lastAt[cat] ?? -1) < GAP[cat]) { stats.dropped++; return false; }
+    return true;
+  }
+  function claim(cat, dur) {
+    const t = ac.currentTime;
+    active[cat].push(t + dur);
+    lastAt[cat] = t;
+    stats.played++;
+    stats.peak[cat] = Math.max(stats.peak[cat] || 0, active[cat].length);
+  }
+  function filt(type, freq, q = 1) {
+    const f = ac.createBiquadFilter();
+    f.type = type; f.frequency.value = freq; f.Q.value = q;
+    return f;
+  }
+  function env(g, t, attack, peak, decay) {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+  }
+  function noiseSrc(t, dur, rate = 1) {
+    const s = ac.createBufferSource();
+    s.buffer = noise;
+    s.playbackRate.value = rate;
+    s.start(t, Math.random() * 1.4, dur + 0.05);
+    return s;
+  }
+  function osc(type, freq, t, dur) {
+    const o = ac.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    o.start(t);
+    o.stop(t + dur + 0.05);
+    return o;
+  }
+  // Posición respecto al jugador: volumen, paneo y qué tan apagado se oye
+  function place(x, y) {
+    const dx = x - player.x, dy = y - player.y;
+    const d = Math.hypot(dx, dy);
+    return {
+      g: 1 / (1 + d / 260),
+      pan: clamp(dx / (W * 0.5), -1, 1) * 0.75,
+      cutoff: 9000 * Math.pow(0.18, Math.min(1, d / 700))
+    };
+  }
+  // Entrada de una cadena con filtro de distancia, volumen y paneo
+  function spot(pos, dest = sfxBus) {
+    const lp = filt('lowpass', pos ? pos.cutoff : 14000, 0.7);
+    const g = ac.createGain();
+    g.gain.value = pos ? pos.g : 1;
+    lp.connect(g);
+    if (ac.createStereoPanner) {
+      const p = ac.createStereoPanner();
+      p.pan.value = pos ? pos.pan : 0;
+      g.connect(p).connect(dest);
+    } else g.connect(dest);
+    return lp;
+  }
+  function duck(level, dur) {
+    const t = ac.currentTime;
+    duckNode.gain.cancelScheduledValues(t);
+    duckNode.gain.setTargetAtTime(level, t, 0.02);
+    duckNode.gain.setTargetAtTime(1, t + dur, 0.3);
+  }
+
+  // Gemido con formantes: un tono áspero filtrado como si fuera una vocal
+  function voice(t, v, dur, pitch, slide, peak, dest) {
+    const f = v.f0 * pitch * (0.92 + Math.random() * 0.16);
+    const o = osc('sawtooth', f, t, dur);
+    o.frequency.linearRampToValueAtTime(f * slide, t + dur);
+    const vib = osc('sine', 4 + Math.random() * 3, t, dur);
+    const vd = ac.createGain(); vd.gain.value = f * 0.05;
+    vib.connect(vd).connect(o.frequency);
+    let src = o;
+    if (v.dist) {
+      const ws = ac.createWaveShaper();
+      ws.curve = distCurve;
+      o.connect(ws);
+      src = ws;
+    }
+    const a = filt('bandpass', v.f1, 4), b = filt('bandpass', v.f2, 5);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + dur * 0.18);
+    g.gain.setValueAtTime(peak * 0.85, t + dur * 0.6);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(a); src.connect(b);
+    a.connect(g); b.connect(g);
+    g.connect(dest);
+    // aliento ronco
+    const n = noiseSrc(t, dur, 0.7);
+    const nb = filt('bandpass', v.f1 * 1.5, 1.2);
+    const ng = ac.createGain();
+    env(ng, t, dur * 0.2, peak * 0.25, dur * 0.8);
+    n.connect(nb).connect(ng).connect(dest);
+  }
+
+  // ---------- capa de multitud (pasos arrastrados de todos los zombis) ----------
+  function buildCrowd() {
+    const src = ac.createBufferSource();
+    src.buffer = noise;
+    src.loop = true;
+    const bp = filt('bandpass', 300, 0.9);
+    const lp = filt('lowpass', 900, 0.7);
+    const am = ac.createGain();
+    am.gain.value = 0.55;
+    // dos ritmos desfasados = muchos pies que no van al paso
+    const l1 = ac.createOscillator(); l1.frequency.value = 1.55;
+    const d1 = ac.createGain(); d1.gain.value = 0.35;
+    const l2 = ac.createOscillator(); l2.frequency.value = 2.2;
+    const d2 = ac.createGain(); d2.gain.value = 0.2;
+    l1.connect(d1).connect(am.gain);
+    l2.connect(d2).connect(am.gain);
+    const level = ac.createGain();
+    level.gain.value = 0;
+    src.connect(bp).connect(lp).connect(am).connect(level).connect(zombieBus);
+    src.start(); l1.start(); l2.start();
+    crowd = { level };
+  }
+
+  // ---------- efectos ----------
+  function shot() {
+    if (!can('disparo')) return;
+    claim('disparo', 0.3);
+    const t = ac.currentTime, dest = spot(null);
+    const n = noiseSrc(t, 0.2, 0.9 + Math.random() * 0.2);
+    const bp = filt('bandpass', 1500, 0.6), g = ac.createGain();
+    env(g, t, 0.002, 0.55, 0.13);
+    n.connect(bp).connect(g).connect(dest);
+    const o = osc('sine', 150, t, 0.14);
+    o.frequency.exponentialRampToValueAtTime(45, t + 0.1);
+    const og = ac.createGain();
+    env(og, t, 0.002, 0.6, 0.12);
+    o.connect(og).connect(dest);
+    const n2 = noiseSrc(t + 0.015, 0.3, 0.6), lp = filt('lowpass', 700, 0.5), g2 = ac.createGain();
+    env(g2, t + 0.015, 0.01, 0.12, 0.28);
+    n2.connect(lp).connect(g2).connect(dest);
+  }
+
+  function hitFlesh(x, y) {
+    if (!can('impacto')) return;
+    claim('impacto', 0.12);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.1, 0.8), lp = filt('lowpass', 650, 1), g = ac.createGain();
+    env(g, t, 0.002, 0.5, 0.08);
+    n.connect(lp).connect(g).connect(dest);
+    const o = osc('sine', 110, t, 0.09);
+    o.frequency.exponentialRampToValueAtTime(45, t + 0.08);
+    const og = ac.createGain();
+    env(og, t, 0.002, 0.4, 0.08);
+    o.connect(og).connect(dest);
+  }
+
+  function ricochet(x, y) {
+    if (!can('pared')) return;
+    claim('pared', 0.22);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const f = 2300 + Math.random() * 900;
+    const o = osc('sine', f, t, 0.2);
+    o.frequency.exponentialRampToValueAtTime(f * 0.65, t + 0.18);
+    const og = ac.createGain();
+    env(og, t, 0.002, 0.1, 0.18);
+    o.connect(og).connect(dest);
+    const n = noiseSrc(t, 0.03), hp = filt('highpass', 2500), g = ac.createGain();
+    env(g, t, 0.001, 0.25, 0.03);
+    n.connect(hp).connect(g).connect(dest);
+  }
+
+  let stepSide = 1;
+  function step() {
+    if (!can('paso')) return;
+    claim('paso', 0.12);
+    stepSide = -stepSide;
+    const t = ac.currentTime;
+    const dest = spot({ g: 1, pan: stepSide * 0.12, cutoff: 9000 });
+    const n = noiseSrc(t, 0.08, 0.7 + Math.random() * 0.2), lp = filt('lowpass', 420, 1.2), g = ac.createGain();
+    env(g, t, 0.004, 0.22, 0.07);
+    n.connect(lp).connect(g).connect(dest);
+    const o = osc('sine', 75, t, 0.07);
+    const og = ac.createGain();
+    env(og, t, 0.003, 0.18, 0.06);
+    o.connect(og).connect(dest);
+  }
+
+  function shuffle(z) {
+    if (!can('arrastre')) return;
+    claim('arrastre', 0.3);
+    const t = ac.currentTime, dest = spot(place(z.x, z.y), zombieBus);
+    const n = noiseSrc(t, 0.28, 0.6), bp = filt('bandpass', 480 / z.T.scale, 1.1), g = ac.createGain();
+    env(g, t, 0.05, 0.16 * z.T.scale, 0.22);
+    n.connect(bp).connect(g).connect(dest);
+  }
+
+  function groan(z) {
+    if (!can('gemido')) return;
+    const v = VOICES[z.reg] || VOICES.revolucionario;
+    const dur = (z.T.fast ? 0.45 : 0.75 + Math.random() * 0.5) * (z.T.scale > 1.2 ? 1.3 : 1);
+    claim('gemido', dur);
+    const t = ac.currentTime;
+    voice(t, v, dur, 1, 0.8 + Math.random() * 0.15, 0.6, spot(place(z.x, z.y), zombieBus));
+  }
+
+  function zombieDeath(z) {
+    if (!can('muerte')) return;
+    claim('muerte', 0.7);
+    const t = ac.currentTime, dest = spot(place(z.x, z.y), zombieBus);
+    const v = VOICES[z.reg] || VOICES.revolucionario;
+    voice(t, v, 0.6 * Math.max(1, z.T.scale), 1.45, 0.45, 0.9, dest);
+    const n = noiseSrc(t, 0.2, 0.5), lp = filt('lowpass', 800), g = ac.createGain();
+    env(g, t, 0.004, 0.45, 0.18);
+    n.connect(lp).connect(g).connect(dest);
+  }
+
+  function swipe(z) {
+    if (!can('zarpazo')) return;
+    claim('zarpazo', 0.16);
+    const t = ac.currentTime, dest = spot(place(z.x, z.y));
+    const n = noiseSrc(t, 0.14), bp = filt('bandpass', 500, 1.6), g = ac.createGain();
+    bp.frequency.exponentialRampToValueAtTime(2600, t + 0.12);
+    env(g, t, 0.03, 1.1, 0.1);
+    n.connect(bp).connect(g).connect(dest);
+  }
+
+  function playerHurt() {
+    if (!can('golpe')) return;
+    claim('golpe', 0.3);
+    const t = ac.currentTime, dest = spot(null);
+    voice(t, { f0: 150, f1: 600, f2: 1000 }, 0.22, 1, 0.75, 1.0, dest);
+    const o = osc('sine', 95, t, 0.16);
+    o.frequency.exponentialRampToValueAtTime(40, t + 0.15);
+    const og = ac.createGain();
+    env(og, t, 0.002, 0.7, 0.15);
+    o.connect(og).connect(dest);
+    duck(0.45, 0.35);
+  }
+
+  function roar(z) {
+    if (!can('rugido')) return;
+    claim('rugido', 0.9);
+    const t = ac.currentTime;
+    voice(t, VOICES.coronel, 0.85, 1.25, 0.7, 1.0, spot(place(z.x, z.y)));
+  }
+
+  // ---------- toques de corneta, tambor y campana ----------
+  function bugleNote(t, f, dur, peak, dest) {
+    const o1 = osc('sawtooth', f, t, dur), o2 = osc('square', f * 1.003, t, dur);
+    const vib = osc('sine', 5.5, t, dur), vd = ac.createGain();
+    vd.gain.setValueAtTime(0, t);
+    vd.gain.linearRampToValueAtTime(f * 0.006, t + Math.min(0.15, dur));
+    vib.connect(vd);
+    vd.connect(o1.frequency); vd.connect(o2.frequency);
+    const lp = filt('lowpass', 900, 1.2);
+    lp.frequency.setValueAtTime(900, t);
+    lp.frequency.linearRampToValueAtTime(2600, t + 0.04);   // ataque brillante, como metal
+    lp.frequency.setTargetAtTime(1800, t + 0.05, 0.1);
+    const mix = ac.createGain(); mix.gain.value = 0.5;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + 0.03);
+    g.gain.setValueAtTime(peak, t + Math.max(0.03, dur - 0.06));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.04);
+    o1.connect(mix); o2.connect(mix);
+    mix.connect(lp).connect(g).connect(dest);
+  }
+  function bugle(t, notes, peak, dest = stingBus) {
+    for (const [f, d] of notes) { bugleNote(t, f, d, peak, dest); t += d + 0.04; }
+    return t;
+  }
+  function drum(t, strength = 1) {
+    const o = osc('sine', 75, t, 0.4);
+    o.frequency.exponentialRampToValueAtTime(42, t + 0.3);
+    const og = ac.createGain();
+    env(og, t, 0.003, 0.7 * strength, 0.35);
+    o.connect(og).connect(stingBus);
+    const n = noiseSrc(t, 0.15), lp = filt('lowpass', 260), g = ac.createGain();
+    env(g, t, 0.002, 0.5 * strength, 0.12);
+    n.connect(lp).connect(g).connect(stingBus);
+  }
+  function bell(t, f, peak, decay) {
+    [[1, 1], [2, 0.6], [2.4, 0.45], [3, 0.3], [4.2, 0.22], [5.4, 0.12]].forEach(([m, a], i) => {
+      const o = osc('sine', f * m, t, decay);
+      const g = ac.createGain();
+      env(g, t, 0.004, peak * a, decay / (1 + i * 0.6));
+      o.connect(g).connect(stingBus);
+    });
+  }
+
+  const CALLS = {
+    normal:  [[392, 0.13], [523, 0.13], [659, 0.45]],
+    evento:  [[392, 0.11], [392, 0.11], [523, 0.11], [659, 0.24], [523, 0.11], [784, 0.55]],
+    jefe:    [[196, 0.32], [262, 0.32], [196, 0.18], [262, 0.18], [330, 0.8]]
+  };
+  function waveStart(event) {
+    if (!can('toque')) return;
+    claim('toque', 2.5);
+    const t = ac.currentTime + 0.05;
+    if (event === 'respiro') { bell(t, 330, 0.25, 3); return; }
+    if (event === 'jefe') {
+      for (let i = 0; i < 6; i++) drum(t + i * (0.22 - i * 0.02), 0.5 + i * 0.1);
+      bugle(t + 1.1, CALLS.jefe, 0.3);
+      return;
+    }
+    if (event === 'eclipse') bell(t, 98, 0.3, 4);   // campanada grave mientras se oculta la luna
+    bugle(t, event ? CALLS.evento : CALLS.normal, 0.28);
+    drum(t, 0.6);
+  }
+
+  function playerDeath() {
+    if (!ac || muted || paused) return;
+    const t = ac.currentTime;
+    crowd.level.gain.setTargetAtTime(0, t, 0.6);
+    duck(0.2, 3);
+    const o = osc('sine', 60, t, 1.8);
+    o.frequency.exponentialRampToValueAtTime(26, t + 1.6);
+    const og = ac.createGain();
+    env(og, t, 0.005, 0.9, 1.7);
+    o.connect(og).connect(stingBus);
+    const n = noiseSrc(t, 0.6, 0.4), lp = filt('lowpass', 150), g = ac.createGain();
+    env(g, t, 0.005, 0.6, 0.55);
+    n.connect(lp).connect(g).connect(stingBus);
+    bell(t + 0.35, 147, 0.4, 4.5);
+    // Toque de silencio, lento y apagado
+    const muffle = filt('lowpass', 1400, 0.7);
+    muffle.connect(stingBus);
+    bugle(t + 1.1, [[523, 0.55], [392, 0.55], [262, 1.3]], 0.22, muffle);
+  }
+
+
+  // ---------- armas y artimañas de las facciones ----------
+  function enemyShot(x, y) {
+    if (!can('balaEnemiga')) return;
+    claim('balaEnemiga', 0.25);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.12, 1.1), bp = filt('bandpass', 2400, 0.8), g = ac.createGain();
+    env(g, t, 0.001, 0.4, 0.09);
+    n.connect(bp).connect(g).connect(dest);
+    const o = osc('sine', 220, t, 0.08);
+    o.frequency.exponentialRampToValueAtTime(70, t + 0.07);
+    const og = ac.createGain();
+    env(og, t, 0.001, 0.35, 0.07);
+    o.connect(og).connect(dest);
+  }
+  function cock(x, y) {   // cerrojo de la ametralladora antes de la ráfaga
+    if (!can('cerrojo')) return;
+    claim('cerrojo', 0.2);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    [0, 0.09].forEach((d, i) => {
+      const n = noiseSrc(t + d, 0.03), hp = filt('bandpass', 3200 - i * 900, 3), g = ac.createGain();
+      env(g, t + d, 0.001, 0.35, 0.03);
+      n.connect(hp).connect(g).connect(dest);
+    });
+  }
+  function toss(x, y) {
+    if (!can('lanzar')) return;
+    claim('lanzar', 0.2);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.2), bp = filt('bandpass', 900, 1.2), g = ac.createGain();
+    bp.frequency.exponentialRampToValueAtTime(300, t + 0.18);
+    env(g, t, 0.02, 0.4, 0.16);
+    n.connect(bp).connect(g).connect(dest);
+  }
+  function fuse(x, y, dur) {
+    if (!can('mecha')) return;
+    claim('mecha', dur);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, dur, 1.3), hp = filt('highpass', 4200, 0.7), g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.16, t + 0.05);
+    g.gain.setValueAtTime(0.2, t + dur - 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    n.connect(hp).connect(g).connect(dest);
+  }
+  function explosion(x, y) {
+    if (!can('explosion')) return;
+    claim('explosion', 1.3);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 1.2, 0.6), lp = filt('lowpass', 2400, 0.7), g = ac.createGain();
+    lp.frequency.exponentialRampToValueAtTime(120, t + 1.1);
+    env(g, t, 0.004, 1.0, 1.1);
+    n.connect(lp).connect(g).connect(dest);
+    const o = osc('sine', 75, t, 0.9);
+    o.frequency.exponentialRampToValueAtTime(28, t + 0.8);
+    const og = ac.createGain();
+    env(og, t, 0.003, 1.0, 0.85);
+    o.connect(og).connect(dest);
+    duck(0.55, 0.4);
+  }
+  function dud(x, y) {
+    if (!can('mecha')) return;
+    claim('mecha', 0.5);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.45, 0.8), bp = filt('bandpass', 2600, 1.5), g = ac.createGain();
+    bp.frequency.exponentialRampToValueAtTime(500, t + 0.4);
+    env(g, t, 0.01, 0.3, 0.42);
+    n.connect(bp).connect(g).connect(dest);
+  }
+  function fireStart(x, y) {
+    if (!can('fuego')) return;
+    claim('fuego', 0.5);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.5, 0.7), lp = filt('lowpass', 300, 0.8), g = ac.createGain();
+    lp.frequency.exponentialRampToValueAtTime(1800, t + 0.3);
+    env(g, t, 0.06, 0.55, 0.42);
+    n.connect(lp).connect(g).connect(dest);
+  }
+  function crackle(x, y) {
+    if (!can('chispa')) return;
+    claim('chispa', 0.05);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.025, 1.5), bp = filt('bandpass', 1500 + Math.random() * 2000, 2), g = ac.createGain();
+    env(g, t, 0.001, 0.22, 0.02);
+    n.connect(bp).connect(g).connect(dest);
+  }
+  function wire(x, y) {
+    if (!can('alambre')) return;
+    claim('alambre', 0.35);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    [0, 0.07, 0.15].forEach(d => {
+      const o = osc('triangle', 2600 + Math.random() * 1400, t + d, 0.12);
+      const g = ac.createGain();
+      env(g, t + d, 0.001, 0.12, 0.1);
+      o.connect(g).connect(dest);
+    });
+  }
+  function snag() {
+    if (!can('raspa')) return;
+    claim('raspa', 0.3);
+    const t = ac.currentTime, dest = spot(null);
+    const n = noiseSrc(t, 0.25, 1.2), bp = filt('bandpass', 3000, 2), g = ac.createGain();
+    env(g, t, 0.01, 0.25, 0.22);
+    n.connect(bp).connect(g).connect(dest);
+  }
+  function lasso(x, y) {
+    if (!can('lazo')) return;
+    claim('lazo', 0.5);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.45), bp = filt('bandpass', 700, 3), g = ac.createGain();
+    const lfo = osc('sine', 9, t, 0.45), ld = ac.createGain();
+    ld.gain.value = 400;
+    lfo.connect(ld).connect(bp.frequency);
+    env(g, t, 0.05, 1.5, 0.38);
+    n.connect(bp).connect(g).connect(dest);
+  }
+  function lassoHit() {
+    if (!can('lazo')) return;
+    claim('lazo', 0.2);
+    const t = ac.currentTime, dest = spot(null);
+    const n = noiseSrc(t, 0.05), hp = filt('highpass', 2000), g = ac.createGain();
+    env(g, t, 0.001, 0.4, 0.05);
+    n.connect(hp).connect(g).connect(dest);
+    const o = osc('sine', 120, t, 0.12);
+    const og = ac.createGain();
+    env(og, t, 0.002, 0.4, 0.1);
+    o.connect(og).connect(dest);
+  }
+  function flagPlant(x, y) {
+    if (!can('bandera')) return;
+    claim('bandera', 0.4);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const o = osc('sine', 90, t, 0.15);
+    o.frequency.exponentialRampToValueAtTime(50, t + 0.12);
+    const og = ac.createGain();
+    env(og, t, 0.002, 0.5, 0.12);
+    o.connect(og).connect(dest);
+    const n = noiseSrc(t + 0.05, 0.3, 0.5), bp = filt('bandpass', 700, 1), g = ac.createGain();
+    const lfo = osc('sine', 14, t, 0.35), ld = ac.createGain();
+    ld.gain.value = 0.12;
+    lfo.connect(ld).connect(g.gain);
+    env(g, t + 0.05, 0.03, 0.2, 0.25);
+    n.connect(bp).connect(g).connect(dest);
+  }
+  function hitWood(x, y) {
+    if (!can('madera')) return;
+    claim('madera', 0.08);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.05), bp = filt('bandpass', 1200, 2.5), g = ac.createGain();
+    env(g, t, 0.001, 0.4, 0.05);
+    n.connect(bp).connect(g).connect(dest);
+  }
+  function flagBreak(x, y) {
+    if (!can('madera')) return;
+    claim('madera', 0.3);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.25, 0.7), bp = filt('bandpass', 900, 1.2), g = ac.createGain();
+    env(g, t, 0.002, 0.6, 0.22);
+    n.connect(bp).connect(g).connect(dest);
+  }
+  function gallop(x, y) {
+    if (!can('galope')) return;
+    claim('galope', 0.1);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const o = osc('sine', 85 + Math.random() * 20, t, 0.08);
+    o.frequency.exponentialRampToValueAtTime(45, t + 0.07);
+    const og = ac.createGain();
+    env(og, t, 0.002, 0.45, 0.07);
+    o.connect(og).connect(dest);
+    const n = noiseSrc(t, 0.05, 0.6), lp = filt('lowpass', 600), g = ac.createGain();
+    env(g, t, 0.001, 0.3, 0.05);
+    n.connect(lp).connect(g).connect(dest);
+  }
+  function neigh(x, y) {
+    if (!can('relincho')) return;
+    claim('relincho', 1);
+    const t = ac.currentTime, dest = spot(place(x, y), zombieBus);
+    const o = osc('sawtooth', 480, t, 0.9);
+    o.frequency.linearRampToValueAtTime(950, t + 0.15);
+    o.frequency.linearRampToValueAtTime(700, t + 0.5);
+    o.frequency.linearRampToValueAtTime(380, t + 0.88);
+    const vib = osc('sine', 11, t, 0.9), vd = ac.createGain();
+    vd.gain.value = 45;
+    vib.connect(vd).connect(o.frequency);
+    const a = filt('bandpass', 1300, 3), b = filt('bandpass', 2600, 4), g = ac.createGain();
+    env(g, t, 0.06, 1.2, 0.82);
+    o.connect(a); o.connect(b); a.connect(g); b.connect(g);
+    g.connect(dest);
+  }
+  function bugleWorld(x, y) {
+    if (!can('corneta')) return;
+    claim('corneta', 1.2);
+    const dest = spot(place(x, y));
+    bugle(ac.currentTime, [[523, 0.12], [659, 0.12], [784, 0.12], [1047, 0.4]], 0.32, dest);
+  }
+  function vanish(x, y) {
+    if (!can('sombra')) return;
+    claim('sombra', 0.6);
+    const t = ac.currentTime, dest = spot(place(x, y), zombieBus);
+    const n = noiseSrc(t, 0.55, 0.6), bp = filt('bandpass', 1800, 2), g = ac.createGain();
+    bp.frequency.exponentialRampToValueAtTime(200, t + 0.5);
+    env(g, t, 0.15, 0.6, 0.38);
+    n.connect(bp).connect(g).connect(dest);
+  }
+
+  // ---------- se llama en cada cuadro ----------
+  let groanTimer = 1.5;
+  function update(dt, zs) {
+    if (!ac || paused) return;
+    // Pasos de la multitud: volumen según cuántos hay y qué tan cerca están
+    let near = 0;
+    for (const z of zs) near += z.T.scale / (1 + Math.hypot(z.x - player.x, z.y - player.y) / 220);
+    let target = Math.min(0.12, 0.045 * Math.log2(1 + near));
+    if (state === 'dead') target *= 0.4;
+    crowd.level.gain.setTargetAtTime(target, ac.currentTime, 0.4);
+    zombieBus.gain.setTargetAtTime(ZOMBIE_VOLUME / (1 + Math.max(0, zs.length - 4) * 0.03), ac.currentTime, 0.5);
+    if (!zs.length) return;
+
+    // Arrastre individual solo para los dos más cercanos, si están cerca
+    const sorted = zs.map(z => ({ z, d: Math.hypot(z.x - player.x, z.y - player.y) })).sort((a, b) => a.d - b.d);
+    for (const { z, d } of sorted.slice(0, 1)) {
+      if (d > 180) break;
+      z.stepT = (z.stepT ?? Math.random() * 0.5) - dt;
+      if (z.stepT <= 0) { z.stepT = 55 / z.speed + Math.random() * 0.15; shuffle(z); }
+    }
+
+    // Gemidos: más zombis = un poco más seguido, con tope (~2.5 por segundo)
+    groanTimer -= dt;
+    if (groanTimer <= 0) {
+      groanTimer = clamp(2.8 / Math.pow(zs.length, 0.35), 1.0, 3.0) * (0.6 + Math.random() * 0.8);
+      let total = 0;
+      const w = sorted.map(({ d }) => { const v = 1 / Math.pow(1 + d / 160, 2); total += v; return v; });
+      let r = Math.random() * total, i = 0;
+      while (r > w[i] && i < w.length - 1) r -= w[i++];
+      groan(sorted[i].z);
+    }
+  }
+
+  function silenceCrowd() {
+    if (ac) crowd.level.gain.setTargetAtTime(0, ac.currentTime, 0.2);
+  }
+  function suspend() { paused = true; if (ac && ac.state === 'running') ac.suspend(); }
+  function resume() { paused = false; if (ac && ac.state === 'suspended') ac.resume(); }
+  function setMuted(m) {
+    muted = m;
+    try { localStorage.setItem('luzdeluna.mudo', m ? '1' : '0'); } catch (e) { /* sin almacenamiento */ }
+    if (ac) out.gain.setTargetAtTime(m ? 0 : VOLUME, ac.currentTime, 0.05);
+  }
+
+  return {
+    init, update, silenceCrowd, suspend, resume, setMuted,
+    isMuted: () => muted,
+    shot, hitFlesh, ricochet, step, groan, zombieDeath, swipe, playerHurt, roar, waveStart, playerDeath,
+    enemyShot, cock, toss, fuse, explosion, dud, fireStart, crackle, wire, snag, lasso, lassoHit,
+    flagPlant, flagBreak, hitWood, gallop, neigh, bugleWorld, vanish,
+    _debug: () => ({ ac, out, stats })
+  };
+})();
 
 // ------------------------------------------------------------
 // Tamaño de pantalla y construcción del cuarto
@@ -548,20 +1728,41 @@ function showBanner(title, sub, dur, color) {
 //   4) Dificultad adaptativa: si vas sobrado llegan eventos y más presión;
 //      si vas sufriendo, una oleada de respiro.
 // ------------------------------------------------------------
+function pickWeighted(items, weightOf) {
+  let total = 0;
+  const ws = items.map(it => { const w = Math.max(0, weightOf(it)); total += w; return w; });
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) { if ((r -= ws[i]) <= 0) return items[i]; }
+  return items[items.length - 1];
+}
+let lastFocus = null;
+
 function planWave(w) {
-  const plan = { event: null, sub: '', queue: [] };
+  const plan = { event: null, sub: '', queue: [], bosses: [] };
   const pressure = Math.min(DIFF.maxPressure, 1 + streak * DIFF.streakBonus);
   let budget = (DIFF.baseBudget + DIFF.budgetGrowth * Math.pow(w - 1, DIFF.budgetCurve)) * pressure;
   plan.interval = Math.max(DIFF.minInterval, DIFF.baseInterval * Math.pow(DIFF.intervalDecay, w - 1));
   plan.cap = Math.min(DIFF.maxCap, DIFF.baseCap + w);
   plan.speedMult = Math.min(DIFF.maxSpeedMult, 1 + DIFF.speedStep * (w - 1));
-  let pRunner = w < 3 ? 0 : Math.min(0.35, 0.1 + 0.04 * (w - 3));
-  let pTank = w < 6 ? 0 : Math.min(0.15, 0.05 + 0.015 * (w - 6));
+  // Cuántos especiales: ninguno al principio y luego cada vez más, con tope
+  let pSpecial = w < 3 ? 0 : Math.min(0.45, 0.12 + 0.035 * (w - 3));
+  let allowHeavy = true, onlyFast = false;
+
+  const bases = ROSTER.filter(r => r.base && w >= r.from);
+  const specials = ROSTER.filter(r => !r.base && w >= r.from);
+  // Facción protagonista de la oleada (distinta a la anterior si se puede)
+  const factions = [...new Set(bases.map(r => ZTYPES[r.t].faction))];
+  let focus = pickWeighted(factions, f => (f === lastFocus && factions.length > 1 ? 0.25 : 1));
 
   const isBoss = w % DIFF.bossEvery === 0;
   const afterBoss = w > 1 && (w - 1) % DIFF.bossEvery === 0;
 
   if (isBoss) {
+    // Rotan los jefes; a partir de la sexta ronda de jefes salen de dos en dos
+    const k = w / DIFF.bossEvery - 1;
+    plan.bosses.push(BOSS_ORDER[k % BOSS_ORDER.length]);
+    if (k >= BOSS_ORDER.length) plan.bosses.push(BOSS_ORDER[(k + 2) % BOSS_ORDER.length]);
+    focus = ZTYPES[plan.bosses[0]].faction;
     plan.event = 'jefe';
     plan.sub = 'Se levantó de su tumba con todo y escolta';
     budget *= 0.55;
@@ -570,8 +1771,8 @@ function planWave(w) {
     plan.sub = 'Los muertos dan tregua… por ahora';
     budget *= 0.75;
     plan.interval *= 1.3;
-    pRunner *= 0.5;
-    pTank = 0;
+    pSpecial *= 0.5;
+    allowHeavy = false;
   } else if (w >= 3 && heat >= DIFF.eventHeat && w - lastEventWave >= 2) {
     const options = ['eclipse', 'estampida', 'asedio'].filter(e => e !== lastEvent);
     plan.event = options[Math.floor(Math.random() * options.length)];
@@ -582,7 +1783,8 @@ function planWave(w) {
       budget *= 0.9;
     } else if (plan.event === 'estampida') {
       plan.sub = '¡Vienen corriendo!';
-      pRunner = 0.75;
+      pSpecial = 0.75;
+      onlyFast = true;
       plan.interval *= 0.6;
       plan.cap = Math.min(DIFF.maxCap + 4, plan.cap + 4);
     } else {
@@ -592,25 +1794,31 @@ function planWave(w) {
   } else if (afterBoss) {
     budget *= 0.8;   // descanso natural después del jefe
   }
+  if (!plan.event) plan.sub = FACTIONS[focus].grito;
+  plan.focus = focus;
+  lastFocus = focus;
 
+  const pool = specials.filter(r => (allowHeavy || !ZTYPES[r.t].heavy) && (!onlyFast || ZTYPES[r.t].fast));
   while (budget > 0.5) {
-    const r = Math.random();
-    const t = r < pTank ? 'tanque' : r < pTank + pRunner ? 'corredor' : 'normal';
+    let t;
+    if (pool.length && Math.random() < pSpecial) {
+      // Los especiales de la facción protagonista salen más
+      t = pickWeighted(pool, r => r.w * (ZTYPES[r.t].faction === focus ? 2.5 : 1)).t;
+    } else {
+      t = pickWeighted(bases, r => (ZTYPES[r.t].faction === focus ? 3 : 1)).t;
+    }
     plan.queue.push(t);
     budget -= ZTYPES[t].cost;
   }
   shuffle(plan.queue);
-  // Un tanque nunca abre la oleada
-  if (plan.queue[0] === 'tanque') {
-    const j = plan.queue.findIndex(t => t !== 'tanque');
+  // Un enemigo pesado nunca abre la oleada
+  if (plan.queue.length && ZTYPES[plan.queue[0]].heavy) {
+    const j = plan.queue.findIndex(t => !ZTYPES[t].heavy);
     if (j > 0) [plan.queue[0], plan.queue[j]] = [plan.queue[j], plan.queue[0]];
   }
-  if (isBoss) {
-    // El Coronel sale después de la primera parte de su escolta
-    const n = 1 + Math.floor((w - DIFF.bossEvery) / (DIFF.bossEvery * 2));
-    const at = Math.floor(plan.queue.length * 0.35);
-    for (let i = 0; i < n; i++) plan.queue.splice(at + i * 3, 0, 'coronel');
-  }
+  // El jefe sale después de la primera parte de su escolta
+  const at = Math.floor(plan.queue.length * 0.35);
+  plan.bosses.forEach((b, i) => plan.queue.splice(at + i * 3, 0, b));
   return plan;
 }
 
@@ -624,8 +1832,10 @@ function startWave() {
   waveStats = { hits: 0, minHp: player.hp, start: survivalTime, spawnEnd: null };
   moonTarget = currentWave.event === 'eclipse' ? 0.38 : 1;
   const ev = currentWave.event && EVENT_INFO[currentWave.event];
-  showBanner(ev ? `Oleada ${wave} · ${ev.title}` : `Oleada ${wave}`,
+  const evTitle = currentWave.event === 'jefe' ? currentWave.bosses.map(b => ZTYPES[b].name).join(' y ') : ev && ev.title;
+  showBanner(ev ? `Oleada ${wave} · ${evTitle}` : `Oleada ${wave}`,
              currentWave.sub, ev ? 3.4 : 2.5, ev ? ev.color : '#c9d6ff');
+  Sfx.waveStart(currentWave.event);
 }
 
 // Mide qué tan cómodo jugó la oleada y ajusta la presión de las siguientes
@@ -652,6 +1862,29 @@ function evaluateWave() {
 }
 
 // Intenta sacar un zombi del tipo indicado por la puerta i
+function makeZombie(typeName, x, y, extra) {
+  const T = ZTYPES[typeName];
+  const sm = currentWave ? currentWave.speedMult : 1;
+  const z = {
+    x, y, r: T.r, T, type: typeName,
+    hp: T.hp, maxHp: T.hp,
+    mass: (T.r / 15) * (T.r / 15),
+    door: 0, entering: false,
+    angle: 0,
+    speed: (T.speed[0] + Math.random() * (T.speed[1] - T.speed[0])) * (T.boss ? 1 : sm),
+    phase: Math.random() * Math.PI * 2,
+    hitFlash: 0, kx: 0, ky: 0,
+    attackT: -1, attackCd: 0,
+    charge: null, chargeT: 0, chargeCd: 3, chargeDir: 0,
+    act: null, actT: 0, actCd: 1 + Math.random() * 1.5, haste: 0, vis: 1,
+    reg: T.reg,
+    ...extra
+  };
+  zombies.push(z);
+  noteSighting(z.reg);
+  return z;
+}
+
 function spawnAt(i, typeName) {
   const T = ZTYPES[typeName];
   const d = doors[i];
@@ -659,21 +1892,18 @@ function spawnAt(i, typeName) {
   const p = doorToWorld(d, -WALL - T.r - 2, ly);
   // Nunca aparece encima de otro zombi
   if (zombies.some(z => Math.hypot(z.x - p.x, z.y - p.y) < z.r + T.r + 4)) return false;
-  const sm = currentWave ? currentWave.speedMult : 1;
-  zombies.push({
-    x: p.x, y: p.y, r: T.r, T,
-    hp: T.hp, maxHp: T.hp,
-    mass: (T.r / 15) * (T.r / 15),
-    door: i, entering: true,
-    angle: Math.atan2(d.ny, d.nx),
-    speed: (T.speed[0] + Math.random() * (T.speed[1] - T.speed[0])) * (T.boss ? 1 : sm),
-    phase: Math.random() * Math.PI * 2,
-    variant: T.variant ?? (Math.random() < 0.6 ? 0 : 1),
-    hitFlash: 0, kx: 0, ky: 0,
-    attackT: -1, attackCd: 0,
-    charge: null, chargeT: 0, chargeCd: 3, chargeDir: 0
-  });
+  makeZombie(typeName, p.x, p.y, { door: i, entering: true, angle: Math.atan2(d.ny, d.nx) });
   return true;
+}
+
+// Aparición dentro del cuarto (emboscadas del Jefe Suriano), solo si hay espacio
+function spawnFree(typeName, x, y) {
+  const T = ZTYPES[typeName], f = inner();
+  x = clamp(x, f.x + T.r, f.x + f.w - T.r);
+  y = clamp(y, f.y + T.r, f.y + f.h - T.r);
+  if (zombies.some(z => Math.hypot(z.x - x, z.y - y) < z.r + T.r + 2)) return null;
+  if (Math.hypot(player.x - x, player.y - y) < player.radius + T.r + 30) return null;
+  return makeZombie(typeName, x, y, { angle: Math.atan2(player.y - y, player.x - x) });
 }
 
 // Embestida del jefe: avisa, se lanza en línea recta y descansa
@@ -695,11 +1925,461 @@ function updateCharge(z, dt, dist, toPlayer) {
   }
   if (z.chargeCd <= 0 && z.attackT < 0 && dist > 90 && dist < 420) {
     z.charge = 'prep';
+    Sfx.roar(z);
     z.chargeT = CHARGE_PREP;
     z.chargeDir = toPlayer;
     return true;
   }
   return false;
+}
+
+// ============================================================
+// MECÁNICAS DE LAS FACCIONES
+// Proyectiles enemigos, peligros en el piso y los jefes.
+// ============================================================
+const eShots = [];    // balas enemigas
+const thrown = [];    // dinamita, antorchas y rollos de alambre en el aire
+const bombs = [];     // dinamita encendida en el piso
+const hazards = [];   // fuego y alambre de púas en el piso
+const flags = [];     // banderas rojas del Cabecilla Colorado
+const lassos = [];    // reatas de los rurales
+const floaters = [];  // textos flotantes ("¡Falló!", "¡Aturdido!")
+const blasts = [];    // destellos de explosión (para la luz)
+const ENEMY_BULLET_SPEED = 330;
+const EXPLOSION_R = 78;
+const FLAG_RADIUS = 150;
+
+function clearFactionStuff() {
+  for (const a of [eShots, thrown, bombs, hazards, flags, lassos, floaters, blasts]) a.length = 0;
+}
+function nearFlag(z) {
+  for (const fl of flags) if (Math.hypot(fl.x - z.x, fl.y - z.y) < FLAG_RADIUS) return true;
+  return false;
+}
+// Velocidad extra: corneta del General (haste) y banderas rojas cercanas
+function speedMulZ(z) {
+  return (z.haste > 0 ? 1.35 : 1) * (flags.length && !z.T.boss && nearFlag(z) ? 1.3 : 1);
+}
+function moveZ(z, ang, mul, dt) {
+  const sp = z.speed * speedMulZ(z) * mul;
+  z.x += Math.cos(ang) * sp * dt;
+  z.y += Math.sin(ang) * sp * dt;
+}
+// Turnos de ataque a distancia: como mucho 2 tiradores actúan a la vez,
+// para que la pantalla llena no se vuelva un fuego cruzado injusto
+const MAX_RANGED = 2;
+function rangedBusy() {
+  let n = 0;
+  for (const z of zombies) if ((z.act && !z.T.boss) || z.lassoOut) n++;
+  return n >= MAX_RANGED;
+}
+function addFloater(text, x, y, color = '#ffd27a') {
+  floaters.push({ text, x, y, t: 1, color });
+}
+// Mano derecha del zombi en el mundo (para la antorcha del Incendiario)
+function handPos(z) {
+  const k = ZOMBIE_SIZE * z.T.scale / 64;
+  const c = Math.cos(z.angle), s = Math.sin(z.angle);
+  const lx = 23 * k, ly = 13 * k;
+  return { x: z.x + lx * c - ly * s, y: z.y + lx * s + ly * c };
+}
+// Qué tan iluminado está un punto: luna, puertas y la luz del propio jugador
+function lightAt(x, y) {
+  let l = Math.max(0, 1 - Math.hypot(x - moon.x, y - moon.y) / (moon.r * (0.55 + 0.45 * moonLevel))) * moonLevel;
+  for (const d of doors) {
+    const p = worldToDoor(d, x, y);
+    if (p.lx > 0 && p.lx < d.L && Math.abs(p.ly) < d.w / 2 + p.lx * 0.4) l = Math.max(l, d.s * moonLevel * (1 - p.lx / d.L));
+  }
+  if (Math.hypot(x - player.x, y - player.y) < 75) l = Math.max(l, 0.3);
+  return l;
+}
+
+function fireEnemyBullet(z, ang) {
+  const c = Math.cos(ang), s = Math.sin(ang), off = z.r + 6;
+  eShots.push({ x: z.x + c * off, y: z.y + s * off, vx: c * ENEMY_BULLET_SPEED, vy: s * ENEMY_BULLET_SPEED, life: 2.2 });
+  Sfx.enemyShot(z.x, z.y);
+}
+function throwPayload(z, kind, tx, ty) {
+  const f = inner();
+  tx = clamp(tx, f.x + 12, f.x + f.w - 12);
+  ty = clamp(ty, f.y + 12, f.y + f.h - 12);
+  const d = Math.hypot(tx - z.x, ty - z.y);
+  thrown.push({ kind, sx: z.x, sy: z.y, tx, ty, t: 0, dur: clamp(d / 330, 0.45, 0.95), spin: Math.random() * 6 });
+  Sfx.toss(z.x, z.y);
+}
+function landPayload(p) {
+  if (p.kind === 'dinamita') {
+    // La dinamita de la época fallaba seguido: 1 de cada 5 no estalla
+    bombs.push({ x: p.tx, y: p.ty, fuse: 1.15, dud: Math.random() < 0.2 });
+    Sfx.fuse(p.tx, p.ty, 1.15);
+  } else if (p.kind === 'antorcha') {
+    hazards.push({ kind: 'fuego', x: p.tx, y: p.ty, r: 46, t: 5.5, max: 5.5, seed: Math.random() * 10 });
+    Sfx.fireStart(p.tx, p.ty);
+  } else if (p.kind === 'alambre') {
+    hazards.push({ kind: 'alambre', x: p.tx, y: p.ty, r: 36, t: 14, max: 14, seed: Math.random() * 10 });
+    Sfx.wire(p.tx, p.ty);
+  }
+}
+function explode(b) {
+  blasts.push({ x: b.x, y: b.y, t: 0.3 });
+  shake = Math.max(shake, 0.25);
+  Sfx.explosion(b.x, b.y);
+  for (let i = 0; i < 4; i++) spawnSparks(b.x, b.y, Math.cos(i * 1.57), Math.sin(i * 1.57));
+  addDecal({ type: 'scorch', x: b.x, y: b.y, r: 28 + Math.random() * 8 });
+  if (state === 'playing' && Math.hypot(player.x - b.x, player.y - b.y) < EXPLOSION_R + player.radius * 0.5) {
+    hurtPlayer({ x: b.x, y: b.y, T: { knock: 1.6 } });
+  }
+  // También lastima a los muertos que estén cerca
+  for (const z of zombies.slice()) {
+    const d = Math.hypot(z.x - b.x, z.y - b.y);
+    if (d < EXPLOSION_R + z.r * 0.5) {
+      const ux = (z.x - b.x) / (d || 1), uy = (z.y - b.y) / (d || 1);
+      z.kx += ux * 220 / z.mass;
+      z.ky += uy * 220 / z.mass;
+      z.hp -= 3;
+      z.hitFlash = 0.12;
+      if (z.hp <= 0) killZombie(z, ux, uy);
+    }
+  }
+}
+function throwLasso(z, ang) {
+  lassos.push({ owner: z, x: z.x, y: z.y, vx: Math.cos(ang) * 430, vy: Math.sin(ang) * 430, d: 0, state: 'out', t: 0 });
+  z.lassoOut = true;
+  Sfx.lasso(z.x, z.y);
+}
+function plantFlag(z, f) {
+  const away = Math.atan2(z.y - player.y, z.x - player.x) + (Math.random() - 0.5) * 1.4;
+  const d = 40 + Math.random() * 40;
+  const x = clamp(z.x + Math.cos(away) * d, f.x + 14, f.x + f.w - 14);
+  const y = clamp(z.y + Math.sin(away) * d, f.y + 14, f.y + f.h - 14);
+  flags.push({ x, y, hp: 6, max: 6, owner: z, phase: Math.random() * 6, hit: 0 });
+  Sfx.flagPlant(x, y);
+}
+// Lugar oscuro, lejos de la luz, para que reaparezca el Jefe Suriano
+function darkSpot(z, f) {
+  let best = null, bestScore = Infinity;
+  for (let i = 0; i < 40; i++) {
+    const x = f.x + z.r + 4 + Math.random() * (f.w - 2 * z.r - 8);
+    const y = f.y + z.r + 4 + Math.random() * (f.h - 2 * z.r - 8);
+    const dp = Math.hypot(x - player.x, y - player.y);
+    if (dp < 170 || dp > 320) continue;
+    if (zombies.some(o => o !== z && Math.hypot(o.x - x, o.y - y) < o.r + z.r + 4)) continue;
+    const score = lightAt(x, y) + Math.random() * 0.1;
+    if (score < bestScore) { bestScore = score; best = { x, y }; }
+  }
+  return best || { x: z.x, y: z.y };
+}
+
+// ---------- comportamientos ----------
+// Cada uno devuelve el ángulo hacia donde mira si se encargó de moverlo,
+// o null para que el zombi camine y lance zarpazos como cualquier otro.
+const AI = {
+  coronel(z, dt, dist, toPlayer) {
+    return updateCharge(z, dt, dist, toPlayer) ? z.chargeDir : null;
+  },
+
+  // Liebre Blanca: golpea y huye a la oscuridad, luego regresa
+  hitrun(z, dt, dist, toPlayer) {
+    if (z.flee > 0) {
+      z.flee -= dt;
+      const a = toPlayer + Math.PI + Math.sin(gameTime * 3 + z.phase) * 0.5;
+      moveZ(z, a, 1.1, dt);
+      return a;
+    }
+    return null;
+  },
+
+  // Ametrallador: se emplaza, apunta (línea roja) y suelta una ráfaga
+  shooter(z, dt, dist, toPlayer) {
+    z.actCd -= dt;
+    if (z.act === 'aim') {
+      z.actT -= dt;
+      z.aimDir = lerpAngle(z.aimDir, toPlayer, Math.min(1, dt * 2.5));
+      if (z.actT <= 0) { z.act = 'fire'; z.burst = 5; z.actT = 0; }
+      return z.aimDir;
+    }
+    if (z.act === 'fire') {
+      z.actT -= dt;
+      if (z.actT <= 0) {
+        fireEnemyBullet(z, z.aimDir + (Math.random() - 0.5) * 0.14);
+        z.actT = 0.13;
+        if (--z.burst <= 0) { z.act = null; z.actCd = 3 + Math.random(); }
+      }
+      return z.aimDir;
+    }
+    if (state === 'playing' && z.actCd <= 0 && dist > 110 && dist < 340 && z.attackT < 0 && !rangedBusy()) {
+      z.act = 'aim'; z.actT = 0.85; z.aimDir = toPlayer;
+      Sfx.cock(z.x, z.y);
+      return toPlayer;
+    }
+    if (dist > 120 && dist < 260) return toPlayer;   // emplazado: espera quieto
+    return null;
+  },
+
+  // Dinamitero, Incendiario y Alambrista: se detienen y lanzan su carga
+  thrower(z, dt, dist, toPlayer) {
+    z.actCd -= dt;
+    if (z.act === 'windup') {
+      z.actT -= dt;
+      if (z.actT <= 0) {
+        throwPayload(z, z.T.payload, player.x + player.vx * 0.35, player.y + player.vy * 0.35);
+        z.act = null;
+        z.actCd = z.T.payload === 'alambre' ? 6 + Math.random() * 2 : 4.2 + Math.random() * 1.6;
+      }
+      return toPlayer;
+    }
+    if (state === 'playing' && z.actCd <= 0 && dist > 120 && dist < 330 && z.attackT < 0 && !rangedBusy()) {
+      z.act = 'windup'; z.actT = 0.5;
+      return toPlayer;
+    }
+    return null;
+  },
+
+  // Rural: lanza la reata; si te alcanza te jala hacia él y te frena
+  lasso(z, dt, dist, toPlayer) {
+    z.actCd -= dt;
+    if (z.lassoOut) return toPlayer;
+    if (z.act === 'windup') {
+      z.actT -= dt;
+      if (z.actT <= 0) { throwLasso(z, toPlayer); z.act = null; z.actCd = 4.5 + Math.random() * 1.5; }
+      return toPlayer;
+    }
+    if (state === 'playing' && z.actCd <= 0 && dist > 90 && dist < 240 && z.attackT < 0 && !rangedBusy()) {
+      z.act = 'windup'; z.actT = 0.45;
+      return toPlayer;
+    }
+    return null;
+  },
+
+  // Capitán de Dorados: cargas de caballería que rebotan en los muros;
+  // al terminar queda aturdido y recibe el doble de daño
+  jinete(z, dt, dist, toPlayer, f) {
+    z.chargeCd -= dt;
+    if (z.stun > 0) { z.stun -= dt; return z.angle; }
+    if (z.charge === 'prep') {
+      z.chargeT -= dt;
+      z.chargeDir = lerpAngle(z.chargeDir, toPlayer, Math.min(1, dt * 3));
+      if (z.chargeT <= 0) {
+        z.charge = 'go'; z.chargeT = 2.6; z.bounces = 0; z.hitThisCharge = false; z.gallopT = 0;
+        z.mass = 8;   // en plena carga avienta a los demás
+        Sfx.neigh(z.x, z.y);
+      }
+      return z.chargeDir;
+    }
+    if (z.charge === 'go') {
+      z.chargeT -= dt;
+      z.x += Math.cos(z.chargeDir) * 360 * dt;
+      z.y += Math.sin(z.chargeDir) * 360 * dt;
+      z.gallopT -= dt;
+      if (z.gallopT <= 0) { z.gallopT = 0.16; Sfx.gallop(z.x, z.y); }
+      // Rebota en los muros y corrige un poco hacia el jugador
+      let bounced = false;
+      if (z.x < f.x + z.r || z.x > f.x + f.w - z.r) { z.chargeDir = Math.PI - z.chargeDir; bounced = true; }
+      if (z.y < f.y + z.r || z.y > f.y + f.h - z.r) { z.chargeDir = -z.chargeDir; bounced = true; }
+      if (bounced) {
+        z.x = clamp(z.x, f.x + z.r, f.x + f.w - z.r);
+        z.y = clamp(z.y, f.y + z.r, f.y + f.h - z.r);
+        z.chargeDir = lerpAngle(z.chargeDir, Math.atan2(player.y - z.y, player.x - z.x), 0.4);
+        z.bounces++;
+        shake = Math.max(shake, 0.08);
+      }
+      if (!z.hitThisCharge && state === 'playing' && Math.hypot(player.x - z.x, player.y - z.y) <= z.r + player.radius + 4) {
+        hurtPlayer(z);
+        z.hitThisCharge = true;
+      }
+      if (z.bounces >= 3 || z.chargeT <= 0) {
+        z.charge = null; z.stun = 1.6; z.mass = (z.r / 15) ** 2;
+        z.chargeCd = 4.5 + Math.random() * 1.5;
+        addFloater('¡Aturdido!', z.x, z.y - z.r - 14);
+      }
+      return z.chargeDir;
+    }
+    if (state === 'playing' && z.chargeCd <= 0 && dist > 80 && z.attackT < 0) {
+      z.charge = 'prep'; z.chargeT = 0.9; z.chargeDir = toPlayer;
+      return toPlayer;
+    }
+    return null;
+  },
+
+  // Jefe Suriano: casi invisible; se esfuma y reaparece en la oscuridad
+  // con dos Liebres Blancas a su lado
+  sombra(z, dt, dist, toPlayer, f) {
+    z.reveal = Math.max(0, (z.reveal || 0) - dt);
+    z.blinkCd = (z.blinkCd ?? 6) - dt;
+    if (z.blink > 0) {
+      z.blink -= dt;
+      z.intangible = true;
+      if (z.blink <= 0) {
+        const p = darkSpot(z, f);
+        z.x = p.x; z.y = p.y; z.kx = z.ky = 0;
+        z.intangible = false;
+        z.appear = 0.5;
+        if (state === 'playing') {
+          for (let i = 0; i < 2; i++) {
+            const a = Math.random() * Math.PI * 2;
+            spawnFree('liebre', z.x + Math.cos(a) * 48, z.y + Math.sin(a) * 48);
+          }
+        }
+      }
+      return z.angle;
+    }
+    z.appear = Math.max(0, (z.appear || 0) - dt);
+    if (state === 'playing' && z.blinkCd <= 0 && z.attackT < 0) {
+      z.blink = 0.5; z.blinkCd = 7 + Math.random() * 2;
+      Sfx.vanish(z.x, z.y);
+      return z.angle;
+    }
+    return null;
+  },
+
+  // General Constitucionalista: corneta que apura a la tropa, descargas
+  // de fusilería y alambre de púas alrededor del jugador
+  general(z, dt, dist, toPlayer) {
+    z.bugleCd = (z.bugleCd ?? 3) - dt;
+    z.volleyCd = (z.volleyCd ?? 4) - dt;
+    z.wireCd = (z.wireCd ?? 7) - dt;
+    z.ring = Math.max(0, (z.ring || 0) - dt);
+    if (z.act === 'volley') {
+      z.actT -= dt;
+      z.aimDir = lerpAngle(z.aimDir, toPlayer, Math.min(1, dt * 2));
+      if (z.actT <= 0) {
+        for (let k = -1; k <= 1; k++) fireEnemyBullet(z, z.aimDir + k * 0.22);
+        z.act = null;
+      }
+      return z.aimDir;
+    }
+    if (state !== 'playing') return null;
+    if (z.bugleCd <= 0) {
+      z.bugleCd = 9; z.ring = 1;
+      Sfx.bugleWorld(z.x, z.y);
+      for (const o of zombies) if (o !== z && Math.hypot(o.x - z.x, o.y - z.y) < 300) o.haste = 4.5;
+      addFloater('¡A la carga!', z.x, z.y - z.r - 16);
+    }
+    if (z.volleyCd <= 0 && dist > 90 && dist < 380 && z.attackT < 0) {
+      z.act = 'volley'; z.actT = 0.7; z.aimDir = toPlayer;
+      z.volleyCd = 4.5 + Math.random();
+      return toPlayer;
+    }
+    if (z.wireCd <= 0 && z.attackT < 0) {
+      z.wireCd = 11;
+      const a0 = Math.random() * Math.PI * 2;
+      for (let k = 0; k < 3; k++) {
+        const a = a0 + k * 2.09;
+        throwPayload(z, 'alambre', player.x + Math.cos(a) * 62, player.y + Math.sin(a) * 62);
+      }
+    }
+    return null;
+  },
+
+  // Cabecilla Colorado: planta banderas rojas. Mientras ondee alguna,
+  // recibe muy poco daño y los muertos cercanos se apuran
+  bandera(z, dt, dist, toPlayer, f) {
+    z.flagCd = (z.flagCd ?? 2) - dt;
+    z.torchCd = (z.torchCd ?? 4) - dt;
+    if (z.act === 'plant') {
+      z.actT -= dt;
+      if (z.actT <= 0) { plantFlag(z, f); z.act = null; }
+      return z.angle;
+    }
+    if (state !== 'playing') return null;
+    if (z.flagCd <= 0 && flags.filter(fl => fl.owner === z).length < 3 && z.attackT < 0) {
+      z.act = 'plant'; z.actT = 0.6; z.flagCd = 6.5;
+      return z.angle;
+    }
+    if (z.torchCd <= 0 && dist > 100 && dist < 330 && z.attackT < 0) {
+      throwPayload(z, 'antorcha', player.x, player.y);
+      z.torchCd = 5 + Math.random() * 2;
+    }
+    return null;
+  }
+};
+
+// ---------- actualización de proyectiles y peligros ----------
+function updateFactionStuff(dt, f) {
+  // Balas enemigas
+  for (let i = eShots.length - 1; i >= 0; i--) {
+    const b = eShots[i];
+    b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
+    if (state === 'playing' && Math.hypot(b.x - player.x, b.y - player.y) < player.radius + 4) {
+      hurtPlayer({ x: b.x - b.vx * 0.05, y: b.y - b.vy * 0.05, T: { knock: 0.6 } });
+      eShots.splice(i, 1);
+      continue;
+    }
+    if (b.x < f.x || b.x > f.x + f.w || b.y < f.y || b.y > f.y + f.h || b.life <= 0) eShots.splice(i, 1);
+  }
+  // Cargas en el aire
+  for (let i = thrown.length - 1; i >= 0; i--) {
+    const p = thrown[i];
+    p.t += dt;
+    if (p.t >= p.dur) { landPayload(p); thrown.splice(i, 1); }
+  }
+  // Dinamita en el piso
+  for (let i = bombs.length - 1; i >= 0; i--) {
+    const b = bombs[i];
+    b.fuse -= dt;
+    if (b.fuse <= 0) {
+      bombs.splice(i, 1);
+      if (b.dud) { addFloater('¡Falló!', b.x, b.y - 10, '#d8d0bc'); Sfx.dud(b.x, b.y); }
+      else explode(b);
+    }
+  }
+  // Fuego y alambre
+  let inWire = false, inFire = false;
+  for (let i = hazards.length - 1; i >= 0; i--) {
+    const h = hazards[i];
+    h.t -= dt;
+    if (h.t <= 0) { hazards.splice(i, 1); continue; }
+    const d = Math.hypot(player.x - h.x, player.y - h.y);
+    if (h.kind === 'alambre' && d < h.r) inWire = true;
+    if (h.kind === 'fuego' && d < h.r * 0.85) inFire = true;
+    if (h.kind === 'fuego' && Math.random() < dt * 3) Sfx.crackle(h.x, h.y);
+  }
+  if (inWire && !player.inWire) Sfx.snag();
+  player.inWire = inWire && state === 'playing';
+  if (inFire && state === 'playing') {
+    player.burnT = (player.burnT ?? 0.25) - dt;
+    if (player.burnT <= 0) {
+      hurtPlayer({ x: player.x + (Math.random() - 0.5), y: player.y + 1, T: { knock: 0.3 } });
+      player.burnT = 1;
+    }
+  } else player.burnT = 0.25;
+  // Banderas: caen si las derriban o si muere su dueño
+  for (let i = flags.length - 1; i >= 0; i--) {
+    const fl = flags[i];
+    fl.hit = Math.max(0, fl.hit - dt);
+    if (fl.hp <= 0 || !zombies.includes(fl.owner)) {
+      if (fl.hp <= 0) { Sfx.flagBreak(fl.x, fl.y); addFloater('¡Bandera abajo!', fl.x, fl.y - 18, '#ff9a8a'); }
+      flags.splice(i, 1);
+    }
+  }
+  // Reatas
+  for (let i = lassos.length - 1; i >= 0; i--) {
+    const l = lassos[i];
+    const alive = zombies.includes(l.owner);
+    if (!alive) { lassos.splice(i, 1); player.pullT = 0; continue; }
+    if (l.state === 'out') {
+      l.x += l.vx * dt; l.y += l.vy * dt; l.d += 430 * dt;
+      if (state === 'playing' && Math.hypot(l.x - player.x, l.y - player.y) < player.radius + 8) {
+        l.state = 'pull'; l.t = 0.45;
+        player.pullT = 0.45; player.pullFrom = l.owner; player.slowT = 1.4;
+        Sfx.lassoHit();
+        addFloater('¡Lazado!', player.x, player.y - 30, '#e8c48a');
+      } else if (l.d > 260) l.state = 'back';
+    } else if (l.state === 'back') {
+      const a = Math.atan2(l.owner.y - l.y, l.owner.x - l.x);
+      l.x += Math.cos(a) * 600 * dt; l.y += Math.sin(a) * 600 * dt;
+      if (Math.hypot(l.owner.x - l.x, l.owner.y - l.y) < 20) { lassos.splice(i, 1); l.owner.lassoOut = false; }
+    } else {
+      l.x = player.x; l.y = player.y; l.t -= dt;
+      if (l.t <= 0) { lassos.splice(i, 1); l.owner.lassoOut = false; }
+    }
+  }
+  for (let i = floaters.length - 1; i >= 0; i--) {
+    const t = floaters[i];
+    t.t -= dt * 0.8; t.y -= 22 * dt;
+    if (t.t <= 0) floaters.splice(i, 1);
+  }
+  for (let i = blasts.length - 1; i >= 0; i--) if ((blasts[i].t -= dt) <= 0) blasts.splice(i, 1);
 }
 
 function updateZombies(dt, f) {
@@ -735,6 +2415,7 @@ function updateZombies(dt, f) {
   const damp = Math.exp(-8 * dt);
   for (const z of zombies) {
     z.hitFlash = Math.max(0, z.hitFlash - dt);
+    z.haste = Math.max(0, z.haste - dt);
     let target;
     if (z.entering) {
       // Cruza el vano en línea recta hacia dentro
@@ -748,25 +2429,32 @@ function updateZombies(dt, f) {
       const toPlayer = Math.atan2(dy, dx);
       z.attackCd = Math.max(0, z.attackCd - dt);
 
-      if (z.T.boss && updateCharge(z, dt, dist, toPlayer)) {
-        target = z.chargeDir;
+      // Comportamiento especial (si devuelve un ángulo, ya se encargó de moverlo)
+      const special = z.T.ai && AI[z.T.ai] ? AI[z.T.ai](z, dt, dist, toPlayer, f) : null;
+      if (special !== null && special !== undefined) {
+        target = special;
       } else if (z.attackT >= 0) {
         // Zarpazo en curso: encara al jugador y no avanza
         target = toPlayer;
         const prev = z.attackT;
         z.attackT += dt;
+        if (prev < ATTACK_WINDUP && z.attackT >= ATTACK_WINDUP) Sfx.swipe(z);
         if (prev < ATTACK_HIT && z.attackT >= ATTACK_HIT &&
             dist <= z.r + player.radius + HIT_RANGE) {
           hurtPlayer(z);
         }
-        if (z.attackT >= ATTACK_TOTAL) z.attackT = -1;
+        if (z.attackT >= ATTACK_TOTAL) {
+          z.attackT = -1;
+          if (z.T.ai === 'hitrun') z.flee = 1.1 + Math.random() * 0.5;   // golpea y huye
+        }
       } else {
         // Va directo al jugador, con un ligero bamboleo
         target = toPlayer + Math.sin(gameTime * 3 + z.phase) * 0.25;
         // Se detiene al alcanzarlo para no temblar contra él
         if (dist > z.r + player.radius + 2) {
-          z.x += Math.cos(target) * z.speed * dt;
-          z.y += Math.sin(target) * z.speed * dt;
+          const spd = z.speed * speedMulZ(z);
+          z.x += Math.cos(target) * spd * dt;
+          z.y += Math.sin(target) * spd * dt;
         }
         // Lo bastante cerca: inicia el zarpazo
         if (z.attackCd <= 0 && dist <= z.r + player.radius + ATTACK_RANGE) {
@@ -880,8 +2568,16 @@ function segmentCircle(x0, y0, x1, y1, cx, cy, r) {
 function damageZombie(z, b, hx, hy) {
   const sp = Math.hypot(b.vx, b.vy) || 1;
   const ux = b.vx / sp, uy = b.vy / sp;
-  z.hp--;
+  let dmg = 1;
+  if (z.stun > 0) dmg = 2;                                     // Capitán aturdido
+  if (z.T.ai === 'bandera' && flags.some(fl => fl.owner === z)) {
+    dmg = 0.25;                                                // Cabecilla protegido por sus banderas
+    if (Math.random() < 0.25) addFloater('Escudo', z.x, z.y - z.r - 10, '#ff9a8a');
+  }
+  if (z.T.ai === 'sombra') z.reveal = 1.2;                     // el Jefe Suriano se deja ver al recibir un tiro
+  z.hp -= dmg;
   z.hitFlash = 0.12;
+  Sfx.hitFlesh(hx, hy);
   // Un disparo durante la preparación interrumpe el zarpazo
   if (z.attackT >= 0 && z.attackT < ATTACK_HIT) {
     z.attackT = -1;
@@ -894,8 +2590,12 @@ function damageZombie(z, b, hx, hy) {
 }
 
 function killZombie(z, ux, uy) {
-  zombies.splice(zombies.indexOf(z), 1);
+  const idx = zombies.indexOf(z);
+  if (idx < 0) return;
+  zombies.splice(idx, 1);
   kills++;
+  noteKill(z.reg);
+  Sfx.zombieDeath(z);
   const s = z.T.scale;
   spawnBlood(z.x, z.y, ux, uy, Math.round(22 * s));
   const blobs = [];
@@ -908,7 +2608,7 @@ function killZombie(z, ux, uy) {
   }
   addDecal({ type: 'pool', x: z.x, y: z.y, blobs });
   addDecal({
-    type: z.variant === 0 ? 'hat' : 'kepi', s,
+    type: 'hat2', hat: SKINS[z.T.skin].hat, s,
     x: z.x + ux * 14 * s + (Math.random() - 0.5) * 10,
     y: z.y + uy * 14 * s + (Math.random() - 0.5) * 10,
     a: Math.random() * Math.PI * 2
@@ -977,44 +2677,17 @@ function drawGore() {
       ctx.beginPath();
       ctx.arc(d.x + b0.dx - 2, d.y + b0.dy - 2, b0.r * 0.5, 0, Math.PI * 2);
       ctx.fill();
+    } else if (d.type === 'scorch') {
+      const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r);
+      g.addColorStop(0, 'rgba(10,8,6,0.75)');
+      g.addColorStop(0.7, 'rgba(20,14,8,0.45)');
+      g.addColorStop(1, 'rgba(20,14,8,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fill();
     } else {
-      ctx.save();
-      ctx.translate(d.x, d.y);
-      ctx.rotate(d.a);
-      ctx.scale(d.s || 1, d.s || 1);
-      if (d.type === 'hat') {
-        ctx.fillStyle = '#9c7f4c';
-        ctx.strokeStyle = '#4a3820';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(0, 0, 12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#86683a';
-        ctx.beginPath();
-        ctx.arc(1, 0, 6.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#6b0a0a';
-        ctx.beginPath();
-        ctx.arc(-6, 5, 3, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        ctx.fillStyle = '#3d4a5c';
-        ctx.strokeStyle = '#1e252f';
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.roundRect(-6.5, -7, 13, 14, 5);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#15181d';
-        ctx.beginPath();
-        ctx.moveTo(6, -6);
-        ctx.quadraticCurveTo(12, 0, 6, 6);
-        ctx.closePath();
-        ctx.fill();
-      }
-      ctx.restore();
+      drawFallenHat(d);
     }
   }
 
@@ -1026,6 +2699,276 @@ function drawGore() {
   }
 }
 
+// Sombrero tirado en el piso, según la facción
+function drawFallenHat(d) {
+  const h = d.hat || { shape: 'palma', c1: '#9c7f4c', c2: '#86683a' };
+  ctx.save();
+  ctx.translate(d.x, d.y);
+  ctx.rotate(d.a);
+  ctx.scale(d.s || 1, d.s || 1);
+  ctx.lineWidth = 1.3;
+  ctx.strokeStyle = 'rgba(30,22,12,0.9)';
+  const disc = (r, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); };
+  if (h.shape === 'kepi' || h.shape === 'quepi') {
+    ctx.fillStyle = h.c1;
+    ctx.beginPath(); ctx.roundRect(-6.5, -7, 13, 14, 5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#15181d';
+    ctx.beginPath(); ctx.moveTo(6, -6); ctx.quadraticCurveTo(12, 0, 6, 6); ctx.closePath(); ctx.fill();
+  } else if (h.shape === 'gorra') {
+    disc(7.5, h.c1);
+    ctx.fillStyle = '#1d1d14';
+    ctx.beginPath(); ctx.moveTo(6, -5.5); ctx.quadraticCurveTo(12, 0, 6, 5.5); ctx.closePath(); ctx.fill();
+  } else if (h.shape === 'salacot') {
+    ctx.fillStyle = h.c1; ctx.beginPath(); ctx.ellipse(0, 0, 11.5, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = h.c2; ctx.beginPath(); ctx.ellipse(0, 0, 7.5, 6.5, 0, 0, Math.PI * 2); ctx.fill();
+  } else {
+    disc(h.shape === 'charro' ? 14 : h.shape === 'texana' ? 11.5 : 12, h.c1);
+    disc(6.5, h.c2);
+    if (h.band || h.trim) { ctx.strokeStyle = h.band || h.trim; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(0, 0, 7.4, 0, Math.PI * 2); ctx.stroke(); }
+  }
+  ctx.fillStyle = '#6b0a0a';
+  ctx.beginPath(); ctx.arc(-6, 5, 2.6, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+
+// ------------------------------------------------------------
+// Dibujo de lo que traen las facciones
+// ------------------------------------------------------------
+// En el piso (queda bajo la oscuridad): alambre, brasas, banderas y dinamita
+function drawFactionGround() {
+  for (const h of hazards) {
+    const fade = Math.min(1, h.t / 0.8, (h.max - h.t) / 0.25 + 0.2);
+    if (h.kind === 'alambre') {
+      ctx.save();
+      ctx.globalAlpha = fade;
+      ctx.translate(h.x, h.y);
+      ctx.strokeStyle = '#7d8187';
+      ctx.lineWidth = 1.4;
+      for (let k = 0; k < 3; k++) {
+        ctx.beginPath();
+        const rr = h.r * (0.45 + k * 0.25);
+        for (let a = 0; a <= Math.PI * 2 + 0.01; a += 0.35) {
+          const j = Math.sin(a * 7 + h.seed + k) * 3;
+          const x = Math.cos(a) * (rr + j), y = Math.sin(a) * (rr + j);
+          if (a === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      ctx.strokeStyle = '#a3a7ad';
+      ctx.lineWidth = 1;
+      for (let a = 0; a < Math.PI * 2; a += 0.5) {
+        const x = Math.cos(a + h.seed) * h.r * 0.7, y = Math.sin(a + h.seed) * h.r * 0.7;
+        ctx.beginPath(); ctx.moveTo(x - 3, y - 3); ctx.lineTo(x + 3, y + 3); ctx.moveTo(x + 3, y - 3); ctx.lineTo(x - 3, y + 3); ctx.stroke();
+      }
+      ctx.restore();
+    } else {
+      ctx.fillStyle = `rgba(25,12,5,${0.55 * fade})`;
+      ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  for (const fl of flags) {
+    ctx.save();
+    ctx.translate(fl.x, fl.y);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath(); ctx.ellipse(3, 4, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#4a2e14';
+    ctx.beginPath(); ctx.arc(0, 0, 3.2, 0, Math.PI * 2); ctx.fill();
+    const wv = Math.sin(gameTime * 5 + fl.phase) * 3;
+    ctx.fillStyle = fl.hit > 0 ? '#ffd0c8' : '#b3201a';
+    ctx.strokeStyle = '#5a0f0a';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 0); ctx.quadraticCurveTo(9, -4 + wv, 20, -2 + wv * 1.4);
+    ctx.lineTo(20, 9 + wv * 1.4); ctx.quadraticCurveTo(9, 7 + wv, 0, 10);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+    if (fl.hp < fl.max) {
+      for (let k = 0; k < fl.max; k++) {
+        ctx.fillStyle = k < fl.hp ? 'rgba(220,60,60,0.9)' : 'rgba(255,255,255,0.15)';
+        ctx.fillRect(fl.x - 13 + k * 4.5, fl.y - 14, 3.5, 3);
+      }
+    }
+  }
+  for (const b of bombs) {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(0.6);
+    ctx.fillStyle = '#b3261e'; ctx.strokeStyle = '#3a0a05'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(-8, -2.5, 16, 5, 1.5); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// Fuentes de luz de las facciones (se recortan de la oscuridad)
+function factionLights() {
+  for (const h of hazards) {
+    if (h.kind !== 'fuego') continue;
+    const fl = 0.85 + Math.sin(gameTime * 23 + h.seed) * 0.08 + Math.sin(gameTime * 9.7 + h.seed * 2) * 0.07;
+    punch(h.x, h.y, 105 * fl, 0.75 * Math.min(1, h.t / 0.8));
+  }
+  for (const b of bombs) if (!b.dud || b.fuse > 0.2) punch(b.x, b.y, 45, 0.45);
+  for (const p of thrown) {
+    if (p.kind !== 'antorcha' && p.kind !== 'dinamita') continue;
+    const k = p.t / p.dur;
+    punch(p.sx + (p.tx - p.sx) * k, p.sy + (p.ty - p.sy) * k, p.kind === 'antorcha' ? 70 : 40, 0.5);
+  }
+  for (const z of zombies) if (z.T.torch && !z.entering) { const hp = handPos(z); punch(hp.x, hp.y, 80, 0.5); }
+  for (const b of eShots) punch(b.x, b.y, 28, 0.35);
+  for (const fl of flags) punch(fl.x, fl.y, 46, 0.3);
+  for (const bl of blasts) punch(bl.x, bl.y, 240, Math.min(1, bl.t / 0.3));
+}
+
+// Lo que brilla: llamas, mechas, balas enemigas y explosiones
+function drawFactionEmissive() {
+  const flame = (x, y, r, a) => {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(255,230,150,${a})`);
+    g.addColorStop(0.4, `rgba(255,140,40,${a * 0.8})`);
+    g.addColorStop(1, 'rgba(200,40,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  };
+  for (const h of hazards) {
+    if (h.kind !== 'fuego') continue;
+    const fade = Math.min(1, h.t / 0.8);
+    for (let k = 0; k < 6; k++) {
+      const a = h.seed + k * 1.05 + Math.sin(gameTime * 3 + k) * 0.3;
+      const rr = h.r * (0.2 + 0.5 * ((k * 0.37 + h.seed) % 1));
+      flame(h.x + Math.cos(a) * rr, h.y + Math.sin(a) * rr, 14 + Math.sin(gameTime * 17 + k * 2 + h.seed) * 4, 0.55 * fade);
+    }
+  }
+  for (const b of bombs) {
+    const tip = { x: b.x + Math.cos(0.6) * 8, y: b.y + Math.sin(0.6) * 8 };
+    if (!b.dud || Math.random() < 0.6) flame(tip.x, tip.y, 6 + Math.random() * 4, 0.9);
+  }
+  for (const p of thrown) {
+    const k = p.t / p.dur, hgt = Math.sin(k * Math.PI) * 40;
+    const x = p.sx + (p.tx - p.sx) * k, y = p.sy + (p.ty - p.sy) * k - hgt;
+    if (p.kind === 'antorcha') flame(x, y, 14, 0.8);
+    if (p.kind === 'dinamita') flame(x, y, 5, 0.9);
+  }
+  for (const z of zombies) {
+    if (!z.T.torch || z.entering) continue;
+    const hp = handPos(z);
+    flame(hp.x, hp.y, 11 + Math.sin(gameTime * 20 + z.phase) * 2.5, 0.85);
+  }
+  for (const b of eShots) {
+    const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 10);
+    g.addColorStop(0, 'rgba(255,120,90,0.95)');
+    g.addColorStop(1, 'rgba(255,40,20,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(b.x, b.y, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ffd0c0';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(b.x - b.vx * 0.03, b.y - b.vy * 0.03); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+  for (const bl of blasts) {
+    const k = bl.t / 0.3;
+    flame(bl.x, bl.y, EXPLOSION_R * (1.3 - 0.5 * k), 0.9 * k);
+  }
+}
+
+// Encima de todo: cargas en vuelo, reatas, miras, avisos y textos
+function drawFactionOverlay() {
+  for (const p of thrown) {
+    const k = p.t / p.dur, hgt = Math.sin(k * Math.PI) * 40;
+    const x = p.sx + (p.tx - p.sx) * k, y = p.sy + (p.ty - p.sy) * k;
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.translate(x, y - hgt);
+    ctx.rotate(p.spin + p.t * 12);
+    if (p.kind === 'dinamita') { ctx.fillStyle = '#b3261e'; ctx.fillRect(-7, -2.5, 14, 5); }
+    else if (p.kind === 'antorcha') { ctx.fillStyle = '#5a3a1e'; ctx.fillRect(-8, -1.8, 16, 3.6); }
+    else { ctx.strokeStyle = '#9a9ea4'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.arc(0, 0, 3.5, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.restore();
+  }
+  for (const l of lassos) {
+    const hp = handPos(l.owner);
+    ctx.strokeStyle = '#c9a46a';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(hp.x, hp.y); ctx.lineTo(l.x, l.y); ctx.stroke();
+    ctx.beginPath(); ctx.arc(l.x, l.y, l.state === 'pull' ? player.radius + 2 : 9, 0, Math.PI * 2); ctx.stroke();
+  }
+  // Miras: el ametrallador y el General avisan antes de disparar
+  for (const z of zombies) {
+    if (z.act === 'aim' || z.act === 'volley') {
+      const a = 0.35 + 0.25 * Math.sin(gameTime * 25);
+      ctx.save();
+      ctx.translate(z.x, z.y);
+      ctx.strokeStyle = `rgba(255,60,40,${a})`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 6]);
+      const spread = z.act === 'volley' ? [-0.22, 0, 0.22] : [0];
+      for (const o of spread) {
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(z.aimDir + o) * z.r, Math.sin(z.aimDir + o) * z.r);
+        ctx.lineTo(Math.cos(z.aimDir + o) * 360, Math.sin(z.aimDir + o) * 360);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    if (z.act === 'windup' && z.T.ai !== 'lasso') {
+      // Brazo en alto con la carga antes de lanzarla
+      const hp = handPos(z);
+      ctx.fillStyle = 'rgba(255,200,120,0.6)';
+      ctx.beginPath(); ctx.arc(hp.x, hp.y, 4 + Math.sin(gameTime * 30) * 1.5, 0, Math.PI * 2); ctx.fill();
+    }
+    if (z.haste > 0 && zombieAlpha(z) > 0.5) {
+      ctx.strokeStyle = 'rgba(255,210,90,0.45)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.r + 4, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (z.ring > 0) {
+      ctx.strokeStyle = `rgba(255,210,90,${z.ring * 0.6})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(z.x, z.y, 300 * (1 - z.ring) + z.r, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (z.T.ai === 'bandera' && flags.some(fl => fl.owner === z)) {
+      ctx.strokeStyle = `rgba(230,50,40,${0.35 + 0.15 * Math.sin(gameTime * 6)})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(z.x, z.y, z.r + 7, 0, Math.PI * 2); ctx.stroke();
+      // Hilo rojo hacia cada bandera que lo protege
+      ctx.setLineDash([3, 7]);
+      ctx.lineWidth = 1;
+      for (const fl of flags) if (fl.owner === z) { ctx.beginPath(); ctx.moveTo(z.x, z.y); ctx.lineTo(fl.x, fl.y); ctx.stroke(); }
+      ctx.setLineDash([]);
+    }
+    if (z.stun > 0) {
+      for (let k = 0; k < 3; k++) {
+        const a = gameTime * 5 + k * 2.09;
+        ctx.fillStyle = '#ffe28a';
+        ctx.beginPath(); ctx.arc(z.x + Math.cos(a) * 18, z.y - z.r - 8 + Math.sin(a) * 5, 2.5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  }
+  ctx.font = '600 14px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const t of floaters) {
+    ctx.globalAlpha = Math.min(1, t.t * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillText(t.text, t.x + 1, t.y + 1);
+    ctx.fillStyle = t.color;
+    ctx.fillText(t.text, t.x, t.y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Qué tan visible es un zombi (el Jefe Suriano es casi una sombra)
+function zombieAlpha(z) {
+  if (z.T.ai !== 'sombra') return 1;
+  let v = 0.16;
+  if (z.reveal > 0) v = Math.max(v, Math.min(1, z.reveal / 0.4));
+  if (z.attackT >= 0) v = Math.max(v, 0.85);
+  const d = Math.hypot(z.x - player.x, z.y - player.y);
+  if (d < 110) v = Math.max(v, 0.16 + 0.6 * (1 - d / 110));
+  if (z.blink > 0) v *= z.blink / 0.5;
+  if (z.appear > 0) v *= 1 - z.appear / 0.5;
+  return v;
+}
+
 // Sprite teñido por tipo de zombi (se genera una sola vez)
 function tintedSprite(spr, tint) {
   if (!spr.tinted[tint]) spr.tinted[tint] = makeFlash(spr.img, tint);
@@ -1034,17 +2977,19 @@ function tintedSprite(spr, tint) {
 
 function drawZombies() {
   for (const z of zombies) {
-    const spr = zombieSprites[z.variant];
+    const spr = SKINS[z.T.skin];
     const sc = z.T.scale;
     const size = ZOMBIE_SIZE * sc;
     ctx.save();
+    ctx.globalAlpha = zombieAlpha(z);
     ctx.translate(z.x, z.y);
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.beginPath();
-    ctx.ellipse(3 * sc, 5 * sc, 17 * sc, 15 * sc, 0, 0, Math.PI * 2);
+    if (z.T.ai === 'jinete') ctx.ellipse(3, 5, 20 * sc, 12 * sc, z.angle, 0, Math.PI * 2);
+    else ctx.ellipse(3 * sc, 5 * sc, 17 * sc, 15 * sc, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.rotate(z.angle);
-    drawArms(z);
+    if (!z.T.noArms) drawArms(z);
     if (spr.ready) {
       const h = size / 2;
       ctx.drawImage(z.T.tint ? tintedSprite(spr, z.T.tint) : spr.img, -h, -h, size, size);
@@ -1052,9 +2997,10 @@ function drawZombies() {
       const prepGlow = z.charge === 'prep' ? 0.35 + 0.35 * Math.sin(gameTime * 30) : 0;
       const fl = Math.max(z.hitFlash / 0.12, prepGlow);
       if (fl > 0) {
-        ctx.globalAlpha = Math.min(1, fl);
+        const base = ctx.globalAlpha;
+        ctx.globalAlpha = Math.min(1, fl) * base;
         ctx.drawImage(spr.flash, -h, -h, size, size);
-        ctx.globalAlpha = 1;
+        ctx.globalAlpha = base;
       }
     }
     ctx.restore();
@@ -1064,7 +3010,7 @@ function drawZombies() {
 // Vida restante: solo se muestra cuando el zombi ya recibió daño
 function drawZombieHealth() {
   for (const z of zombies) {
-    if (z.T.boss || z.hp >= z.maxHp) continue;
+    if (z.T.boss || z.hp >= z.maxHp || zombieAlpha(z) < 0.5) continue;
     const y0 = z.y - z.r - 14;
     if (z.maxHp <= 5) {
       const w = 4, gap = 1.5;
@@ -1095,7 +3041,7 @@ function drawBossBar() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   ctx.fillStyle = '#ffd27a';
-  ctx.fillText(bosses.length > 1 ? `El Coronel ×${bosses.length}` : 'El Coronel', W / 2, y - 6);
+  ctx.fillText([...new Set(bosses.map(z => z.T.name))].join(' y '), W / 2, y - 6);
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
   ctx.fillRect(x - 2, y - 2, w + 4, 12);
   ctx.fillStyle = 'rgba(255,255,255,0.1)';
@@ -1109,7 +3055,7 @@ function drawChargeWarnings() {
   for (const z of zombies) {
     if (z.charge !== 'prep') continue;
     const a = 0.16 + 0.1 * Math.sin(gameTime * 30);
-    const len = CHARGE_SPEED * CHARGE_TIME;
+    const len = z.T.ai === 'jinete' ? 320 : CHARGE_SPEED * CHARGE_TIME;
     ctx.save();
     ctx.translate(z.x, z.y);
     ctx.rotate(z.chargeDir);
@@ -1167,7 +3113,6 @@ function drawBanner() {
 // ------------------------------------------------------------
 // Brazos animados de los zombis (dibujados en el marco ya rotado del zombi)
 // ------------------------------------------------------------
-const ZOMBIE_ARMS = ['#d6c9a8', '#4b5a6e']; // manga: manta / uniforme federal
 const ZOMBIE_SKIN = '#7f9a6b';
 
 // ext: cuánto se estiran · spread: se abren hacia fuera · swing: cierran hacia dentro
@@ -1189,11 +3134,11 @@ function armPose(z) {
   return { ext: 9 * (1 - v), spread: 0, swing: 1 - v };
 }
 
-function drawArms(z) {
+function drawArms(z, g = ctx) {
   const k = ZOMBIE_SIZE * z.T.scale / 64;
   const pose = armPose(z);
   const walk = z.entering || z.attackT >= 0 ? 0 : Math.sin(gameTime * 7 + z.phase);
-  ctx.lineCap = 'round';
+  g.lineCap = 'round';
   for (const side of [-1, 1]) {
     const sx = -3 * k, sy = side * 13 * k;
     const a = -side * 0.06 + side * 0.32 * pose.spread - side * 0.42 * pose.swing;
@@ -1202,37 +3147,37 @@ function drawArms(z) {
     const hx = sx + cx * len, hy = sy + cy * len;
 
     // Manga
-    ctx.strokeStyle = ZOMBIE_ARMS[z.variant];
-    ctx.lineWidth = 7 * k;
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(sx + cx * len * 0.66, sy + cy * len * 0.66);
-    ctx.stroke();
+    g.strokeStyle = SKINS[z.T.skin].sleeve;
+    g.lineWidth = 7 * k;
+    g.beginPath();
+    g.moveTo(sx, sy);
+    g.lineTo(sx + cx * len * 0.66, sy + cy * len * 0.66);
+    g.stroke();
 
     // Antebrazo y mano podrida
-    ctx.strokeStyle = ZOMBIE_SKIN;
-    ctx.lineWidth = 5 * k;
-    ctx.beginPath();
-    ctx.moveTo(sx + cx * len * 0.6, sy + cy * len * 0.6);
-    ctx.lineTo(hx, hy);
-    ctx.stroke();
+    g.strokeStyle = ZOMBIE_SKIN;
+    g.lineWidth = 5 * k;
+    g.beginPath();
+    g.moveTo(sx + cx * len * 0.6, sy + cy * len * 0.6);
+    g.lineTo(hx, hy);
+    g.stroke();
 
     // Garras
-    ctx.strokeStyle = '#3c4a33';
-    ctx.lineWidth = 1.2 * k;
+    g.strokeStyle = '#3c4a33';
+    g.lineWidth = 1.2 * k;
     for (const f of [-1, 0, 1]) {
       const fx = hx - cy * f * 1.6 * k, fy = hy + cx * f * 1.6 * k;
-      ctx.beginPath();
-      ctx.moveTo(fx, fy);
-      ctx.lineTo(fx + cx * 3 * k, fy + cy * 3 * k);
-      ctx.stroke();
+      g.beginPath();
+      g.moveTo(fx, fy);
+      g.lineTo(fx + cx * 3 * k, fy + cy * 3 * k);
+      g.stroke();
     }
 
     // Sangre en las manos
-    ctx.fillStyle = '#7a0a0a';
-    ctx.beginPath();
-    ctx.arc(hx - cx * 1.5 * k, hy - cy * 1.5 * k, 1.8 * k, 0, Math.PI * 2);
-    ctx.fill();
+    g.fillStyle = '#7a0a0a';
+    g.beginPath();
+    g.arc(hx - cx * 1.5 * k, hy - cy * 1.5 * k, 1.8 * k, 0, Math.PI * 2);
+    g.fill();
   }
 }
 
@@ -1244,6 +3189,7 @@ function hurtPlayer(z) {
 
   player.hp = Math.max(0, player.hp - 1);
   waveStats.hits++;
+  if (player.hp > 0) Sfx.playerHurt();
   player.invuln = INVULN_TIME;     // evita que varios zombis te golpeen en el mismo instante
   player.regenDelay = REGEN_DELAY;
   player.hitFlash = 0.18;
@@ -1281,6 +3227,7 @@ function hurtPlayer(z) {
 
 function killPlayer() {
   state = 'dead';
+  Sfx.playerDeath();
   mouse.down = false;
   player.kx = player.ky = 0;
   player.hp = 0;
@@ -1294,9 +3241,11 @@ function killPlayer() {
   spawnBlood(player.x, player.y, Math.cos(a), Math.sin(a), 26);
 }
 
-function restartGame() {
-  if (state !== 'dead') return;
+// Deja el mundo como al principio (sin zombis, sin sangre, jugador al centro)
+function resetWorld() {
   zombies.length = 0;
+  clearFactionStuff();
+  lastFocus = null;
   bullets.length = 0;
   sparks.length = 0;
   blood.length = 0;
@@ -1310,11 +3259,47 @@ function restartGame() {
   const f = inner();
   Object.assign(player, {
     x: f.x + f.w * 0.35, y: f.y + f.h * 0.6,
-    hp: PLAYER_HP, invuln: 0, regenDelay: 0, hitFlash: 0, kx: 0, ky: 0
+    hp: PLAYER_HP, invuln: 0, regenDelay: 0, hitFlash: 0, kx: 0, ky: 0,
+    slowT: 0, pullT: 0, pullFrom: null, inWire: false, vx: 0, vy: 0, burnT: 0.25
   });
+  keys.clear();
+  mouse.down = false;
+}
+
+function hideOverlays() {
+  for (const el of [pauseScreen, deathScreen, menuScreen, registryScreen, notice]) el.classList.remove('visible');
+}
+
+// Empieza una partida nueva (desde el menú, la pausa o la muerte)
+function startGame() {
+  Sfx.init();   // el navegador solo deja iniciar el audio tras un clic o una tecla
+  resetWorld();
+  hideOverlays();
+  document.body.classList.remove('en-menu');
   state = 'playing';
-  deathScreen.classList.remove('visible');
+  last = performance.now();
+  // Para probar: abrir el juego con ?oleada=10 empieza directo en esa oleada
+  try {
+    const q = parseInt(new URLSearchParams(location.search).get('oleada'), 10);
+    if (q > 1) wave = Math.min(q, 99) - 1;
+  } catch (e) { /* sin parámetros */ }
   startWave();
+}
+
+function restartGame() {
+  if (state === 'playing' || state === 'menu') return;
+  startGame();
+}
+
+function goToMenu() {
+  Sfx.resume();
+  Sfx.silenceCrowd();
+  resetWorld();
+  hideOverlays();
+  state = 'menu';
+  document.body.classList.add('en-menu');
+  menuScreen.classList.add('visible');
+  document.getElementById('menu-jugar').focus();
 }
 
 // Barra de vida sobre la cabeza del jugador (los segmentos se rellenan al regenerar)
@@ -1444,18 +3429,39 @@ function buildFloor() {
 // Entrada
 // ------------------------------------------------------------
 addEventListener('keydown', e => {
-  if (e.code === 'Enter' && state === 'dead' && deathScreen.classList.contains('visible')) {
+  if (e.code === 'KeyM' && !e.repeat) { toggleMute(); return; }
+  // Menú principal y registro
+  if (state === 'menu') {
+    if (registryScreen.classList.contains('visible')) {
+      if (e.code === 'Escape') { e.preventDefault(); closeRegistry(); }
+    } else if (e.code === 'Enter' && !['menu-registro', 'menu-sonido'].includes(document.activeElement?.id)) {
+      e.preventDefault();
+      startGame();
+    }
+    return;
+  }
+  if (e.code === 'Enter' && state === 'dead' && deathScreen.classList.contains('visible') &&
+      document.activeElement?.id !== 'menu-desde-muerte') {
     e.preventDefault();
     restartGame();
     return;
   }
+  // Pausa con P o Esc (ignora la repetición al dejar la tecla presionada)
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    e.preventDefault();
+    if (!e.repeat) togglePause();
+    return;
+  }
+  if (state === 'paused') return;
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
     keys.add(e.code);
     e.preventDefault();
   }
 });
 addEventListener('keyup', e => keys.delete(e.code));
-addEventListener('blur', () => { keys.clear(); mouse.down = false; });
+// Al cambiar de ventana o de pestaña el juego se pausa solo
+addEventListener('blur', () => { keys.clear(); mouse.down = false; pauseGame(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 
 canvas.addEventListener('mousemove', e => {
   mouse.x = e.clientX;
@@ -1478,6 +3484,7 @@ addEventListener('mouseup', e => { if (e.button === 0) mouse.down = false; });
 // Disparos y partículas
 // ------------------------------------------------------------
 function shoot() {
+  Sfx.shot();
   const m = muzzleWorld();
   const spread = (Math.random() - 0.5) * 0.03;
   const a = player.angle + spread;
@@ -1520,10 +3527,30 @@ function update(dt) {
     if (keys.has('KeyA')) dx -= 1;
     if (keys.has('KeyD')) dx += 1;
   }
+  // Frenado por alambre de púas o por la reata de un rural
+  const slow = (player.inWire ? 0.45 : 1) * (player.slowT > 0 ? 0.6 : 1);
+  player.slowT = Math.max(0, (player.slowT || 0) - dt);
+  player.vx = 0; player.vy = 0;
   if (dx || dy) {
     const l = Math.hypot(dx, dy);
-    player.x += (dx / l) * player.speed * dt;
-    player.y += (dy / l) * player.speed * dt;
+    player.vx = (dx / l) * player.speed * slow;
+    player.vy = (dy / l) * player.speed * slow;
+    player.x += player.vx * dt;
+    player.y += player.vy * dt;
+    playerStepT -= dt;
+    if (playerStepT <= 0) { playerStepT = 0.3; Sfx.step(); }
+  } else {
+    playerStepT = 0.08;   // el primer paso suena casi al arrancar
+  }
+
+  // La reata jala al jugador hacia el rural
+  if (player.pullT > 0 && player.pullFrom) {
+    player.pullT -= dt;
+    const a = Math.atan2(player.pullFrom.y - player.y, player.pullFrom.x - player.x);
+    if (Math.hypot(player.pullFrom.x - player.x, player.pullFrom.y - player.y) > player.pullFrom.r + player.radius + 6) {
+      player.x += Math.cos(a) * 190 * dt;
+      player.y += Math.sin(a) * 190 * dt;
+    }
   }
 
   // Empujón recibido: se disipa rápido
@@ -1561,6 +3588,8 @@ function update(dt) {
 
   // Zombis (aparición, persecución, ataques y colisiones)
   updateZombies(dt, f);
+  updateFactionStuff(dt, f);
+  Sfx.update(dt, zombies);
 
   // Apuntar al cursor
   if (alive) player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
@@ -1582,10 +3611,22 @@ function update(dt) {
 
     // Impacto contra zombis: se prueba todo el tramo recorrido en este cuadro
     // para que una bala rápida no atraviese a un zombi sin tocarlo
-    let hitZ = null, hitT = 2;
+    let hitZ = null, hitT = 2, hitF = null;
     for (const z of zombies) {
+      if (z.intangible) continue;
       const t = segmentCircle(px, py, b.x, b.y, z.x, z.y, z.r);
       if (t >= 0 && t < hitT) { hitT = t; hitZ = z; }
+    }
+    for (const fl of flags) {
+      const t = segmentCircle(px, py, b.x, b.y, fl.x, fl.y, 11);
+      if (t >= 0 && t < hitT) { hitT = t; hitF = fl; hitZ = null; }
+    }
+    if (hitF) {
+      hitF.hp--; hitF.hit = 0.12;
+      spawnSparks(hitF.x, hitF.y, -b.vx, -b.vy);
+      Sfx.hitWood(hitF.x, hitF.y);
+      bullets.splice(i, 1);
+      continue;
     }
     if (hitZ) {
       damageZombie(hitZ, b, px + (b.x - px) * hitT, py + (b.y - py) * hitT);
@@ -1614,6 +3655,7 @@ function update(dt) {
 
     if (hit) {
       spawnSparks(b.x, b.y, nx, ny);
+      Sfx.ricochet(b.x, b.y);
       bullets.splice(i, 1);
     } else if (b.life <= 0) {
       bullets.splice(i, 1);
@@ -1668,10 +3710,13 @@ function draw(t) {
 
   // Sangre en el piso y zombis (también quedan bajo la oscuridad)
   drawGore();
+  drawFactionGround();
   drawZombies();
 
-  // 2) Personaje (queda bajo la oscuridad)
+  // 2) Personaje (queda bajo la oscuridad; en el menú el cuarto está vacío)
+  const showPlayer = state !== 'menu';
   ctx.save();
+  if (!showPlayer) ctx.globalAlpha = 0;
   ctx.translate(player.x, player.y);
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.beginPath();
@@ -1684,7 +3729,7 @@ function draw(t) {
     else if (player.invuln > 0 && Math.floor(player.invuln * 20) % 2) ctx.globalAlpha = 0.55; // parpadeo
     ctx.drawImage(sprite, -h, -h, SPRITE_SIZE, SPRITE_SIZE);
     ctx.globalAlpha = 1;
-    if (player.hitFlash > 0 && playerFlash) {
+    if (showPlayer && player.hitFlash > 0 && playerFlash) {
       ctx.globalAlpha = player.hitFlash / 0.18;
       ctx.drawImage(playerFlash, -h, -h, SPRITE_SIZE, SPRITE_SIZE);
       ctx.globalAlpha = 1;
@@ -1716,7 +3761,8 @@ function draw(t) {
       });
     }
   }
-  punch(player.x, player.y, 75, 0.3);
+  if (showPlayer) punch(player.x, player.y, 75, 0.3);
+  factionLights();
   for (const b of bullets) punch(b.x, b.y, 45, 0.45);
   for (const s of sparks) punch(s.x, s.y, 30, 0.3 * (s.life / s.max));
   if (flash > 0) {
@@ -1767,6 +3813,7 @@ function draw(t) {
   // 5) Elementos que emiten luz: ojos en el eclipse, balas, chispas, fogonazo
   ctx.globalCompositeOperation = 'lighter';
   drawEyes();
+  drawFactionEmissive();
   for (const b of bullets) {
     const glow = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 12);
     glow.addColorStop(0, 'rgba(255,210,120,0.9)');
@@ -1808,6 +3855,7 @@ function draw(t) {
   }
 
   ctx.globalCompositeOperation = 'source-over';
+  drawFactionOverlay();
   drawVignette();
 
   drawBossBar();
@@ -1817,7 +3865,7 @@ function draw(t) {
 // ------------------------------------------------------------
 // HUD de teclas presionadas
 // ------------------------------------------------------------
-const hudKeys = [...document.querySelectorAll('#hud kbd')];
+const hudKeys = [...document.querySelectorAll('#hud kbd[data-k]')];
 const hudMouse = document.getElementById('hud-raton');
 
 const stWave = document.getElementById('st-wave');
@@ -1850,14 +3898,541 @@ function showDeathScreen() {
   deathScreen.classList.add('visible');
 }
 
+// ------------------------------------------------------------
+// Silenciar (tecla M o botón del menú); la preferencia se recuerda
+// ------------------------------------------------------------
+const muteBtn = document.getElementById('menu-sonido');
+function syncMuteUi() {
+  const m = Sfx.isMuted();
+  muteBtn.textContent = m ? 'Sonido: desactivado' : 'Sonido: activado';
+  muteBtn.setAttribute('aria-pressed', String(!m));
+  document.getElementById('hud-sonido-txt').textContent = m ? 'Silencio' : 'Sonido';
+  document.getElementById('hud-sonido').classList.toggle('on', m);
+}
+function toggleMute() {
+  Sfx.setMuted(!Sfx.isMuted());
+  syncMuteUi();
+}
+muteBtn.addEventListener('click', () => { Sfx.init(); toggleMute(); });
+syncMuteUi();
+
+// ------------------------------------------------------------
+// Menú principal
+// ------------------------------------------------------------
+const menuScreen = document.getElementById('menu');
+document.getElementById('menu-jugar').addEventListener('click', startGame);
+document.getElementById('menu-registro').addEventListener('click', openRegistry);
+document.getElementById('menu-desde-pausa').addEventListener('click', goToMenu);
+document.getElementById('menu-desde-muerte').addEventListener('click', goToMenu);
+
+// ------------------------------------------------------------
+// Registro del Cuartel
+// Cada sección es una lista de entradas. Para agregar armas o personajes
+// más adelante basta con llenar su arreglo "entradas" y, si se quiere,
+// darle a cada entrada una función "retrato" que dibuje su grabado.
+// ------------------------------------------------------------
+const REGISTRO_NOMBRE = 'Registro del Cuartel';
+const REGISTRO_COMPLETO = false;   // true = muestra todas las notas sin tener que descubrirlas
+
+function speedLabel(T) {
+  const v = (T.speed[0] + T.speed[1]) / 2;
+  if (T.pace) return T.pace;
+  return v < 50 ? 'Lenta' : v < 95 ? 'Normal' : v < 130 ? 'Rápida' : 'Muy rápida';
+}
+
+// Notas de cada facción (resumen de la investigación histórica)
+const FACTION_ORDER = ['federales', 'zapatistas', 'villistas', 'carrancistas', 'colorados'];
+const FACTION_NOTES = {
+  federales: {
+    titulo: 'El Ejército Federal', bajada: 'Huertistas · disuelto el 13 de agosto de 1914',
+    texto: [
+      'Fue el ejército del gobierno de Victoriano Huerta. Para llenar sus filas se recurrió a la leva: se apresaba a los hombres a la salida de la iglesia o del cine y se les ponía un uniforme. Muy pocos eran voluntarios y las deserciones eran constantes.',
+      'Lo derrotaron en Torreón y en Zacatecas. Tras la salida de Huerta se disolvió con los Tratados de Teoloyucan, y con él desaparecieron los Rurales, la policía montada del porfiriato.'
+    ],
+    vestian: 'Uniforme azul oscuro de corte francés y quepí; en 1913 se repartieron gorras kaki con banda blanca. Los rurales vestían de charro: gris perla con botonadura de plata, sombrero ancho de fieltro y corbata roja o negra.',
+    peleaban: 'Defendían las plazas con trincheras, ametralladoras y artillería emplazada en los cerros.'
+  },
+  zapatistas: {
+    titulo: 'El Ejército Libertador del Sur', bajada: 'Los surianos de Emiliano Zapata',
+    texto: [
+      'Campesinos del sur que se levantaron con Zapata por la tierra. Lejos de la frontera y de los puertos, siempre les faltaron armas y parque; muchos peleaban con lo que le quitaban al enemigo, ropa incluida.',
+      'Hacían la guerra a su modo: incursiones rápidas, golpes por sorpresa y retirada al monte. Sus enemigos los llamaban "liebres blancas".'
+    ],
+    vestian: 'Calzón y camisa de manta blanca, huaraches y sombrero de palma de ala ancha; los jefes, sombrero de charro. Cuando las fábricas de Morelos les surtían tela, también gabardina y popelina.',
+    peleaban: 'Guerrilla: atacar por sorpresa y desaparecer.'
+  },
+  villistas: {
+    titulo: 'La División del Norte', bajada: 'Las tropas de Francisco Villa',
+    texto: [
+      'El ejército más temido del norte. Se movía en trenes con todo y cañones, atacaba de noche y lanzaba cargas de caballería contra las posiciones federales. En Zacatecas, el 23 de junio de 1914, acabó con el ejército de Huerta.',
+      'Usaban bombas de dinamita para los asaltos, aunque en Torreón muchas no estallaron. Al frente iban los Dorados, la escolta personal de Villa.'
+    ],
+    vestian: 'Ropa de trabajo llena de polvo, cananas cruzadas al pecho y sombrero de "cuatro pedradas". Los Dorados llevaban sombrero Stetson con insignia dorada y chaqueta verde olivo, más tarde kaki.',
+    peleaban: 'Cargas de caballería, ataques nocturnos y dinamita.'
+  },
+  carrancistas: {
+    titulo: 'El Ejército Constitucionalista', bajada: 'Las fuerzas de Venustiano Carranza',
+    texto: [
+      'Nació en marzo de 1913 para derrocar a Huerta tras el asesinato de Madero. Era el bando con más dinero y más orden, con generales como Álvaro Obregón y Pablo González.',
+      'Tras la Convención de Aguascalientes, a fines de 1914, quedó enfrentado con Villa y con Zapata. Obregón traía tácticas nuevas: trincheras, alambre de púas y ametralladoras para frenar a la caballería.'
+    ],
+    vestian: 'Uniforme de campaña kaki, casi siempre verde olivo, con gorra de visera o casco de sol forrado de kaki. En guarnición, un azul tan oscuro que parecía negro.',
+    peleaban: 'Orden, trincheras, alambradas y fuego cruzado.'
+  },
+  colorados: {
+    titulo: 'Los Colorados', bajada: 'Orozquistas de la bandera roja',
+    texto: [
+      'Les decían colorados por la bandera roja que enarbolaban desde 1911. Siguieron a Pascual Orozco en su rebelión de 1912, con el lema "Reforma, Libertad y Justicia", y en 1913 se pasaron al lado de Huerta.',
+      'Eran jinetes irregulares y guerrilleros: tomaban pueblos, quemaban haciendas y saboteaban las vías del tren. Villa los tenía por traidores; en Zacatecas no les perdonó la vida.'
+    ],
+    vestian: 'Ningún corresponsal les describe uniforme. Se les reconoce por el rojo de su bandera en listones y paliacates.',
+    peleaban: 'Guerrilla a caballo, incendios y sabotaje.'
+  }
+};
+
+// Desde cuándo aparece cada tipo (se calcula de ROSTER y BOSS_ORDER para no desfasarse)
+function apareceDe(tipo) {
+  const bi = BOSS_ORDER.indexOf(tipo);
+  if (bi >= 0) return `Oleada ${(bi + 1) * DIFF.bossEvery}`;
+  const r = ROSTER.find(x => x.t === tipo);
+  return !r ? '—' : r.from === 1 ? 'Desde la primera oleada' : `Desde la oleada ${r.from}`;
+}
+
+const REGISTRO = [
+  {
+    id: 'enemigos', titulo: 'Enemigos', indice: 'Los que regresaron',
+    entradas: [
+      // ---------- Federales ----------
+      { id: 'federal', tipo: 'federal', faccion: 'federales', inicial: true,
+        nombre: 'El Federal', volanta: 'Soldado del ejército de Huerta',
+        titular: 'El ejército federal no se rindió del todo',
+        texto: ['Muchos llegaron al cuartel por la leva y nunca volvieron a casa. Todavía visten el uniforme azul y el quepí, como si siguieran esperando órdenes de un gobierno que ya no existe.',
+                'Avanzan junto a los muertos de los demás bandos. Esta noche la muerte no distingue colores: todos vienen a cobrar la misma deuda.'],
+        tactica: 'Camina y tira zarpazos',
+        consejo: 'Cinco tiros. No deje que se junten varios: rodeado, ni el mejor tirador alcanza.' },
+      { id: 'desertor', tipo: 'desertor', faccion: 'federales',
+        nombre: 'El Desertor', volanta: 'Corre el que huyó',
+        titular: 'Corrió en vida; muerto no ha parado',
+        texto: ['La leva llenó los cuarteles de hombres que no querían pelear, y muchos desertaron a la primera oportunidad. La deuda alcanzó a éste de todos modos.',
+                'Ahora corre en sentido contrario: directo hacia usted. Es menudo y frágil, pero llega antes de que uno termine de apuntar.'],
+        tactica: 'Muy rápido y frágil',
+        consejo: 'Dos tiros bastan. Atiéndalo primero: si lo deja para después, ya lo tiene encima.' },
+      { id: 'rural', tipo: 'rural', faccion: 'federales',
+        nombre: 'El Rural', volanta: 'De la Guardia Rural del porfiriato',
+        titular: 'Ni la muerte le quitó la reata',
+        texto: ['Policía montada de don Porfirio, famosa por su traje de charro gris perla con botonadura de plata. Huerta quiso hacerla crecer; terminó disuelta junto con el ejército federal en el verano de 1914.',
+                'Conserva la reata. Desde lejos la lanza y, si alcanza a su presa, la jala hacia él y la deja entumida.'],
+        tactica: 'Lanza la reata: te jala y te frena',
+        consejo: 'Cuando gire el brazo, muévase de lado. Si lo lazan, dispárele: muerto el rural, se suelta la reata.' },
+      { id: 'ametrallador', tipo: 'ametrallador', faccion: 'federales',
+        nombre: 'El Ametrallador', volanta: 'Artillería federal',
+        titular: 'La ametralladora federal sigue cantando',
+        texto: ['En Torreón, las ametralladoras federales frenaron una y otra vez los asaltos villistas. Este artillero cargó la suya hasta la tumba.',
+                'Se emplaza a media distancia, apunta y suelta una ráfaga de cinco tiros. Mientras apunta, una línea roja delata hacia dónde.'],
+        tactica: 'Ráfaga de 5 balas tras apuntar',
+        consejo: 'Salga de la línea roja antes de la ráfaga. De cerca no puede usar la ametralladora: es el momento de rematarlo.' },
+      { id: 'coronel', tipo: 'coronel', faccion: 'federales', jefe: true,
+        nombre: 'El Coronel', volanta: 'Jefe de los caídos federales',
+        titular: 'Amaneció abierta la tumba del Coronel',
+        texto: ['Oficial federal de alto rango, sepultado con todo y charreteras. Llega rodeado de su escolta y no tiene prisa: sabe que tarde o temprano uno se queda sin espacio.',
+                'Cuando uno se le aleja, se planta, tiembla y embiste en línea recta como caballo desbocado.'],
+        tactica: 'Embestida en línea recta',
+        consejo: 'Cuando lo vea temblar y aparezca la franja roja en el piso, hágase a un lado. Son cuarenta y cinco tiros; vencerlo le devuelve fuerzas.' },
+      // ---------- Zapatistas ----------
+      { id: 'revolucionario', tipo: 'suriano', faccion: 'zapatistas', inicial: true,
+        nombre: 'El Suriano', volanta: 'Campesino del Ejército Libertador del Sur',
+        titular: 'Bajaron del sur con el calzón de manta',
+        texto: ['Campesinos de Morelos que se fueron a la bola con Zapata y no regresaron a casa. Anoche volvieron con la manta tiesa de sangre, el sombrero de palma y las cananas vacías.',
+                'Los testigos coinciden: no hablan ni reconocen a nadie. Caminan hacia los vivos con los brazos por delante.'],
+        tactica: 'Camina y tira zarpazos',
+        consejo: 'Cinco tiros bien puestos lo devuelven a la tierra. Un disparo mientras echa los brazos atrás le corta el golpe.' },
+      { id: 'liebre', tipo: 'liebre', faccion: 'zapatistas',
+        nombre: 'La Liebre Blanca', volanta: 'Guerrillero suriano',
+        titular: 'Golpea y se esfuma',
+        texto: ['Así llamaban sus enemigos a los zapatistas, por la manta blanca y por lo rápido que desaparecían en el monte. Ésta viene ligera, de manta limpia y huaraches gastados de tanto correr.',
+                'Llega corriendo, tira un zarpazo y huye a la oscuridad antes de que uno reaccione. Luego vuelve.'],
+        tactica: 'Golpea y huye',
+        consejo: 'Tres tiros. Dispárele cuando dé la vuelta para huir: todavía está cerca y no se cuida.' },
+      { id: 'jefesuriano', tipo: 'jefe', faccion: 'zapatistas', jefe: true,
+        nombre: 'El Jefe Suriano', volanta: 'Jefe de los caídos del sur',
+        titular: 'Nadie lo ve llegar',
+        texto: ['Jefe guerrillero de sombrero de charro y manta fina, como vestían los oficiales zapatistas. Muerto, se volvió parte de la noche: apenas se le distingue, como un temblor en el aire.',
+                'Se esfuma y reaparece en lo más oscuro del cuarto, siempre con dos Liebres Blancas a su lado.'],
+        tactica: 'Casi invisible; reaparece con emboscadas',
+        consejo: 'Cada tiro lo delata por un momento, y su gemido dice de qué lado anda. Cuando se esfume, espere la emboscada. Cuarenta tiros.' },
+      // ---------- Villistas ----------
+      { id: 'villista', tipo: 'villista', faccion: 'villistas',
+        nombre: 'El Villista', volanta: 'Soldado de la División del Norte',
+        titular: 'Llegaron polvosos y armados hasta los dientes',
+        texto: ['Así se describía a los hombres de Villa: cananas cruzadas al pecho, sombrero de cuatro pedradas y la ropa llena de polvo. Hicieron la guerra a caballo y en tren, del norte hasta Zacatecas.',
+                'Muertos siguen siendo de los más aguerridos: andan un poco más rápido que la tropa de los otros bandos.'],
+        tactica: 'Un poco más rápido',
+        consejo: 'Cinco tiros. No le dé la espalda.' },
+      { id: 'dinamitero', tipo: 'dinamitero', faccion: 'villistas',
+        nombre: 'El Dinamitero', volanta: 'Bombas de la División del Norte',
+        titular: 'Cuidado con la mecha',
+        texto: ['Los villistas asaltaban posiciones con bombas de dinamita, aunque en Torreón muchas no estallaron. Éste carga sus cartuchos colgados a la espalda.',
+                'A media distancia se detiene, enciende uno y lo lanza hacia donde usted va. La mecha chisporrotea un segundo antes de estallar; a veces se apaga sola.'],
+        tactica: 'Lanza dinamita; 1 de cada 5 falla',
+        consejo: 'Al ver la chispa en el piso, aléjese. La explosión también destroza a los muertos: úsela a su favor.' },
+      { id: 'dorado', tipo: 'dorado', faccion: 'villistas',
+        nombre: 'El Dorado', volanta: 'De la escolta personal de Villa',
+        titular: 'Ni muerto se deja el Dorado',
+        texto: ['Villa escogió a cien hombres de sus brigadas para su escolta: los Dorados. Llevaban sombrero Stetson con insignia dorada, Mauser de 7 milímetros y Colt .44, y sus órdenes valían como si las diera el propio general.',
+                'Grande y pesado, camina despacio, pero las balas apenas le hacen mella. Se abre paso a empujones y un golpe suyo manda lejos a cualquiera.'],
+        tactica: 'Muy resistente; empuja fuerte',
+        consejo: 'Catorce tiros. No se quede quieto frente a él: retroceda disparando y aproveche todo el cuarto.' },
+      { id: 'capitan', tipo: 'capitan', faccion: 'villistas', jefe: true,
+        nombre: 'El Capitán de Dorados', volanta: 'Jefe de la caballería del norte',
+        titular: 'Carga a galope tendido dentro del Palacio',
+        texto: ['Cuentan que en Zacatecas los Dorados cabalgaron como verdaderos centauros. Este capitán no se bajó del caballo ni para morir.',
+                'Avisa con una franja roja, relincha y carga a galope rebotando en los muros hasta tres veces. Al terminar queda aturdido.'],
+        tactica: 'Cargas que rebotan; aturdido recibe el doble',
+        consejo: 'Muévase de lado al ver la franja. Cuando vea estrellas sobre su cabeza, descárguele todo: ahí recibe el doble. Sesenta tiros.' },
+      // ---------- Carrancistas ----------
+      { id: 'carrancista', tipo: 'carrancista', faccion: 'carrancistas',
+        nombre: 'El Carrancista', volanta: 'Soldado del Ejército Constitucionalista',
+        titular: 'Marchan en orden aun después de muertos',
+        texto: ['El ejército de Carranza era el mejor pagado y el más organizado. Su tropa vestía uniforme kaki verde olivo y gorra de visera.',
+                'Muertos conservan la disciplina: son algo más lentos, pero aguantan un tiro más que los demás.'],
+        tactica: 'Aguanta un tiro más',
+        consejo: 'Seis tiros. Cuídese de que no lo encierren entre varios.' },
+      { id: 'alambrista', tipo: 'alambrista', faccion: 'carrancistas',
+        nombre: 'El Alambrista', volanta: 'Zapador constitucionalista',
+        titular: 'Alambre de púas en pleno Palacio',
+        texto: ['Los constitucionalistas aprendieron a frenar a la caballería con trincheras y alambradas. Este zapador sigue tendiendo alambre después de muerto.',
+                'Lanza rollos de alambre de púas que se quedan en el piso un buen rato. Quien los pisa avanza a duras penas.'],
+        tactica: 'Siembra alambre que frena mucho',
+        consejo: 'No pelee dentro del alambre: rodéelo. Si queda atrapado, salga antes de que lleguen los demás.' },
+      { id: 'general', tipo: 'general', faccion: 'carrancistas', jefe: true,
+        nombre: 'El General Constitucionalista', volanta: 'Jefe de los caídos constitucionalistas',
+        titular: 'Con su corneta, los muertos se apuran',
+        texto: ['Viste uniforme kaki y casco de sol forrado de kaki, como los oficiales de campaña constitucionalistas. No da un paso sin su corneta.',
+                'Cuando la toca, los muertos cercanos se apresuran. Dispara descargas de tres balas y rodea a su enemigo de alambre de púas.'],
+        tactica: 'Corneta que apura, descargas y alambre',
+        consejo: 'Cuando suene la corneta, retroceda: todos se apuran unos segundos. La línea roja avisa la descarga. Cincuenta y cinco tiros.' },
+      // ---------- Colorados ----------
+      { id: 'colorado', tipo: 'colorado', faccion: 'colorados',
+        nombre: 'El Colorado', volanta: 'Orozquista de la bandera roja',
+        titular: 'Vuelven los colorados',
+        texto: ['Jinetes irregulares que siguieron a Pascual Orozco bajo la bandera roja y después pelearon del lado de Huerta. Se les reconoce por el rojo en el sombrero y el paliacate.',
+                'Son ligeros y rápidos, pero aguantan menos que la tropa de línea.'],
+        tactica: 'Rápido y frágil',
+        consejo: 'Cuatro tiros. Llegan antes que los demás: atiéndalos primero.' },
+      { id: 'incendiario', tipo: 'incendiario', faccion: 'colorados',
+        nombre: 'El Incendiario', volanta: 'Quemador de haciendas',
+        titular: 'Donde pasa, deja lumbre',
+        texto: ['En 1912 los colorados recorrieron La Laguna quemando haciendas y saboteando las vías del tren. Éste trae la antorcha encendida en la mano; en lo oscuro se le ve venir.',
+                'Lanza antorchas que dejan el piso ardiendo unos segundos. Pisar las brasas quema.'],
+        tactica: 'Deja fuego en el piso',
+        consejo: 'No cruce las llamas. Su antorcha lo delata en la oscuridad: aproveche para tirarle de lejos.' },
+      { id: 'cabecilla', tipo: 'cabecilla', faccion: 'colorados', jefe: true,
+        nombre: 'El Cabecilla Colorado', volanta: 'Jefe de los caídos de la bandera roja',
+        titular: 'Mientras ondee su bandera, no cae',
+        texto: ['Cabecilla de una partida de colorados. Trae la bandera roja a la espalda y planta una tras otra donde se detiene.',
+                'Mientras ondee alguna de sus banderas, las balas apenas le hacen daño y los muertos que están cerca se apuran. También lanza antorchas.'],
+        tactica: 'Banderas que lo protegen y apuran a los demás',
+        consejo: 'Derribe primero las banderas: seis tiros cada una. Sin ellas queda expuesto. Cincuenta tiros.' }
+    ]
+  },
+  {
+    id: 'armas', titulo: 'Armas', indice: 'El armamento del cuartel', proximamente: true,
+    aviso: 'El cuartel está haciendo inventario. En la próxima edición se publicará la lista completa del armamento disponible.',
+    entradas: [
+      { id: 'mauser', nombre: 'Fusil Mauser' },
+      { id: 'carabina', nombre: 'Carabina 30-30' },
+      { id: 'hotchkiss', nombre: 'Ametralladora Hotchkiss' }
+    ]
+  },
+  {
+    id: 'personajes', titulo: 'Personajes', indice: 'Los que resisten', proximamente: true,
+    aviso: 'Nuestros corresponsales siguen buscando a quienes resistieron aquella noche en Palacio. Sus semblanzas aparecerán en la próxima edición.',
+    entradas: [
+      { id: 'villa', nombre: 'Francisco Villa' },
+      { id: 'zapata', nombre: 'Emiliano Zapata' },
+      { id: 'fierro', nombre: 'Rodolfo Fierro' },
+      { id: 'soldadera', nombre: 'La soldadera' }
+    ]
+  }
+];
+
+// Progreso del registro: qué se ha visto y cuántas bajas de cada uno.
+// Se guarda en el navegador si se puede; si no, solo dura la sesión.
+const REG_KEY = 'luzdeluna.registro.v1';
+let regProgress = { visto: {}, bajas: {} };
+try {
+  const saved = JSON.parse(localStorage.getItem(REG_KEY) || 'null');
+  if (saved && typeof saved === 'object') regProgress = { visto: saved.visto || {}, bajas: saved.bajas || {} };
+} catch (e) { /* sin almacenamiento disponible */ }
+function saveProgress() {
+  try { localStorage.setItem(REG_KEY, JSON.stringify(regProgress)); } catch (e) { /* sin almacenamiento */ }
+}
+
+const ENEMY_ENTRIES = REGISTRO[0].entradas;
+function registryIdFor(typeName) {
+  return ZTYPES[typeName] && ZTYPES[typeName].reg;
+}
+function isUnlocked(entry) {
+  return REGISTRO_COMPLETO || entry.inicial || !!regProgress.visto[entry.id];
+}
+// La nota de una facción se abre en cuanto se conoce a cualquiera de los suyos
+function factionUnlocked(f) {
+  return ENEMY_ENTRIES.some(e => e.faccion === f && isUnlocked(e));
+}
+
+function noteSighting(id) {
+  if (!id || regProgress.visto[id]) return;
+  regProgress.visto[id] = true;
+  saveProgress();
+  const entry = ENEMY_ENTRIES.find(e => e.id === id);
+  if (entry && !entry.inicial && !REGISTRO_COMPLETO) showNotice(`Nueva nota en el ${REGISTRO_NOMBRE}: <b>${entry.nombre}</b>`);
+}
+function noteKill(id) {
+  if (!id) return;
+  regProgress.bajas[id] = (regProgress.bajas[id] || 0) + 1;
+  saveProgress();
+}
+
+const notice = document.getElementById('aviso');
+let noticeTimer = null;
+function showNotice(html) {
+  notice.innerHTML = html;
+  notice.classList.add('visible');
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => notice.classList.remove('visible'), 3200);
+}
+
+// Grabado de un zombi: mirando hacia arriba, con sus brazos, a escala real entre ellos
+function drawEnemyPortrait(cv, entry, locked) {
+  const T = ZTYPES[entry.tipo];
+  const spr = SKINS[T.skin];
+  if (!spr.ready) { setTimeout(() => drawEnemyPortrait(cv, entry, locked), 60); return; }
+  const px = 180, r = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = cv.height = px * r;
+  const g = cv.getContext('2d');
+  g.setTransform(r, 0, 0, r, 0, 0);
+  g.clearRect(0, 0, px, px);
+  // Escala fija: se nota quién es más grande. El jinete se achica un poco para que quepa el caballo
+  const k = T.ai === 'jinete' ? 1.55 : 2.25;
+  g.translate(px / 2, px / 2 + 16);
+  g.scale(k, k);
+  g.fillStyle = 'rgba(40,28,15,0.22)';
+  g.beginPath();
+  g.ellipse(3 * T.scale, 5 * T.scale, 17 * T.scale, 15 * T.scale, 0, 0, Math.PI * 2);
+  g.fill();
+  g.rotate(-Math.PI / 2);
+  const fake = { T, attackT: -1, charge: null, entering: true, phase: 0 };
+  if (!T.noArms) drawArms(fake, g);
+  const size = ZOMBIE_SIZE * T.scale;
+  g.drawImage(T.tint ? tintedSprite(spr, T.tint) : spr.img, -size / 2, -size / 2, size, size);
+  if (locked) {
+    // Silueta: solo se intuye la forma
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'source-atop';
+    g.fillStyle = '#2a2118';
+    g.fillRect(0, 0, cv.width, cv.height);
+    g.globalCompositeOperation = 'source-over';
+  }
+}
+
+const registryScreen = document.getElementById('registro');
+const regTabs = document.getElementById('reg-secciones');
+const regIndex = document.getElementById('reg-indice');
+const regNote = document.getElementById('reg-nota');
+let regSection = 'enemigos', regEntry = 'revolucionario';
+document.getElementById('reg-volver').addEventListener('click', closeRegistry);
+
+function el(tag, props = {}, ...children) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') n.className = v;
+    else if (k === 'text') n.textContent = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v);
+  }
+  for (const c of children) if (c) n.append(c);
+  return n;
+}
+
+function renderTabs() {
+  regTabs.replaceChildren(...REGISTRO.map(sec => el('button', {
+    role: 'tab', 'aria-selected': String(sec.id === regSection),
+    onclick: () => { regSection = sec.id; regEntry = sec.entradas[0]?.id; renderRegistry(); }
+  }, sec.titulo, sec.proximamente ? el('span', { class: 'pronto', text: ' · próximamente' }) : null)));
+}
+
+function renderIndex(sec) {
+  const items = [el('li', {}, el('p', { class: 'indice-titulo', text: sec.indice }))];
+  const entryButton = (entry, i) => {
+    const open = !sec.proximamente && isUnlocked(entry);
+    const label = open || sec.proximamente ? entry.nombre : '¿ ? ?';
+    return el('li', {}, el('button', {
+      'aria-current': String(entry.id === regEntry),
+      onclick: () => { regEntry = entry.id; renderRegistry(); }
+    },
+      el('span', { class: 'num', text: String(i + 1).padStart(2, '0') }),
+      el('span', { class: open || sec.proximamente ? '' : 'bloqueado', text: label }),
+      open && entry.jefe ? el('span', { class: 'marca-jefe', text: 'Jefe' }) : null
+    ));
+  };
+  if (sec.id === 'enemigos') {
+    let n = 0;
+    for (const f of FACTION_ORDER) {
+      const open = factionUnlocked(f);
+      items.push(el('li', { class: 'grupo-faccion' }, el('button', {
+        'aria-current': String(regEntry === 'f:' + f),
+        onclick: () => { regEntry = 'f:' + f; renderRegistry(); }
+      }, el('span', { class: open ? '' : 'bloqueado', text: open ? FACTIONS[f].nombre : 'Facción desconocida' }))));
+      for (const entry of sec.entradas.filter(e => e.faccion === f)) items.push(entryButton(entry, n++));
+    }
+  } else {
+    sec.entradas.forEach((entry, i) => items.push(entryButton(entry, i)));
+  }
+  regIndex.replaceChildren(...items);
+}
+
+function renderFactionNote(f) {
+  const nota = FACTION_NOTES[f];
+  if (!factionUnlocked(f)) {
+    regNote.replaceChildren(
+      el('p', { class: 'nota-volanta', text: 'Sin confirmar' }),
+      el('h2', { text: 'Facción desconocida' }),
+      el('p', { class: 'nota-bajada', text: 'Ningún testigo ha visto todavía a uno de los suyos.' }),
+      el('span', { class: 'sello', text: 'Sin avistamientos' })
+    );
+    return;
+  }
+  const miembros = ENEMY_ENTRIES.filter(e => e.faccion === f);
+  const bajas = miembros.reduce((a, e) => a + (regProgress.bajas[e.id] || 0), 0);
+  regNote.replaceChildren(
+    el('p', { class: 'nota-volanta', text: 'Facción' }),
+    el('h2', { text: nota.titulo }),
+    el('p', { class: 'nota-bajada', text: nota.bajada }),
+    el('div', { class: 'ficha' },
+      el('div', {}, el('span', { text: 'Miembros' }), el('b', { text: String(miembros.length) })),
+      el('div', {}, el('span', { text: 'Conocidos' }), el('b', { text: `${miembros.filter(isUnlocked).length} de ${miembros.length}` })),
+      el('div', {}, el('span', { text: 'Bajas registradas' }), el('b', { text: String(bajas) }))),
+    el('div', { class: 'nota-texto' }, ...nota.texto.map(t => el('p', { text: t }))),
+    el('p', { class: 'consejo' }, el('strong', { text: 'Cómo vestían. ' }), nota.vestian),
+    el('p', { class: 'consejo consejo-2' }, el('strong', { text: 'Cómo peleaban. ' }), nota.peleaban)
+  );
+}
+
+function renderNote(sec) {
+  if (sec.id === 'enemigos' && String(regEntry).startsWith('f:')) { renderFactionNote(regEntry.slice(2)); return; }
+  const entry = sec.entradas.find(e => e.id === regEntry) || sec.entradas[0];
+  if (sec.proximamente) {
+    regNote.replaceChildren(
+      el('p', { class: 'nota-volanta', text: 'Próxima edición' }),
+      el('h2', { text: entry.nombre }),
+      el('p', { class: 'nota-bajada', text: sec.indice }),
+      el('div', { class: 'nota-texto' }, el('p', { text: sec.aviso })),
+      el('span', { class: 'sello', text: 'En preparación' })
+    );
+    return;
+  }
+  const open = isUnlocked(entry);
+  const cv = el('canvas', { 'aria-hidden': 'true' });
+  const fig = el('figure', { class: 'grabado' }, cv,
+    el('figcaption', { text: open ? `${entry.nombre}, según testigos.` : 'Silueta reconstruida por testigos.' }));
+  if (!open) {
+    regNote.replaceChildren(
+      el('p', { class: 'nota-volanta', text: 'Sin confirmar' }),
+      el('h2', { text: 'Paradero desconocido' }),
+      el('p', { class: 'nota-bajada', text: 'El cuartel aún no tiene noticias de este enemigo.' }),
+      el('div', { class: 'nota-grid' }, fig,
+        el('div', { class: 'nota-texto' },
+          el('p', { text: 'Hay rumores de algo más entre los caídos, pero ningún testigo ha vuelto para contarlo. Siga resistiendo y la nota completa aparecerá en esta página.' }),
+          el('span', { class: 'sello', text: 'Sin avistamientos' })))
+    );
+    drawEnemyPortrait(cv, entry, true);
+    return;
+  }
+  const T = ZTYPES[entry.tipo];
+  const kills = regProgress.bajas[entry.id] || 0;
+  regNote.replaceChildren(
+    el('p', { class: 'nota-volanta', text: `${FACTIONS[entry.faccion].nombre} · ${entry.volanta}` }),
+    el('h2', { text: entry.titular }),
+    el('p', { class: 'nota-bajada', text: entry.jefe ? `${entry.nombre}, jefe de los ${FACTIONS[entry.faccion].nombre.toLowerCase()}` : entry.nombre }),
+    el('div', { class: 'nota-grid' }, fig,
+      el('div', {},
+        el('div', { class: 'ficha' },
+          el('div', {}, el('span', { text: 'Aguanta' }), el('b', { text: `${T.hp} tiros` })),
+          el('div', {}, el('span', { text: 'Paso' }), el('b', { text: speedLabel(T) })),
+          el('div', {}, el('span', { text: 'Aparece' }), el('b', { text: apareceDe(entry.tipo) })),
+          el('div', {}, el('span', { text: 'Bajas registradas' }), el('b', { text: String(kills) }))),
+        el('p', { class: 'tactica' }, el('span', { text: 'Táctica: ' }), entry.tactica),
+        el('div', { class: 'nota-texto' }, ...entry.texto.map(t => el('p', { text: t }))),
+        el('p', { class: 'consejo' }, el('strong', { text: 'Consejo del cuartel. ' }), entry.consejo)))
+  );
+  drawEnemyPortrait(cv, entry, false);
+}
+
+function renderRegistry() {
+  const sec = REGISTRO.find(s => s.id === regSection);
+  renderTabs();
+  renderIndex(sec);
+  renderNote(sec);
+}
+
+function openRegistry() {
+  if (state !== 'menu') return;
+  renderRegistry();
+  menuScreen.classList.remove('visible');
+  registryScreen.classList.add('visible');
+  document.getElementById('reg-volver').focus();
+}
+
+function closeRegistry() {
+  registryScreen.classList.remove('visible');
+  menuScreen.classList.add('visible');
+  document.getElementById('menu-jugar').focus();   // así "Enter para jugar" sigue funcionando
+}
+
+// ------------------------------------------------------------
+// Pausa
+// ------------------------------------------------------------
+const pauseScreen = document.getElementById('pausa');
+const hudPause = document.getElementById('hud-pausa');
+document.getElementById('continuar').addEventListener('click', resumeGame);
+document.getElementById('reiniciar-pausa').addEventListener('click', restartGame);
+
+function pauseGame() {
+  if (state !== 'playing') return;
+  state = 'paused';
+  Sfx.suspend();
+  keys.clear();          // que ninguna tecla quede "pegada" al volver
+  mouse.down = false;
+  document.getElementById('p-oleada').textContent = wave;
+  document.getElementById('p-bajas').textContent = kills;
+  document.getElementById('p-tiempo').textContent = formatTime(survivalTime);
+  pauseScreen.classList.add('visible');
+}
+
+function resumeGame() {
+  if (state !== 'paused') return;
+  state = 'playing';
+  Sfx.resume();
+  keys.clear();
+  mouse.down = false;
+  last = performance.now();   // evita un salto de tiempo al reanudar
+  pauseScreen.classList.remove('visible');
+}
+
+function togglePause() {
+  if (state === 'playing') pauseGame();
+  else if (state === 'paused') resumeGame();
+}
+
 function syncHud() {
   for (const k of hudKeys) k.classList.toggle('on', keys.has(k.dataset.k));
   hudMouse.classList.toggle('on', mouse.down);
+  hudPause.classList.toggle('on', state === 'paused');
   setText(stWave, wave);
   setText(stLeft, zombies.length + spawnQueue.length);
   setText(stKills, kills);
   const ev = currentWave && currentWave.event;
-  setText(stEvent, ev ? '· ' + EVENT_INFO[ev].title : '');
+  setText(stEvent, ev ? '· ' + (ev === 'jefe' ? currentWave.bosses.map(b => ZTYPES[b].name).join(' y ') : EVENT_INFO[ev].title) : '');
   stEvent.style.color = ev ? EVENT_INFO[ev].color : '';
 }
 
@@ -1868,15 +4443,29 @@ let last = performance.now();
 function loop(now) {
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
-  update(dt);
-  draw(now);
+  if (state === 'menu') {
+    // El cuarto vacío, iluminado por la luna, de fondo para el menú
+    draw(now);
+  } else if (state === 'paused') {
+    // Todo queda congelado; solo se repinta si cambió el tamaño de la ventana
+    if (redrawWhilePaused) {
+      const s = shake;
+      shake = 0;          // sin sacudida en el cuadro congelado
+      draw(now);
+      shake = s;
+      redrawWhilePaused = false;
+    }
+  } else {
+    update(dt);
+    draw(now);
+  }
   syncHud();
   requestAnimationFrame(loop);
 }
 
-addEventListener('resize', resize);
+addEventListener('resize', () => { resize(); redrawWhilePaused = true; });
 resize();
-startWave();
+document.getElementById('menu-jugar').focus();
 requestAnimationFrame(loop);
 </script>
 </body>
