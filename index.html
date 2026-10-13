@@ -149,7 +149,41 @@
   kbd.solo { width: 28px; height: 28px; }
 
   /* En el menú no se muestran los indicadores del juego */
-  body.en-menu #stats, body.en-menu #hud { display: none; }
+  body.en-menu #stats, body.en-menu #hud, body.en-menu #puntos, body.en-menu #arma, body.en-menu #compra { display: none; }
+  #puntos {
+    position: fixed; right: 16px; top: 10px; text-align: right;
+    font: 13px system-ui, sans-serif; color: #8a97b8; pointer-events: none; user-select: none;
+  }
+  #puntos b { display: block; font: 700 26px Georgia, serif; color: #ffd27a; letter-spacing: .5px; }
+  #pts-pops { position: absolute; right: 0; top: 100%; display: flex; flex-direction: column; align-items: flex-end; }
+  #pts-pops span { font: 600 13px system-ui, sans-serif; animation: pop .9s ease-out forwards; }
+  #pts-pops .mas { color: #ffd27a; } #pts-pops .menos { color: #ff8a7a; }
+  @keyframes pop { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(14px); } }
+  #arma {
+    position: fixed; right: 16px; bottom: 12px; display: flex; gap: 12px; align-items: flex-end;
+    font: 12px system-ui, sans-serif; color: #8a97b8; pointer-events: none; user-select: none;
+  }
+  #arma canvas { width: 120px; height: 40px; }
+  .arma-datos { text-align: right; min-width: 170px; }
+  #arma-nombre { font: 600 14px Georgia, serif; color: #d8dde8; }
+  #arma-nombre.obsidiana { color: #7fe0c0; text-shadow: 0 0 8px rgba(127,224,192,.5); }
+  .arma-balas b { font: 700 30px Georgia, serif; color: #f2f4f8; }
+  .arma-balas b.vacio { color: #ff8a7a; }
+  .arma-balas span { font: 600 15px system-ui, sans-serif; margin-left: 4px; }
+  #arma-barra { height: 3px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; opacity: 0; transition: opacity .1s; }
+  #arma-barra.activa { opacity: 1; }
+  #arma-barra::after { content: ''; display: block; height: 100%; width: calc(var(--k, 0) * 100%); background: #c9d6ff; }
+  #arma-extra { display: flex; flex-direction: column; gap: 4px; text-align: right; }
+  #compra {
+    position: fixed; left: 50%; bottom: 96px; transform: translate(-50%, 8px);
+    padding: 8px 14px; border-radius: 4px; background: rgba(12,14,22,.88); border: 1px solid #3a4260;
+    font: 14px system-ui, sans-serif; color: #d8dde8; opacity: 0; pointer-events: none; transition: opacity .12s, transform .12s;
+    white-space: nowrap;
+  }
+  #compra.visible { opacity: 1; transform: translate(-50%, 0); }
+  #compra kbd { display: inline-flex; width: 22px; height: 20px; font-size: 12px; margin-right: 6px; vertical-align: 1px; }
+  #compra b { color: #ffd27a; margin-left: 6px; }
+  #compra em { color: #ff8a7a; font-style: normal; margin-left: 8px; }
 
   .boton-sec {
     font: 600 16px system-ui, sans-serif;
@@ -371,6 +405,17 @@
   Bajas <b id="st-kills">0</b>
   <b id="st-event"></b>
 </div>
+<div id="puntos"><span>Puntos</span><b id="pts">500</b><div id="pts-pops"></div></div>
+<div id="arma">
+  <div id="arma-extra"><span id="arma-otra"></span><span id="arma-dinamita"></span></div>
+  <canvas id="arma-icono" width="120" height="40"></canvas>
+  <div class="arma-datos">
+    <div id="arma-nombre">Colt Pacificadora</div>
+    <div class="arma-balas"><b id="arma-cargador">6</b><span id="arma-reserva">/ 48</span></div>
+    <div id="arma-barra"></div>
+  </div>
+</div>
+<div id="compra"></div>
 <div id="hud">
   <div class="grupo">
     <div class="teclas">
@@ -387,6 +432,22 @@
       <div class="btn der"></div>
     </div>
     <span id="hud-machete-txt">Disparo · Machete</span>
+  </div>
+  <div class="grupo">
+    <kbd class="solo" data-k="KeyE">E</kbd>
+    <span>Usar</span>
+  </div>
+  <div class="grupo">
+    <kbd class="solo" data-k="KeyR">R</kbd>
+    <span>Recargar</span>
+  </div>
+  <div class="grupo">
+    <kbd class="solo" data-k="KeyQ">Q</kbd>
+    <span>Cambiar</span>
+  </div>
+  <div class="grupo">
+    <kbd class="solo" data-k="KeyG">G</kbd>
+    <span>Dinamita</span>
   </div>
   <div class="grupo">
     <kbd class="solo" id="hud-pausa">P</kbd>
@@ -493,12 +554,331 @@ function inner() {
 }
 
 // ------------------------------------------------------------
+// El Palacio por zonas (biblia: despacho presidencial, patios, oficinas, sótanos)
+// El mundo tiene un tamaño fijo: la ventana solo cambia el zoom, nunca el espacio.
+// ------------------------------------------------------------
+const VIEW_W = 1360, VIEW_H = 780;          // lo que se ve, igual en cualquier ventana
+let VS = 1, OX = 0, OY = 0;                  // escala de la vista y margen (franjas negras)
+const cam = { x: 0, y: 0, sx: 0, sy: 0, room: 'despacho' };
+
+const ROOMS = [
+  { id: 'despacho', nombre: 'el Despacho presidencial', x: 0, y: 0, w: 1200, h: 640, piso: 'duela' },
+  { id: 'patio',    nombre: 'el Patio de Honor',        x: -WALL - 1000, y: -180, w: 1000, h: 1000, piso: 'piedra', cielo: true },
+  { id: 'oficinas', nombre: 'las Oficinas',             x: 1200 + WALL, y: 0, w: 760, h: 640, piso: 'mosaico' },
+  { id: 'sotanos',  nombre: 'los Sótanos',              x: 0, y: 640 + WALL, w: 1200, h: 560, piso: 'roca' }
+];
+const ROOM = Object.fromEntries(ROOMS.map(r => [r.id, r]));
+const roomOpen = { despacho: true, patio: false, oficinas: false, sotanos: false };
+
+// Puertas que se compran: unen el Despacho con las demás zonas
+const GATE_W = 112;
+const GATES = [
+  { id: 'patio',    a: 'despacho', b: 'patio',    vertical: true,  cx: -WALL / 2,       cy: 640 * 0.62,     cost: 750,  nombre: 'la puerta del Patio de Honor' },
+  { id: 'oficinas', a: 'despacho', b: 'oficinas', vertical: true,  cx: 1200 + WALL / 2, cy: 640 * 0.38,     cost: 1000, nombre: 'la puerta de las Oficinas' },
+  { id: 'sotanos',  a: 'despacho', b: 'sotanos',  vertical: false, cx: 1200 * 0.3,      cy: 640 + WALL / 2, cost: 1250, nombre: 'la escalera a los Sótanos' }
+];
+for (const g of GATES) { g.open = false; g.openT = 0; }
+
+// Entradas de los muertos: balcones a la plaza, zaguanes, ventanas y grietas que dan al Mictlán
+const ENTRADAS = [
+  ['despacho', 'n', 0.14], ['despacho', 'n', 0.38], ['despacho', 'n', 0.88],
+  ['patio', 'o', 0.3], ['patio', 'o', 0.75], ['patio', 'n', 0.5], ['patio', 's', 0.45],
+  ['oficinas', 'n', 0.45], ['oficinas', 'e', 0.3], ['oficinas', 'e', 0.75], ['oficinas', 's', 0.62],
+  ['sotanos', 'grieta', [0.16, 0.55]], ['sotanos', 'grieta', [0.55, 0.8]], ['sotanos', 'grieta', [0.88, 0.42]]
+];
+
+let walkRects = [];      // zonas por donde se puede caminar (salas + puertas abiertas)
+let shotRects = [];      // además, los vanos de las entradas (las balas sí pasan)
+let obstacles = [];      // cuerpos sólidos: la caja del Charro y el altar
+let floorRes = 1, floorBuilt = false;
+const MAP = { x: 0, y: 0, w: 0, h: 0 };
+
+function gateRect(g, depth) {
+  return g.vertical
+    ? { x: g.cx - WALL / 2 - depth, y: g.cy - GATE_W / 2, w: WALL + depth * 2, h: GATE_W }
+    : { x: g.cx - GATE_W / 2, y: g.cy - WALL / 2 - depth, w: GATE_W, h: WALL + depth * 2 };
+}
+function entryFrame(d) {
+  if (d.kind !== 'door') return null;
+  const depth = WALL + 70;
+  if (d.nx === 1)  return { x: d.cx - depth, y: d.cy - d.w / 2, w: depth + 2, h: d.w };
+  if (d.nx === -1) return { x: d.cx - 2, y: d.cy - d.w / 2, w: depth + 2, h: d.w };
+  if (d.ny === 1)  return { x: d.cx - d.w / 2, y: d.cy - depth, w: d.w, h: depth + 2 };
+  return { x: d.cx - d.w / 2, y: d.cy - 2, w: d.w, h: depth + 2 };
+}
+function rebuildWalk() {
+  walkRects = ROOMS.map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h, room: r.id }));
+  for (const g of GATES) if (g.open) walkRects.push({ ...gateRect(g, 40), gate: g.id });
+  shotRects = walkRects.concat(doors.map(entryFrame).filter(Boolean));
+  if (NAV.walk) refreshNavWalk();
+}
+
+function buildWorld() {
+  const D = ROOM.despacho;
+  room.x = D.x - WALL; room.y = D.y - WALL; room.w = D.w + WALL * 2; room.h = D.h + WALL * 2;
+  moon.x = D.x + D.w * 0.62; moon.y = D.y + D.h * 0.45; moon.r = Math.min(D.w, D.h) * 0.38;
+  doors = ENTRADAS.map(([rid, lado, f]) => {
+    const r = ROOM[rid], DW = 72;
+    if (lado === 'grieta') return { room: rid, kind: 'grieta', cx: r.x + r.w * f[0], cy: r.y + r.h * f[1], nx: 0, ny: -1, w: 60, s: 0, L: 0 };
+    const s = rid === 'despacho' ? 0.42 : rid === 'oficinas' ? 0.36 : 0.2, L = rid === 'despacho' ? 230 : 190;
+    if (lado === 'n') return { room: rid, kind: 'door', cx: r.x + r.w * f, cy: r.y,       nx: 0,  ny: 1,  w: DW, s, L };
+    if (lado === 's') return { room: rid, kind: 'door', cx: r.x + r.w * f, cy: r.y + r.h, nx: 0,  ny: -1, w: DW, s: s * 0.7, L };
+    if (lado === 'o') return { room: rid, kind: 'door', cx: r.x,       cy: r.y + r.h * f, nx: 1,  ny: 0,  w: DW, s, L };
+    return                  { room: rid, kind: 'door', cx: r.x + r.w, cy: r.y + r.h * f, nx: -1, ny: 0,  w: DW, s, L };
+  });
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const r of ROOMS) { x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); }
+  MAP.x = x0 - WALL - 120; MAP.y = y0 - WALL - 120; MAP.w = x1 - x0 + (WALL + 120) * 2; MAP.h = y1 - y0 + (WALL + 120) * 2;
+  buildNav();
+  rebuildWalk();
+}
+
+function roomAt(x, y) {
+  for (const r of ROOMS) if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return r;
+  return null;
+}
+function playerRoom() {
+  const r = roomAt(player.x, player.y);
+  if (r) cam.room = r.id;
+  return ROOM[cam.room];
+}
+// Sala de referencia de algo (si está en un vano, la más cercana)
+function roomRectOf(x, y) {
+  const r = roomAt(x, y);
+  if (r) return r;
+  let best = ROOM.despacho, bd = Infinity;
+  for (const q of ROOMS) {
+    const d = Math.hypot(clamp(x, q.x, q.x + q.w) - x, clamp(y, q.y, q.y + q.h) - y);
+    if (d < bd) { bd = d; best = q; }
+  }
+  return best;
+}
+// Mantiene un círculo dentro de lo caminable (la corrección más pequeña posible)
+function walkClamp(e, r) {
+  let bx = e.x, by = e.y, bd = Infinity;
+  for (const R of walkRects) {
+    const x = R.w > 2 * r ? clamp(e.x, R.x + r, R.x + R.w - r) : R.x + R.w / 2;
+    const y = R.h > 2 * r ? clamp(e.y, R.y + r, R.y + R.h - r) : R.y + R.h / 2;
+    const d = (x - e.x) * (x - e.x) + (y - e.y) * (y - e.y);
+    if (d < bd) { bd = d; bx = x; by = y; if (d === 0) break; }
+  }
+  e.x = bx; e.y = by;
+  return bd;
+}
+function inRects(rects, x, y) {
+  for (const R of rects) if (x >= R.x && x <= R.x + R.w && y >= R.y && y <= R.y + R.h) return true;
+  return false;
+}
+function isShotPassable(x, y) { return inRects(shotRects, x, y); }
+function isWalkablePoint(x, y) { return inRects(walkRects, x, y); }
+// Empuja fuera de los obstáculos sólidos
+function pushOutObstacles(e, r) {
+  for (const o of obstacles) {
+    const dx = e.x - o.x, dy = e.y - o.y, m = r + o.r, d2 = dx * dx + dy * dy;
+    if (d2 < m * m) { const d = Math.sqrt(d2) || 1; e.x = o.x + dx / d * m; e.y = o.y + dy / d * m; }
+  }
+}
+
+// ---------- navegación: campo de distancias desde el jugador ----------
+const NAV = { cell: 24, x0: 0, y0: 0, cols: 0, rows: 0, walk: null, dist: null, queue: null, t: 0, pcell: -2 };
+const DIRS8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+function buildNav() {
+  NAV.x0 = MAP.x; NAV.y0 = MAP.y;
+  NAV.cols = Math.ceil(MAP.w / NAV.cell); NAV.rows = Math.ceil(MAP.h / NAV.cell);
+  const n = NAV.cols * NAV.rows;
+  NAV.walk = new Uint8Array(n); NAV.dist = new Float32Array(n).fill(Infinity); NAV.queue = new Int32Array(n);
+}
+function refreshNavWalk() {
+  const { cols, rows, cell } = NAV;
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const cx = NAV.x0 + (i + 0.5) * cell, cy = NAV.y0 + (j + 0.5) * cell;
+    let w = 0;
+    for (const R of walkRects) if (cx > R.x + 8 && cx < R.x + R.w - 8 && cy > R.y + 8 && cy < R.y + R.h - 8) { w = 1; break; }
+    NAV.walk[j * cols + i] = w;
+  }
+  NAV.t = 0; NAV.pcell = -2;
+}
+function navCell(x, y) {
+  const i = Math.floor((x - NAV.x0) / NAV.cell), j = Math.floor((y - NAV.y0) / NAV.cell);
+  return i < 0 || j < 0 || i >= NAV.cols || j >= NAV.rows ? -1 : j * NAV.cols + i;
+}
+function updateNav(dt) {
+  NAV.t -= dt;
+  let start = navCell(player.x, player.y);
+  if (NAV.t > 0 && start === NAV.pcell) return;
+  NAV.t = 0.25; NAV.pcell = start;
+  const { dist, walk, queue, cols, rows } = NAV;
+  dist.fill(Infinity);
+  if (start < 0) return;
+  if (!walk[start]) {   // el jugador pegado a un muro: la celda caminable más cercana
+    let best = -1, bd = Infinity;
+    const si = start % cols, sj = (start / cols) | 0;
+    for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++) {
+      const i = si + di, j = sj + dj;
+      if (i < 0 || j < 0 || i >= cols || j >= rows || !walk[j * cols + i]) continue;
+      const d = di * di + dj * dj;
+      if (d < bd) { bd = d; best = j * cols + i; }
+    }
+    if (best < 0) return;
+    start = best;
+  }
+  let h = 0, t = 0;
+  dist[start] = 0; queue[t++] = start;
+  while (h < t) {
+    const c = queue[h++], i = c % cols, j = (c / cols) | 0, d = dist[c] + 1;
+    if (i > 0 && walk[c - 1] && dist[c - 1] > d) { dist[c - 1] = d; queue[t++] = c - 1; }
+    if (i < cols - 1 && walk[c + 1] && dist[c + 1] > d) { dist[c + 1] = d; queue[t++] = c + 1; }
+    if (j > 0 && walk[c - cols] && dist[c - cols] > d) { dist[c - cols] = d; queue[t++] = c - cols; }
+    if (j < rows - 1 && walk[c + cols] && dist[c + cols] > d) { dist[c + cols] = d; queue[t++] = c + cols; }
+  }
+}
+// Hacia dónde caminar para llegar al jugador desde otra sala
+function navAngle(z, fallback) {
+  const c = navCell(z.x, z.y);
+  if (c < 0) return fallback;
+  const { cols, rows, walk, dist } = NAV, i = c % cols, j = (c / cols) | 0;
+  let best = -1, bd = dist[c];
+  for (const [di, dj] of DIRS8) {
+    const ni = i + di, nj = j + dj;
+    if (ni < 0 || nj < 0 || ni >= cols || nj >= rows) continue;
+    const n = nj * cols + ni;
+    if (!walk[n]) continue;
+    if (di && dj && (!walk[j * cols + ni] || !walk[nj * cols + i])) continue;   // sin cortar esquinas
+    const d = dist[n] + (di && dj ? 0.45 : 0);
+    if (d < bd) { bd = d; best = n; }
+  }
+  if (best < 0) return fallback;
+  const bx = NAV.x0 + (best % cols + 0.5) * NAV.cell, by = NAV.y0 + (((best / cols) | 0) + 0.5) * NAV.cell;
+  return Math.atan2(by - z.y, bx - z.x);
+}
+
+// ---------- cámara y vista ----------
+function viewMetrics() {
+  VS = Math.min(W / VIEW_W, H / VIEW_H);
+  OX = (W - VIEW_W * VS) / 2; OY = (H - VIEW_H * VS) / 2;
+}
+function worldTransform(c) {
+  const k = DPR * VS;
+  c.setTransform(k, 0, 0, k, DPR * (OX - (cam.x + cam.sx) * VS), DPR * (OY - (cam.y + cam.sy) * VS));
+}
+function screenTransform(c) { c.setTransform(DPR, 0, 0, DPR, 0, 0); }
+function screenToWorld(sx, sy) { return { x: cam.x + (sx - OX) / VS, y: cam.y + (sy - OY) / VS }; }
+function syncMouse() {
+  if (mouse.sx == null) return;
+  const p = screenToWorld(mouse.sx, mouse.sy);
+  mouse.x = p.x; mouse.y = p.y;
+}
+// Si la sala cabe en pantalla se encuadra completa; si no, sigue al jugador sin salirse de ella
+function cameraTarget() {
+  const r = playerRoom(), m = WALL + 40;
+  const x0 = r.x - m, x1 = r.x + r.w + m, y0 = r.y - m, y1 = r.y + r.h + m;
+  const tx = x1 - x0 <= VIEW_W ? (x0 + x1) / 2 - VIEW_W / 2 : clamp(player.x - VIEW_W / 2, x0, x1 - VIEW_W);
+  const ty = y1 - y0 <= VIEW_H ? (y0 + y1) / 2 - VIEW_H / 2 : clamp(player.y - VIEW_H / 2, y0, y1 - VIEW_H);
+  return { tx, ty };
+}
+function updateCamera(dt, snap) {
+  const { tx, ty } = cameraTarget();
+  const k = snap ? 1 : Math.min(1, dt * 5);
+  cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k;
+  if (shake > 0) { const s = 6 * (shake / 0.2); cam.sx = (Math.random() - 0.5) * s; cam.sy = (Math.random() - 0.5) * s; }
+  else { cam.sx = 0; cam.sy = 0; }
+}
+
+// ---------- puertas que se compran ----------
+function openGate(g) {
+  if (g.open) return;
+  g.open = true; g.openT = 0;
+  roomOpen[g.a] = true; roomOpen[g.b] = true;
+  rebuildWalk();
+  Sfx.doorOpen(g.cx, g.cy);
+  showBanner(`Se abrió ${g.nombre}`, `Ahora también entran por ${ROOM[g.b].nombre}`, 2.4, '#c9d6ff');
+}
+function updateGates(dt) { for (const g of GATES) if (g.open && g.openT < 1) g.openT = Math.min(1, g.openT + dt / 0.6); }
+// Las que siguen cerradas: hojas de madera con tranca. Las abiertas: hojas contra el muro
+function drawGates() {
+  for (const g of GATES) {
+    ctx.save();
+    ctx.translate(g.cx, g.cy);
+    if (!g.vertical) ctx.rotate(Math.PI / 2);
+    const h = GATE_W / 2;
+    if (!g.open || g.openT < 1) {
+      const k = g.open ? g.openT : 0;
+      for (const side of [-1, 1]) {
+        ctx.save();
+        ctx.translate(0, side * h);
+        ctx.rotate(side * -k * Math.PI * 0.55);
+        ctx.fillStyle = '#4a3220'; ctx.strokeStyle = '#1e140c'; ctx.lineWidth = 2;
+        ctx.fillRect(-7, side > 0 ? -h : 0, 14, h);
+        ctx.strokeRect(-7, side > 0 ? -h : 0, 14, h);
+        ctx.fillStyle = '#3a2618';
+        for (let i = 1; i < 4; i++) ctx.fillRect(-7, (side > 0 ? -h : 0) + i * h / 4 - 1, 14, 2);
+        ctx.restore();
+      }
+      if (!g.open) {
+        ctx.fillStyle = '#2a2a2e'; ctx.fillRect(-10, -h * 0.75, 20, h * 1.5);
+        ctx.fillStyle = '#6a6a72'; ctx.fillRect(-10, -4, 20, 8);
+        ctx.fillStyle = '#b59a5a'; ctx.beginPath(); ctx.arc(0, 0, 3.5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+}
+
+// ---------- luz propia de cada zona ----------
+function punchRect(x, y, w, h, a, edge) {
+  fctx.save();
+  fctx.fillStyle = `rgba(0,0,0,${a})`;
+  fctx.fillRect(x + edge, y + edge, w - edge * 2, h - edge * 2);
+  const strips = [[x, y, x, y + edge, x, y, w, edge], [x, y + h, x, y + h - edge, x, y + h - edge, w, edge],
+                  [x, y, x + edge, y, x, y + edge, edge, h - edge * 2], [x + w, y, x + w - edge, y, x + w - edge, y + edge, edge, h - edge * 2]];
+  for (const [ax, ay, bx, by, rx, ry, rw, rh] of strips) {
+    const g = fctx.createLinearGradient(ax, ay, bx, by);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${a})`);
+    fctx.fillStyle = g; fctx.fillRect(rx, ry, rw, rh);
+  }
+  fctx.restore();
+}
+const LAMPS = [   // quinqués de las oficinas y antorchas de los sótanos
+  { room: 'oficinas', fx: 0.3, fy: 0.62, r: 135, s: 0.62, tipo: 'quinque' },
+  { room: 'oficinas', fx: 0.74, fy: 0.3, r: 135, s: 0.62, tipo: 'quinque' },
+  { room: 'sotanos', fx: 0.02, fy: 0.3, r: 165, s: 0.72, tipo: 'antorcha' },
+  { room: 'sotanos', fx: 0.5, fy: 0.02, r: 165, s: 0.72, tipo: 'antorcha' },
+  { room: 'sotanos', fx: 0.98, fy: 0.75, r: 165, s: 0.72, tipo: 'antorcha' },
+  { room: 'sotanos', fx: 0.36, fy: 0.98, r: 150, s: 0.66, tipo: 'antorcha' }
+];
+function lampPos(l) { const r = ROOM[l.room]; return { x: r.x + r.w * l.fx, y: r.y + r.h * l.fy }; }
+function zoneLights() {
+  const P = ROOM.patio;
+  punchRect(P.x, P.y, P.w, P.h, 0.6 * moonLevel, 90);   // patio a cielo abierto
+  LAMPS.forEach((l, i) => {
+    const p = lampPos(l), fl = 0.9 + Math.sin(gameTime * 17 + i * 3) * 0.05 + Math.sin(gameTime * 6.1 + i) * 0.05;
+    punch(p.x, p.y, l.r * fl, l.s);
+  });
+  for (const d of doors) if (d.kind === 'grieta') punch(d.cx, d.cy, 80, 0.32 + 0.06 * Math.sin(gameTime * 2 + d.cx));
+}
+function drawZoneEmissive() {
+  LAMPS.forEach((l, i) => {
+    const p = lampPos(l), fl = 0.85 + Math.sin(gameTime * 17 + i * 3) * 0.15;
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, l.tipo === 'antorcha' ? 26 : 18);
+    g.addColorStop(0, `rgba(255,${l.tipo === 'antorcha' ? 150 : 200},70,${0.75 * fl})`);
+    g.addColorStop(1, 'rgba(255,120,30,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, 26, 0, Math.PI * 2); ctx.fill();
+  });
+  for (const d of doors) {
+    if (d.kind !== 'grieta') continue;
+    const g = ctx.createRadialGradient(d.cx, d.cy, 0, d.cx, d.cy, 40);
+    g.addColorStop(0, `rgba(255,50,30,${0.35 + 0.1 * Math.sin(gameTime * 2.3 + d.cx)})`);
+    g.addColorStop(1, 'rgba(160,0,0,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(d.cx, d.cy, 40, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+
+// ------------------------------------------------------------
 // Sprite SVG inline (vista cenital, mirando hacia +X)
 // ------------------------------------------------------------
 const SPRITE_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  <rect x="40" y="33" width="22" height="6" rx="1.5" fill="#1e2128" stroke="#0b0d12" stroke-width="1"/>
-  <rect x="43" y="38" width="5" height="5" rx="1" fill="#1e2128"/>
   <path d="M30 20 Q42 24 44 34" stroke="#3b4a6b" stroke-width="6" fill="none" stroke-linecap="round"/>
   <path d="M30 44 Q40 42 44 38" stroke="#3b4a6b" stroke-width="6" fill="none" stroke-linecap="round"/>
   <circle cx="44" cy="35" r="3.4" fill="#d3a27f"/>
@@ -1094,9 +1474,10 @@ function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
 function muzzleWorld() {
   const c = Math.cos(player.angle), s = Math.sin(player.angle);
+  const g = heldGeom(), mx = g.rear + g.len, my = 4.5;
   return {
-    x: player.x + MUZZLE.x * c - MUZZLE.y * s,
-    y: player.y + MUZZLE.x * s + MUZZLE.y * c
+    x: player.x + mx * c - my * s,
+    y: player.y + mx * s + my * c
   };
 }
 
@@ -1137,13 +1518,15 @@ const Sfx = (() => {
                   gruñido: 2, conjuro: 1, lechuza: 2, levantar: 1, roto: 1,
                   tajo: 1, tajoGolpe: 1, filo: 2, derrumbe: 1, caida: 2,
                   forja: 1, azote: 1, malaire: 1, bramido: 1, emerger: 1, sello: 1,
-                  aullido: 2, silbido: 1, arder: 1, cielo: 1, brasero: 2, magnesio: 1, protegido: 1, rescate: 1, portazo: 1 };
+                  aullido: 2, silbido: 1, arder: 1, cielo: 1, brasero: 2, magnesio: 1, protegido: 1, rescate: 1, portazo: 1,
+                  recarga: 2, compra: 1, puerta: 1, charro: 1, caja: 1, ruleta: 1, altar: 1 };
   const GAP   = { disparo: 0.05, impacto: 0.025, pared: 0.06, paso: 0.1, arrastre: 0.2, gemido: 0.6, muerte: 0.12, zarpazo: 0.1, golpe: 0.2, rugido: 0.4, toque: 0,
                   balaEnemiga: 0.06, mecha: 0.2, explosion: 0.05, lanzar: 0.15, lazo: 0.3, fuego: 0.3, chispa: 0.08, alambre: 0.2, raspa: 0.6, bandera: 0.3, madera: 0.04, galope: 0.06, relincho: 1, corneta: 1, sombra: 0.5, cerrojo: 0.3,
                   gruñido: 0.3, conjuro: 1, lechuza: 0.2, levantar: 0.5, roto: 0.5,
                   tajo: 0.1, tajoGolpe: 0.1, filo: 0.15, derrumbe: 1, caida: 0.12,
                   forja: 0.5, azote: 0.3, malaire: 1, bramido: 1, emerger: 2, sello: 2,
-                  aullido: 0.4, silbido: 0.4, arder: 0.6, cielo: 1, brasero: 0.2, magnesio: 0.5, protegido: 0.25, rescate: 1, portazo: 1.2 };
+                  aullido: 0.4, silbido: 0.4, arder: 0.6, cielo: 1, brasero: 0.2, magnesio: 0.5, protegido: 0.25, rescate: 1, portazo: 1.2,
+                  recarga: 0.04, compra: 0.12, puerta: 0.5, charro: 1, caja: 0.4, ruleta: 0.03, altar: 1 };
   const active = {}, lastAt = {};
   const stats = { played: 0, dropped: 0, peak: {} };
 
@@ -1283,7 +1666,7 @@ const Sfx = (() => {
     const d = Math.hypot(dx, dy);
     return {
       g: 1 / (1 + d / 260),
-      pan: clamp(dx / (W * 0.5), -1, 1) * 0.75,
+      pan: clamp(dx / (VIEW_W * 0.5), -1, 1) * 0.75,
       cutoff: 9000 * Math.pow(0.18, Math.min(1, d / 700))
     };
   }
@@ -2230,6 +2613,149 @@ const Sfx = (() => {
     n.connect(lp).connect(g).connect(dest);
   }
 
+
+  // ---------- armas, compras, puertas, caja y altar ----------
+  // Disparo según la clase de arma: pistola seca, rifle con trueno, escopeta grave, ametralladora corta
+  const SHOTS = {
+    pistola:       { bp: 1700, q: 0.7, peak: 0.5,  dec: 0.11, thump: 160, tail: 0.1 },
+    carabina:      { bp: 1300, q: 0.6, peak: 0.58, dec: 0.15, thump: 130, tail: 0.16 },
+    rifle:         { bp: 1100, q: 0.5, peak: 0.62, dec: 0.2,  thump: 110, tail: 0.24 },
+    escopeta:      { bp: 700,  q: 0.5, peak: 0.7,  dec: 0.24, thump: 80,  tail: 0.26 },
+    ametralladora: { bp: 1400, q: 0.7, peak: 0.46, dec: 0.08, thump: 140, tail: 0.07 }
+  };
+  function shotKind(kind, pap) {
+    if (!can('disparo')) return;
+    const S = SHOTS[kind] || SHOTS.pistola;
+    claim('disparo', 0.12 + S.dec);
+    const t = ac.currentTime, dest = spot(null);
+    const n = noiseSrc(t, S.dec + 0.08, 0.9 + Math.random() * 0.2);
+    const bp = filt('bandpass', S.bp, S.q), g = ac.createGain();
+    env(g, t, 0.002, S.peak, S.dec);
+    n.connect(bp).connect(g).connect(dest);
+    const o = osc('sine', S.thump, t, S.dec + 0.04);
+    o.frequency.exponentialRampToValueAtTime(40, t + S.dec);
+    const og = ac.createGain();
+    env(og, t, 0.002, 0.6, S.dec);
+    o.connect(og).connect(dest);
+    const n2 = noiseSrc(t + 0.015, S.tail + 0.15, 0.6), lp = filt('lowpass', 650, 0.5), g2 = ac.createGain();
+    env(g2, t + 0.015, 0.01, 0.12 + S.tail * 0.3, S.tail + 0.1);
+    n2.connect(lp).connect(g2).connect(dest);
+    if (pap) {   // arma del altar: un zumbido de obsidiana encima
+      const z = osc('triangle', 880, t, 0.18), zg = ac.createGain();
+      z.frequency.exponentialRampToValueAtTime(440, t + 0.16);
+      env(zg, t, 0.005, 0.07, 0.16);
+      z.connect(zg).connect(dest);
+    }
+  }
+  function click(t, f, peak, dest) {
+    const n = noiseSrc(t, 0.03, 1.4), bp = filt('bandpass', f, 3), g = ac.createGain();
+    env(g, t, 0.001, peak * 2.6, 0.03);
+    n.connect(bp).connect(g).connect(dest);
+  }
+  function dry() {      // sin balas
+    if (!can('recarga')) return;
+    claim('recarga', 0.15);
+    click(ac.currentTime, 3200, 0.35, spot(null));
+  }
+  function reloadStart() { if (!can('recarga')) return; claim('recarga', 0.1); click(ac.currentTime, 1800, 0.4, spot(null)); }
+  function roundIn() { if (!can('recarga')) return; claim('recarga', 0.08); click(ac.currentTime, 2600, 0.3, spot(null)); }
+  function reloadEnd() {
+    if (!can('recarga')) return;
+    claim('recarga', 0.2);
+    const t = ac.currentTime, dest = spot(null);
+    click(t, 1500, 0.45, dest); click(t + 0.09, 2400, 0.4, dest);
+  }
+  function jam() {      // el Mondragón se trabó
+    if (!can('recarga')) return;
+    claim('recarga', 0.3);
+    const t = ac.currentTime, dest = spot(null);
+    click(t, 900, 0.5, dest); click(t + 0.12, 700, 0.4, dest);
+  }
+  function switchWpn() { if (!can('recarga')) return; claim('recarga', 0.12); const t = ac.currentTime, d = spot(null); click(t, 1200, 0.25, d); click(t + 0.07, 2000, 0.2, d); }
+  function buy() {      // monedas
+    if (!can('compra')) return;
+    claim('compra', 0.4);
+    const t = ac.currentTime, dest = spot(null);
+    [2200, 2900, 2500].forEach((f, i) => {
+      const o = osc('triangle', f, t + i * 0.06, 0.15), g = ac.createGain();
+      env(g, t + i * 0.06, 0.002, 0.26, 0.14);
+      o.connect(g).connect(dest);
+    });
+  }
+  function deny() {
+    if (!can('compra')) return;
+    claim('compra', 0.3);
+    const t = ac.currentTime, dest = spot(null);
+    const o = osc('square', 140, t, 0.2), g = ac.createGain(), lp = filt('lowpass', 600);
+    env(g, t, 0.005, 0.12, 0.18);
+    o.connect(lp).connect(g).connect(dest);
+  }
+  function doorOpen(x, y) {   // se quita la tranca y crujen las bisagras
+    if (!can('puerta')) return;
+    claim('puerta', 1.2);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.25, 0.6), lp = filt('lowpass', 500), g = ac.createGain();
+    env(g, t, 0.005, 1.6, 0.22);
+    n.connect(lp).connect(g).connect(dest);
+    const o = osc('sawtooth', 180, t + 0.25, 0.8);
+    o.frequency.linearRampToValueAtTime(320, t + 0.6); o.frequency.linearRampToValueAtTime(140, t + 1.0);
+    const bp = filt('bandpass', 900, 6), og = ac.createGain();
+    env(og, t + 0.25, 0.1, 0.35, 0.7);
+    o.connect(bp).connect(og).connect(dest);
+  }
+  function charroLaugh(x, y) {   // la risa del Charro Negro
+    if (!can('charro')) return;
+    claim('charro', 1.6);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    for (let i = 0; i < 5; i++) voice(t + i * 0.2, { f0: 82, f1: 520, f2: 900, dist: true }, 0.16, 1 - i * 0.04, 0.85, 0.55, dest);
+  }
+  function boxOpen(x, y) {
+    if (!can('caja')) return;
+    claim('caja', 0.5);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.4, 0.5), bp = filt('bandpass', 400, 2), g = ac.createGain();
+    env(g, t, 0.01, 0.5, 0.35);
+    n.connect(bp).connect(g).connect(dest);
+    bell(t + 0.05, 196, 0.1, 1.6);
+  }
+  function boxTick(x, y, k) {    // cada arma que pasa en la ruleta
+    if (!can('ruleta')) return;
+    claim('ruleta', 0.05);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const o = osc('triangle', 600 + k * 500, t, 0.06), g = ac.createGain();
+    env(g, t, 0.002, 0.08, 0.05);
+    o.connect(g).connect(dest);
+  }
+  function boxMove(x, y) {       // el Charro se lleva la caja
+    if (!can('caja')) return;
+    claim('caja', 2);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    bell(t, 98, 0.25, 3);
+    const n = noiseSrc(t + 0.3, 1.2, 0.4), lp = filt('lowpass', 400), g = ac.createGain();
+    lp.frequency.exponentialRampToValueAtTime(2400, t + 1.4);
+    env(g, t + 0.3, 0.4, 0.35, 0.8);
+    n.connect(lp).connect(g).connect(dest);
+  }
+  function papWork(x, y) {       // el altar trabaja: tambor, copal y un canto grave
+    if (!can('altar')) return;
+    claim('altar', 3.2);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    for (let i = 0; i < 8; i++) drum(t + i * 0.38, 0.35 + (i % 2) * 0.15);
+    voice(t + 0.2, { f0: 98, f1: 420, f2: 780 }, 2.8, 1, 1.02, 0.3, dest);
+  }
+  function papDone(x, y) {
+    if (!can('altar')) return;
+    claim('altar', 1.5);
+    const t = ac.currentTime;
+    bell(t, 392, 0.2, 2.2); bell(t + 0.12, 587, 0.18, 2.4);
+  }
+  function pickup() {
+    if (!can('compra')) return;
+    claim('compra', 0.3);
+    const t = ac.currentTime, d = spot(null);
+    click(t, 1400, 0.35, d); click(t + 0.1, 2200, 0.35, d);
+  }
+
   return {
     init, update, silenceCrowd, suspend, resume, setMuted,
     isMuted: () => muted,
@@ -2238,6 +2764,7 @@ const Sfx = (() => {
     flagPlant, flagBreak, hitWood, gallop, neigh, bugleWorld, vanish,
     grunt, chant, rise, hoot, owlDown, interrupt, macheteSwing, macheteHit, weaponTell, roofCollapse, land, forge, slam, breath, deudaRoar, emerge, sealed,
     howl, snarl, whistle, tzitziArrive, tzitziLeave, burn, ignite, magnesio, protHurt, rescueOk, rescueFail, burst,
+    shotKind, dry, reloadStart, roundIn, reloadEnd, jam, switchWpn, buy, deny, doorOpen, charroLaugh, boxOpen, boxTick, boxMove, papWork, papDone, pickup,
     _debug: () => ({ ac, out, stats })
   };
 })();
@@ -2249,43 +2776,23 @@ function resize() {
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   W = innerWidth;
   H = innerHeight;
-
-  for (const c of [canvas, fog, floor]) {
+  for (const c of [canvas, fog]) {
     c.width = Math.round(W * DPR);
     c.height = Math.round(H * DPR);
   }
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  fctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  flctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-  const m = Math.max(16, Math.min(W, H) * 0.05);
-  room.x = m; room.y = m; room.w = W - m * 2; room.h = H - m * 2;
-
-  moon.x = room.x + room.w * 0.62;
-  moon.y = room.y + room.h * 0.45;
-  moon.r = Math.min(room.w, room.h) * 0.38;
-
-  const f = inner();
+  if (!MAP.w) buildWorld();
+  viewMetrics();
   if (!initialized) {
+    const f = inner();
     player.x = f.x + f.w * 0.35;
     player.y = f.y + f.h * 0.6;
     mouse.x = player.x + 100;
     mouse.y = player.y;
     initialized = true;
   }
-  player.x = clamp(player.x, f.x + player.radius, f.x + f.w - player.radius);
-  player.y = clamp(player.y, f.y + player.radius, f.y + f.h - player.radius);
-
-  // La luna está arriba: las puertas laterales reciben poca luz
-  // y la de abajo todavía menos.
-  const DW = 72;
-  doors = [
-    { cx: f.x,              cy: f.y + f.h * 0.62, nx: 1,  ny: 0,  w: DW, s: 0.42, L: moon.r * 0.95 },
-    { cx: f.x + f.w,        cy: f.y + f.h * 0.38, nx: -1, ny: 0,  w: DW, s: 0.42, L: moon.r * 0.95 },
-    { cx: f.x + f.w * 0.3,  cy: f.y + f.h,        nx: 0,  ny: -1, w: DW, s: 0.28, L: moon.r * 0.75 }
-  ];
-
-  buildFloor();
+  updateCamera(0, true);
+  const res = clamp(DPR * VS, 1, 1.5);
+  if (!floorBuilt || Math.abs(res - floorRes) > 0.05) { buildFloor(); floorBuilt = true; }
 }
 
 function drawDoor(g, d) {
@@ -2595,7 +3102,7 @@ function makeZombie(typeName, x, y, extra) {
   const sm = currentWave ? currentWave.speedMult : 1;
   const z = {
     x, y, r: T.r, T, type: typeName,
-    hp: T.hp, maxHp: T.hp,
+    hp: T.hp * hpScale(!!T.boss), maxHp: T.hp * hpScale(!!T.boss),
     mass: (T.r / 15) * (T.r / 15),
     door: 0, entering: false,
     angle: 0,
@@ -2616,9 +3123,22 @@ function makeZombie(typeName, x, y, extra) {
   return z;
 }
 
+// Zonas activas: donde está el jugador y las que se comunican con ella por puertas abiertas
+function nearRooms() {
+  const pr = playerRoom().id, s = new Set([pr]);
+  for (const g of GATES) if (g.open && (g.a === pr || g.b === pr)) { s.add(g.a); s.add(g.b); }
+  return s;
+}
 function spawnAt(i, typeName) {
   const T = ZTYPES[typeName];
   const d = doors[i];
+  if (d.kind === 'grieta') {   // sube por una grieta de los sótanos
+    const x = d.cx + (Math.random() - 0.5) * 40, y = d.cy + (Math.random() - 0.5) * 16;
+    if (zombies.some(z => Math.hypot(z.x - x, z.y - y) < z.r + T.r + 4)) return false;
+    if (Math.hypot(player.x - x, player.y - y) < 70) return false;
+    makeZombie(typeName, x, y, { rise: 0.9, riseMax: 0.9, angle: Math.atan2(player.y - y, player.x - x) });
+    return true;
+  }
   const ly = (Math.random() * 2 - 1) * Math.max(0, d.w / 2 - T.r - 2);
   const p = doorToWorld(d, -WALL - T.r - 2, ly);
   // Nunca aparece encima de otro zombi
@@ -2629,9 +3149,8 @@ function spawnAt(i, typeName) {
 
 // Aparición dentro del cuarto (emboscadas del Jefe Suriano), solo si hay espacio
 function spawnFree(typeName, x, y) {
-  const T = ZTYPES[typeName], f = inner();
-  x = clamp(x, f.x + T.r, f.x + f.w - T.r);
-  y = clamp(y, f.y + T.r, f.y + f.h - T.r);
+  const T = ZTYPES[typeName];
+  const q = { x, y }; walkClamp(q, T.r); x = q.x; y = q.y;
   if (zombies.some(z => Math.hypot(z.x - x, z.y - y) < z.r + T.r + 2)) return null;
   if (Math.hypot(player.x - x, player.y - y) < player.radius + T.r + 30) return null;
   return makeZombie(typeName, x, y, { angle: Math.atan2(player.y - y, player.x - x) });
@@ -2722,7 +3241,9 @@ function handPos(z) {
 // Qué tan iluminado está un punto: luna, puertas y la luz del propio jugador
 function lightAt(x, y) {
   let l = Math.max(0, 1 - Math.hypot(x - moon.x, y - moon.y) / (moon.r * (0.55 + 0.45 * moonLevel))) * moonLevel;
+  if (roomAt(x, y) === ROOM.patio) l = Math.max(l, 0.6 * moonLevel);
   for (const d of doors) {
+    if (d.kind !== 'door') continue;
     const p = worldToDoor(d, x, y);
     if (p.lx > 0 && p.lx < d.L && Math.abs(p.ly) < d.w / 2 + p.lx * 0.4) l = Math.max(l, d.s * moonLevel * (1 - p.lx / d.L));
   }
@@ -2740,7 +3261,7 @@ function fireEnemyBullet(z, ang) {
   Sfx.enemyShot(z.x, z.y);
 }
 function throwPayload(z, kind, tx, ty) {
-  const f = inner();
+  const f = roomRectOf(z.x, z.y);
   tx = clamp(tx, f.x + 12, f.x + f.w - 12);
   ty = clamp(ty, f.y + 12, f.y + f.h - 12);
   const d = Math.hypot(tx - z.x, ty - z.y);
@@ -3295,7 +3816,7 @@ function aiCoyote(z, dt, dist, toPlayer) {
 // Braseros del Fuego Nuevo
 function placeBraseros() {
   braseros.length = 0;
-  const f = inner();
+  const f = playerRoom();
   for (const [a, b] of [[0.3, 0.3], [0.7, 0.3], [0.5, 0.76]]) {
     braseros.push({ x: f.x + f.w * a, y: f.y + f.h * b, lit: 0, prog: 0, seed: Math.random() * 10 });
   }
@@ -3319,7 +3840,7 @@ function litBraseroAt(x, y, pad = 0) {
 
 // La tzitzimitl baja del cielo lejos del jugador y de la luz
 function spawnTzitzi() {
-  const f = inner();
+  const f = playerRoom();
   let best = null, bd = -Infinity;
   for (let i = 0; i < 14; i++) {
     const x = f.x + f.w * (0.15 + 0.7 * Math.random()), y = f.y + f.h * (0.15 + 0.7 * Math.random());
@@ -3347,7 +3868,7 @@ function aiTzitzi(z, dt, dist, toPlayer) {
   const lit = litBraseroAt(z.x, z.y, z.r * 0.4);
   z.inLight = !!lit || z.act === 'caught';
   if (z.inLight) {
-    z.hp -= TZITZI_BURN * dt;
+    z.hp -= TZITZI_BURN * hpScale(true) * dt;
     z.hitFlash = Math.max(z.hitFlash, 0.06);
     z.burnFx = (z.burnFx || 0) - dt;
     if (z.burnFx <= 0) { z.burnFx = 0.05; spawnSparks(z.x + (Math.random() - 0.5) * z.r, z.y + (Math.random() - 0.5) * z.r, 0, -1); }
@@ -3419,6 +3940,7 @@ function tzitziLeave(z, won) {
     kills++;
     noteKill(z.reg);
     player.hp = PLAYER_HP;
+    addPoints(500);
     showBanner('La tzitzimitl regresó al cielo', 'El Fuego Nuevo la espantó. Vida completa', 3.2, '#ffd27a');
   } else {
     showBanner('Pasó el eclipse', 'Se fue sin un rasguño: volverá en el próximo', 3, '#b0b8c8');
@@ -3427,7 +3949,7 @@ function tzitziLeave(z, won) {
 
 // Rondas de rescate
 function spawnProtegido(kind) {
-  const P = PROTEGIDOS[kind], f = inner();
+  const P = PROTEGIDOS[kind], f = playerRoom();
   const spots = [[0.5, 0.5], [0.42, 0.44], [0.58, 0.56], [0.5, 0.4], [0.5, 0.6]].map(([a, b]) => ({ x: f.x + f.w * a, y: f.y + f.h * b }));
   const s = spots.find(p => Math.hypot(p.x - player.x, p.y - player.y) > 90) || spots[0];
   prot = { kind, P, x: s.x, y: s.y, r: P.r, hp: P.hp, maxHp: P.hp, invuln: 0, hitFlash: 0, alarm: 0,
@@ -3489,6 +4011,7 @@ function finishRescue() {
     player.hp = PLAYER_HP;
     macheteCd = 0;
     prot.leaving = 1.2;
+    addPoints(500);
     showBanner('¡A salvo!', `${prot.P.nombre} sobrevivió la noche. Vida completa y machete listo`, 2.8, '#9fe0a8');
     Sfx.rescueOk();
   } else {
@@ -3688,10 +4211,7 @@ function drawEventEmissive() {
     g.addColorStop(1, 'rgba(255,140,40,0)');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(prot.x, prot.y, 26, 0, Math.PI * 2); ctx.fill();
-    if (prot.flashT > 0) {
-      ctx.fillStyle = `rgba(255,255,240,${0.35 * prot.flashT / 0.35})`;
-      ctx.fillRect(0, 0, W, H);
-    }
+
   }
   for (const s of starFx) {
     const k = s.t / s.max, h = s.up ? (1 - k) * 260 : k * 260;
@@ -3822,7 +4342,7 @@ function updateFactionStuff(dt, f) {
       eShots.splice(i, 1);
       continue;
     }
-    if (b.x < f.x || b.x > f.x + f.w || b.y < f.y || b.y > f.y + f.h || b.life <= 0) eShots.splice(i, 1);
+    if (!isShotPassable(b.x, b.y) || b.life <= 0) eShots.splice(i, 1);
   }
   // Cargas en el aire
   for (let i = thrown.length - 1; i >= 0; i--) {
@@ -3937,8 +4457,10 @@ function updateZombies(dt, f) {
         if (k > 0) spawnQueue.unshift(spawnQueue.splice(k, 1)[0]);
         else want = 0;
       }
-      const points = doors.map((_, k) => ({ door: k }));
-      for (const h of roofHoles) if (burst || Math.random() < 0.6) points.push({ hole: h });
+      const near = nearRooms();
+      const points = [];
+      doors.forEach((d, k) => { if (roomOpen[d.room] && near.has(d.room)) points.push({ door: k }); });
+      if (near.has('despacho')) for (const h of roofHoles) if (burst || Math.random() < 0.6) points.push({ hole: h });
       for (const pt of shuffle(points)) {
         if (spawned >= want || !spawnQueue.length || zombies.length >= currentWave.cap) break;
         if (spawnQueue[0] === 'deuda') break;
@@ -3988,9 +4510,22 @@ function updateZombies(dt, f) {
       const dist = Math.hypot(dx, dy);
       const toPlayer = Math.atan2(dy, dx);
       z.attackCd = Math.max(0, z.attackCd - dt);
+      const zRoom = roomAt(z.x, z.y), zf = zRoom || roomRectOf(z.x, z.y);
+      // En otra sala: camina por el Palacio hasta encontrarlo (sin ataques ni habilidades)
+      if ((zRoom === null || zRoom !== roomAt(tgt.x, tgt.y)) && z.act !== 'leave') {
+        if (z.act && z.act !== 'raise') z.act = null;
+        z.attackT = -1; if (z.charge) z.charge = null;
+        target = navAngle(z, toPlayer);
+        const spd = z.speed * speedMulZ(z) * (z.T.boss ? 1 : 1.05);
+        z.x += Math.cos(target) * spd * dt;
+        z.y += Math.sin(target) * spd * dt;
+        z.x += z.kx * dt; z.y += z.ky * dt; z.kx *= damp; z.ky *= damp;
+        z.angle = lerpAngle(z.angle, target, Math.min(1, dt * Math.max(4, z.T.turn || 6)));
+        continue;
+      }
 
       // Comportamiento especial (si devuelve un ángulo, ya se encargó de moverlo)
-      const special = z.T.ai && AI[z.T.ai] ? AI[z.T.ai](z, dt, dist, toPlayer, f) : null;
+      const special = z.T.ai && AI[z.T.ai] ? AI[z.T.ai](z, dt, dist, toPlayer, zf) : null;
       if (special !== null && special !== undefined) {
         target = special;
       } else if (z.attackT >= 0) {
@@ -4058,8 +4593,8 @@ function constrainZombie(z, f) {
     z.x = w.x;
     z.y = w.y;
   } else {
-    z.x = clamp(z.x, f.x + z.r, f.x + f.w - z.r);
-    z.y = clamp(z.y, f.y + z.r, f.y + f.h - z.r);
+    walkClamp(z, z.r);
+    if (obstacles.length) pushOutObstacles(z, z.r);
   }
 }
 
@@ -4125,8 +4660,8 @@ function resolveCollisions(f) {
       player.y = z.y + dy * min;
     }
   }
-  player.x = clamp(player.x, f.x + player.radius, f.x + f.w - player.radius);
-  player.y = clamp(player.y, f.y + player.radius, f.y + f.h - player.radius);
+  if (obstacles.length) pushOutObstacles(player, player.radius);
+  walkClamp(player, player.radius);
 }
 
 // Primer punto (0..1) donde el segmento toca el círculo, o -1 si no lo toca
@@ -4142,6 +4677,791 @@ function segmentCircle(x0, y0, x1, y1, cx, cy, r) {
   if (disc < 0) return -1;
   const t = (-b - Math.sqrt(disc)) / (2 * a);
   return t >= 0 && t <= 1 ? t : -1;
+}
+
+
+// ------------------------------------------------------------
+// Armas: las más usadas en la Revolución (ver el Registro del Cuartel)
+// dmg = daño por bala (un muerto común aguanta 5 en la oleada 1)
+// recarga 'tiro' = bala por bala (revólver de un solo tiro, palanca); 'todo' = de un jalón (peine, cargador, cinta)
+// ------------------------------------------------------------
+const WEAPONS = {
+  colt:      { nombre: 'Colt Pacificadora', clase: 'pistola', dmg: 2.5, rate: 0.24, mag: 6, res: 72, recarga: 'tiro', rt: 0.24, rbase: 0.2, spread: 0.035, range: 520,
+               icono: { tipo: 'revolver', len: 22 } },
+  sw3:       { nombre: 'Smith & Wesson Modelo 3', clase: 'pistola', dmg: 3.4, rate: 0.3, mag: 6, res: 48, recarga: 'todo', rt: 1.25, spread: 0.035, range: 540, precio: 500, caja: 1,
+               icono: { tipo: 'revolver', len: 26 } },
+  c96:       { nombre: 'Mauser C96', clase: 'pistola', dmg: 2.2, rate: 0.13, mag: 10, res: 80, recarga: 'todo', rt: 1.8, spread: 0.05, range: 500, precio: 900, caja: 1,
+               icono: { tipo: 'c96', len: 26 } },
+  w1873:     { nombre: 'Winchester 1873', clase: 'carabina', dmg: 2.4, rate: 0.3, mag: 14, res: 84, recarga: 'tiro', rt: 0.2, rbase: 0.3, spread: 0.03, range: 620, precio: 750, caja: 1,
+               icono: { tipo: 'palanca', len: 50, tubo: true } },
+  w1894:     { nombre: 'Winchester 1894', clase: 'carabina', dmg: 3.6, rate: 0.36, mag: 7, res: 70, recarga: 'tiro', rt: 0.26, rbase: 0.3, spread: 0.02, range: 720, pierce: 1, precio: 1000, caja: 1,
+               icono: { tipo: 'palanca', len: 48, tubo: true } },
+  w1895:     { nombre: 'Winchester 1895', clase: 'rifle', dmg: 4.4, rate: 0.42, mag: 5, res: 50, recarga: 'todo', rt: 1.7, spread: 0.015, range: 820, pierce: 2, caja: 1,
+               icono: { tipo: 'palanca', len: 56, caja: true } },
+  remington: { nombre: 'Remington Rolling Block', clase: 'rifle', dmg: 7.5, rate: 0.2, mag: 1, res: 40, recarga: 'todo', rt: 0.8, spread: 0.006, range: 980, pierce: 3, precio: 500, caja: 1,
+               icono: { tipo: 'rifle', len: 60 } },
+  mauser95:  { nombre: 'Mauser 1895', clase: 'rifle', dmg: 5.5, rate: 0.62, mag: 5, res: 60, recarga: 'todo', rt: 1.9, spread: 0.01, range: 980, pierce: 3, precio: 1250, caja: 1,
+               icono: { tipo: 'cerrojo', len: 62 } },
+  mauser10:  { nombre: 'Carabina Mauser 1910', clase: 'carabina', dmg: 4.6, rate: 0.5, mag: 5, res: 60, recarga: 'todo', rt: 1.6, spread: 0.014, range: 820, pierce: 2, precio: 1100, caja: 1,
+               icono: { tipo: 'cerrojo', len: 50 } },
+  mondragon: { nombre: 'Mondragón 1908', clase: 'rifle', dmg: 4.0, rate: 0.14, mag: 10, res: 80, recarga: 'todo', rt: 2.2, spread: 0.03, range: 880, pierce: 2, atasco: 0.035, caja: 0.5,
+               icono: { tipo: 'semiauto', len: 60 } },
+  escopeta:  { nombre: 'Escopeta de dos cañones', clase: 'escopeta', dmg: 1.5, perdigones: 7, rate: 0.22, mag: 2, res: 40, recarga: 'todo', rt: 1.5, spread: 0.3, range: 300, caida: 0.6, empuje: 2, precio: 900, caja: 1,
+               icono: { tipo: 'escopeta', len: 50 } },
+  colt95:    { nombre: 'Colt-Browning 1895', clase: 'ametralladora', dmg: 2.6, rate: 0.133, mag: 100, res: 300, recarga: 'todo', rt: 4.2, spread: 0.06, range: 760, pierce: 1, lento: 0.72, caja: 0.4,
+               icono: { tipo: 'colt95', len: 58 } },
+  hotchkiss: { nombre: 'Hotchkiss 1900', clase: 'ametralladora', dmg: 2.8, rate: 0.1, mag: 30, res: 300, recarga: 'todo', rt: 2.4, spread: 0.05, range: 780, pierce: 1, lento: 0.75, caja: 0.4,
+               icono: { tipo: 'hotchkiss', len: 60 } },
+  madsen:    { nombre: 'Madsen 1911', clase: 'ametralladora', dmg: 2.5, rate: 0.12, mag: 25, res: 250, recarga: 'todo', rt: 2.6, spread: 0.055, range: 720, pierce: 1, lento: 0.9, caja: 0.55,
+               icono: { tipo: 'madsen', len: 56 } }
+};
+const DINAMITA = { precio: 250, max: 3, mecha: 1.3, radio: 120, dmg: 14 };
+const START_POINTS = 500;
+// Altar de obsidiana (el Pack-a-Punch): lo que cambia al curar un arma
+const ALTAR_COSTO = 5000;
+const ALTAR_NOMBRES = {
+  colt: 'La Cobradora', sw3: 'El Juramento', c96: 'La Escoba del Diablo', w1873: 'La Centenaria', w1894: 'La Siete Leguas',
+  w1895: 'El Rayo del Norte', remington: 'La Sola Bala', mauser95: 'La Adelita', mauser10: 'La Valentina', mondragon: 'La Porfiriana',
+  escopeta: 'La Chachalaca', colt95: 'La Escarbadora', hotchkiss: 'El Ahuizote', madsen: 'La Danesa'
+};
+
+const inv = { slots: [], cur: 0, cd: 0, reloading: false, reloadT: 0, reloadMax: 0, switchT: 0, jamT: 0, dryCd: 0, dinamita: 0, bombCd: 0 };
+let points = START_POINTS;
+const playerBombs = [];   // dinamita que lanza el jugador
+const drops = [];         // cajas de parque en el piso
+
+function newSlot(id, pap = false) {
+  const s = { id, pap, mag: 0, res: 0 };
+  const st = stats(s);
+  s.mag = st.mag; s.res = st.res;
+  return s;
+}
+// Datos efectivos de un arma (con la mejora del altar si la tiene)
+function stats(s) {
+  const W0 = WEAPONS[s.id];
+  if (!s.pap) return W0;
+  const st = { ...W0 };
+  st.nombre = ALTAR_NOMBRES[s.id];
+  st.dmg = W0.dmg * 2;
+  st.mag = s.id === 'escopeta' ? 4 : Math.ceil(W0.mag * 1.5);
+  st.res = Math.ceil(W0.res * 1.5);
+  st.rt = W0.rt * 0.75; if (W0.rbase) st.rbase = W0.rbase * 0.75;
+  st.rate = W0.rate * 0.9;
+  st.pierce = (W0.pierce || 0) + (s.id === 'remington' ? 3 : 1);
+  if (s.id === 'escopeta') st.perdigones = 10;
+  st.atasco = 0;   // la Porfiriana ya no se traba
+  return st;
+}
+function noteWeapon(id) { /* el Registro muestra todas las armas desde el principio */ }
+function curSlot() { return inv.slots[inv.cur] || null; }
+function resetArsenal() {
+  inv.slots = [newSlot('colt')];
+  inv.cur = 0; inv.cd = 0; inv.reloading = false; inv.reloadT = 0; inv.switchT = 0; inv.jamT = 0; inv.dinamita = 0; inv.bombCd = 0;
+  points = START_POINTS;
+  playerBombs.length = 0; drops.length = 0;
+}
+function addPoints(n) {
+  points += n;
+  ptsPop(n);
+}
+function spend(n) {
+  if (points < n) { Sfx.deny(); return false; }
+  points -= n;
+  ptsPop(-n);
+  Sfx.buy();
+  return true;
+}
+// Recibe un arma: si ya la tiene, solo se llena; si trae dos, cambia la que tiene en la mano
+function giveWeapon(id, pap = false, slot = null) {
+  const s = slot || newSlot(id, pap);
+  const have = inv.slots.findIndex(q => q.id === id);
+  if (have >= 0) {
+    const old = inv.slots[have];
+    if (old.pap && !s.pap) { const st = stats(old); old.mag = st.mag; old.res = st.res; }
+    else inv.slots[have] = s;
+    inv.cur = have;
+  } else if (inv.slots.length < 2) { inv.slots.push(s); inv.cur = inv.slots.length - 1; }
+  else inv.slots[inv.cur] = s;
+  inv.reloading = false; inv.switchT = 0.3; inv.jamT = 0;
+  noteWeapon(id);
+  Sfx.pickup();
+}
+function switchWeapon(to) {
+  if (inv.slots.length < 2) return;
+  const n = to == null ? (inv.cur + 1) % inv.slots.length : to;
+  if (n === inv.cur || n >= inv.slots.length) return;
+  inv.cur = n; inv.reloading = false; inv.switchT = 0.35; inv.jamT = 0;
+  Sfx.switchWpn();
+}
+function startReload() {
+  const S = curSlot();
+  if (!S || inv.reloading || inv.switchT > 0) return;
+  const st = stats(S);
+  if (S.mag >= st.mag || S.res <= 0) return;
+  inv.reloading = true;
+  inv.reloadT = st.recarga === 'tiro' ? (st.rbase || 0) + st.rt : st.rt;
+  inv.reloadMax = st.recarga === 'tiro' ? (st.rbase || 0) + st.rt * Math.min(st.mag - S.mag, S.res) : st.rt;
+  inv.reloadStart = survivalTime;
+  Sfx.reloadStart();
+}
+function updateWeapon(dt, alive) {
+  inv.cd -= dt; inv.dryCd -= dt; inv.bombCd -= dt;
+  inv.switchT = Math.max(0, inv.switchT - dt);
+  inv.jamT = Math.max(0, inv.jamT - dt);
+  const S = curSlot();
+  if (inv.reloading && S) {
+    inv.reloadT -= dt;
+    if (inv.reloadT <= 0) {
+      const st = stats(S);
+      if (st.recarga === 'tiro') {
+        if (S.res > 0 && S.mag < st.mag) { S.mag++; S.res--; Sfx.roundIn(); }
+        if (S.mag < st.mag && S.res > 0) inv.reloadT += st.rt;
+        else { inv.reloading = false; Sfx.reloadEnd(); }
+      } else {
+        const n = Math.min(st.mag - S.mag, S.res);
+        S.mag += n; S.res -= n;
+        inv.reloading = false; Sfx.reloadEnd();
+      }
+    }
+  }
+  if (!alive || !S) return;
+  if (mouse.down) tryFire(S);
+  if (S.mag === 0 && S.res > 0 && !inv.reloading && inv.switchT <= 0) startReload();
+}
+function tryFire(S) {
+  if (inv.cd > 0 || inv.switchT > 0 || inv.jamT > 0 || macheteT > 0) return;
+  const st = stats(S);
+  if (S.mag <= 0) {
+    if (S.res <= 0 && inv.dryCd <= 0) { Sfx.dry(); inv.dryCd = 0.4; addFloater('Sin parque', player.x, player.y - 34, '#b0b8c8'); }
+    return;
+  }
+  if (inv.reloading) {
+    if (st.recarga === 'tiro') inv.reloading = false;   // se puede disparar a media recarga
+    else return;
+  }
+  fireSlot(S, st);
+}
+function fireSlot(S, st) {
+  S.mag--;
+  inv.cd = st.rate;
+  const m = muzzleWorld();
+  const n = st.perdigones || 1;
+  const life = st.range / BULLET_SPEED;
+  for (let i = 0; i < n; i++) {
+    const a = player.angle + (n > 1 ? (Math.random() - 0.5) * st.spread : (Math.random() - 0.5) * st.spread);
+    const sp = n > 1 ? BULLET_SPEED * (0.85 + Math.random() * 0.2) : BULLET_SPEED;
+    bullets.push({ x: m.x, y: m.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life, life0: life,
+                   dmg: st.dmg, pierce: st.pierce || 0, hits: [], pap: S.pap, pellet: n > 1, caida: st.caida || 0, empuje: st.empuje || 1, player: true });
+  }
+  flash = 0.06;
+  Sfx.shotKind(st.clase, S.pap);
+  const kick = st.clase === 'escopeta' ? 120 : st.clase === 'rifle' ? 45 : st.clase === 'ametralladora' ? 12 : 0;
+  if (kick) { player.kx -= Math.cos(player.angle) * kick; player.ky -= Math.sin(player.angle) * kick; }
+  if (st.atasco && Math.random() < st.atasco) {
+    inv.jamT = 0.9;
+    Sfx.jam();
+    addFloater('¡Se trabó!', player.x, player.y - 34, '#ffb060');
+  }
+}
+// Dinamita del jugador: se lanza hacia el cursor y truena tras la mecha
+function throwPlayerBomb() {
+  if (state !== 'playing' || inv.dinamita <= 0 || inv.bombCd > 0) return;
+  inv.dinamita--; inv.bombCd = 0.6;
+  const d = Math.min(320, Math.hypot(mouse.x - player.x, mouse.y - player.y));
+  const a = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+  const q = { x: player.x + Math.cos(a) * d, y: player.y + Math.sin(a) * d };
+  walkClamp(q, 10);
+  playerBombs.push({ sx: player.x, sy: player.y, tx: q.x, ty: q.y, t: 0, dur: clamp(d / 380, 0.3, 0.8), fuse: DINAMITA.mecha, spin: Math.random() * 6 });
+  Sfx.toss(player.x, player.y);
+  Sfx.fuse(player.x, player.y, DINAMITA.mecha);
+}
+function updatePlayerBombs(dt) {
+  for (let i = playerBombs.length - 1; i >= 0; i--) {
+    const b = playerBombs[i];
+    b.t = Math.min(b.dur, b.t + dt);
+    b.fuse -= dt;
+    if (b.fuse > 0) continue;
+    playerBombs.splice(i, 1);
+    const k = hpScale(false);
+    for (const z of zombies.slice()) {
+      const d = Math.hypot(z.x - b.tx, z.y - b.ty);
+      if (d > DINAMITA.radio + z.r) continue;
+      const f = 1 - 0.5 * Math.min(1, d / DINAMITA.radio);
+      damageZombie(z, { vx: z.x - b.tx + 0.01, vy: z.y - b.ty, player: true, explosion: true, empuje: 3 }, z.x, z.y, DINAMITA.dmg * k * f * (z.T.boss ? 0.6 : 1));
+    }
+    if (Math.hypot(player.x - b.tx, player.y - b.ty) < 70) hurtPlayer({ x: b.tx, y: b.ty, T: { knock: 1.5 } }, 1);
+    blasts.push({ x: b.tx, y: b.ty, t: 0.35 });
+    addDecal({ type: 'scorch', x: b.tx, y: b.ty, r: 60 });
+    shake = Math.max(shake, 0.35);
+    Sfx.explosion(b.tx, b.ty);
+  }
+}
+// Vida de los muertos según la oleada (las armas mejores la necesitan)
+function hpScale(boss) {
+  const w = Math.max(0, wave - 5);
+  return boss ? 1 + 0.04 * w : 1 + 0.09 * w;
+}
+function meleeScale() { return 1 + 0.04 * Math.max(0, wave - 5); }
+
+// Parque (cajas de munición): las sueltan a veces los muertos y siempre los jefes
+function maybeDrop(z) {
+  if (drops.length >= 2) return;
+  if (z.T.boss || Math.random() < 1 / 70) drops.push({ x: z.x, y: z.y, t: 25 });
+}
+function updateDrops(dt) {
+  for (let i = drops.length - 1; i >= 0; i--) {
+    const d = drops[i];
+    d.t -= dt;
+    if (d.t <= 0) { drops.splice(i, 1); continue; }
+    if (state === 'playing' && Math.hypot(player.x - d.x, player.y - d.y) < player.radius + 16) {
+      drops.splice(i, 1);
+      for (const s of inv.slots) { const st = stats(s); s.res = st.res; }
+      inv.dinamita = DINAMITA.max;
+      showBanner('¡Parque!', 'Munición llena para todas tus armas', 2, '#ffd27a');
+      Sfx.pickup();
+    }
+  }
+}
+
+// ---------- silueta de cada arma (HUD, armeros, caja, altar, Registro y en la mano) ----------
+// Dibuja el arma apuntando a +X, de -len/2 (culata) a +len/2 (boca)
+function drawGunIcon(g, id, s = 1, pap = false, claro = false) {
+  const I = WEAPONS[id].icono, L = I.len * s, h = L / 2;
+  let wood = pap ? '#2a2236' : '#6a4424', steel = pap ? '#1a1620' : '#3d4249', edge = pap ? '#7fe0c0' : '#15181c';
+  if (claro && !pap) { wood = '#b08a62'; steel = '#aab2bf'; edge = '#0b0d12'; }
+  if (claro && pap) { wood = '#3a3050'; steel = '#2a2436'; edge = '#9ff0d4'; }
+  g.save();
+  g.lineJoin = 'round';
+  g.strokeStyle = edge; g.lineWidth = Math.max(0.8, 1.1 * s);
+  const R = (x, y, w, hh, c) => { g.fillStyle = c; g.fillRect(x, y, w, hh); g.strokeRect(x, y, w, hh); };
+  if (I.tipo === 'revolver') {
+    R(-h, -1.2 * s, L * 0.25, 4.5 * s, wood);                  // cacha
+    R(-h + L * 0.22, -2.2 * s, L * 0.3, 4.4 * s, steel);       // tambor
+    R(-h + L * 0.5, -1.2 * s, L * 0.5, 2.4 * s, steel);        // cañón
+  } else if (I.tipo === 'c96') {
+    g.fillStyle = wood; g.beginPath(); g.ellipse(-h + L * 0.12, 1.5 * s, L * 0.13, 3.2 * s, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+    R(-h + L * 0.22, -2.4 * s, L * 0.36, 4.8 * s, steel);
+    R(-h + L * 0.3, 2.4 * s, L * 0.14, 3 * s, steel);          // cargador al frente del gatillo
+    R(-h + L * 0.58, -1.2 * s, L * 0.42, 2.4 * s, steel);
+  } else if (I.tipo === 'escopeta') {
+    g.fillStyle = wood; g.beginPath(); g.moveTo(-h, -3 * s); g.lineTo(-h + L * 0.32, -2 * s); g.lineTo(-h + L * 0.32, 2.5 * s); g.lineTo(-h, 4.5 * s); g.closePath(); g.fill(); g.stroke();
+    R(-h + L * 0.3, -2.6 * s, L * 0.12, 5 * s, steel);
+    R(-h + L * 0.42, -2.6 * s, L * 0.58, 2.2 * s, steel);
+    R(-h + L * 0.42, 0.2 * s, L * 0.58, 2.2 * s, steel);
+  } else if (I.tipo === 'colt95' || I.tipo === 'hotchkiss' || I.tipo === 'madsen') {
+    if (I.tipo === 'madsen') { g.fillStyle = wood; g.beginPath(); g.moveTo(-h, -2.5 * s); g.lineTo(-h + L * 0.25, -2 * s); g.lineTo(-h + L * 0.25, 2.5 * s); g.lineTo(-h, 3.5 * s); g.closePath(); g.fill(); g.stroke(); }
+    else R(-h, -1.5 * s, L * 0.12, 3 * s, steel);               // empuñaduras traseras
+    R(-h + L * 0.12, -3.6 * s, L * 0.34, 7.2 * s, steel);       // cajón
+    R(-h + L * 0.46, -1.6 * s, L * 0.54, 3.2 * s, steel);       // cañón
+    if (I.tipo === 'hotchkiss') { g.fillStyle = edge; for (let k = 0; k < 6; k++) g.fillRect(-h + L * (0.5 + k * 0.06), -2.6 * s, 1.4 * s, 5.2 * s); R(-h + L * 0.2, 3.6 * s, L * 0.3, 1.8 * s, '#8a7a3a'); }
+    if (I.tipo === 'colt95') { R(-h + L * 0.5, 1.6 * s, L * 0.28, 2.2 * s, steel); R(-h + L * 0.15, 3.6 * s, L * 0.16, 4 * s, '#8a7a3a'); }
+    if (I.tipo === 'madsen') { g.fillStyle = steel; g.beginPath(); g.moveTo(-h + L * 0.22, -3.6 * s); g.quadraticCurveTo(-h + L * 0.3, -10 * s, -h + L * 0.4, -9 * s); g.lineTo(-h + L * 0.36, -3.6 * s); g.closePath(); g.fill(); g.stroke(); }
+  } else {
+    // Rifles y carabinas: culata, cajón, cañón con guardamano de madera
+    g.fillStyle = wood; g.beginPath(); g.moveTo(-h, -2.8 * s); g.lineTo(-h + L * 0.3, -1.6 * s); g.lineTo(-h + L * 0.3, 2 * s); g.lineTo(-h, 4.2 * s); g.closePath(); g.fill(); g.stroke();
+    R(-h + L * 0.29, -2.2 * s, L * 0.18, 4.4 * s, steel);
+    R(-h + L * 0.47, -1.3 * s, L * 0.53, 2.6 * s, steel);
+    R(-h + L * 0.47, -0.2 * s, L * (I.tipo === 'rifle' || I.tipo === 'cerrojo' ? 0.4 : 0.22), 2.6 * s, wood);
+    if (I.tubo) R(-h + L * 0.6, 1.4 * s, L * 0.35, 1.4 * s, steel);
+    if (I.tipo === 'palanca') { g.strokeStyle = steel; g.lineWidth = 1.4 * s; g.beginPath(); g.ellipse(-h + L * 0.36, 3.6 * s, L * 0.06, 2 * s, 0, 0, Math.PI * 2); g.stroke(); }
+    if (I.caja || I.tipo === 'semiauto') R(-h + L * 0.33, 2.2 * s, L * 0.1, 3.6 * s, steel);
+    if (I.tipo === 'cerrojo' || I.tipo === 'semiauto') { g.fillStyle = steel; g.beginPath(); g.arc(-h + L * 0.36, -3.4 * s, 1.6 * s, 0, Math.PI * 2); g.fill(); }
+    if (I.tipo === 'rifle') R(-h + L * 0.31, -3.2 * s, L * 0.05, 1.6 * s, steel);   // el bloque que rueda
+  }
+  if (pap) {   // brillo de obsidiana
+    g.strokeStyle = 'rgba(127,224,192,0.55)'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(-h + L * 0.3, -3 * s); g.lineTo(h - 2, -1.6 * s); g.stroke();
+  }
+  g.restore();
+}
+// El arma en la mano del jugador (en el marco local del sprite: +X hacia el frente)
+function heldGeom() {
+  const S = curSlot();
+  if (!S) return { rear: 8, len: 0 };
+  const I = WEAPONS[S.id].icono, len = I.len * 0.72;
+  const corta = WEAPONS[S.id].clase === 'pistola';
+  return { rear: corta ? 8 : -2, len };
+}
+function drawHeldWeapon() {
+  const S = curSlot();
+  if (!S) return;
+  const { rear, len } = heldGeom();
+  ctx.save();
+  ctx.translate(rear + len / 2, 4.5);
+  drawGunIcon(ctx, S.id, 0.72, S.pap);
+  ctx.restore();
+}
+
+// ---------- HUD del arma y los puntos ----------
+const hudPts = document.getElementById('pts');
+const hudPops = document.getElementById('pts-pops');
+const hudArmaNombre = document.getElementById('arma-nombre');
+const hudCargador = document.getElementById('arma-cargador');
+const hudReserva = document.getElementById('arma-reserva');
+const hudBarra = document.getElementById('arma-barra');
+const hudOtra = document.getElementById('arma-otra');
+const hudDinamita = document.getElementById('arma-dinamita');
+const hudIcono = document.getElementById('arma-icono');
+const hudCompra = document.getElementById('compra');
+let hudIconKey = '';
+function ptsPop(n) {
+  if (!hudPops || !n) return;
+  const sp = document.createElement('span');
+  sp.textContent = (n > 0 ? '+' : '') + n;
+  sp.className = n > 0 ? 'mas' : 'menos';
+  hudPops.append(sp);
+  setTimeout(() => sp.remove(), 900);
+  while (hudPops.children.length > 6) hudPops.firstChild.remove();
+}
+function syncWeaponHud() {
+  setText(hudPts, points);
+  const S = curSlot();
+  if (!S) {
+    setText(hudArmaNombre, 'Sin arma de fuego'); setText(hudCargador, '—'); setText(hudReserva, '');
+  } else {
+    const st = stats(S);
+    setText(hudArmaNombre, st.nombre);
+    hudArmaNombre.classList.toggle('obsidiana', !!S.pap);
+    setText(hudCargador, S.mag);
+    setText(hudReserva, `/ ${S.res}`);
+    hudCargador.classList.toggle('vacio', S.mag === 0);
+  }
+  const k = inv.reloading && S ? 1 - Math.max(0, (survivalTime - inv.reloadStart) / Math.max(0.01, inv.reloadMax)) : 0;
+  hudBarra.style.setProperty('--k', inv.reloading ? (1 - Math.max(0, k)).toFixed(3) : 0);
+  hudBarra.classList.toggle('activa', inv.reloading || inv.jamT > 0);
+  const other = inv.slots.find((s, i) => i !== inv.cur);
+  setText(hudOtra, other ? `Q · ${stats(other).nombre}` : '');
+  setText(hudDinamita, inv.dinamita ? `G · Dinamita ×${inv.dinamita}` : '');
+  const key = S ? S.id + (S.pap ? '*' : '') : '';
+  if (key !== hudIconKey && hudIcono) {
+    hudIconKey = key;
+    const r = Math.min(window.devicePixelRatio || 1, 2);
+    hudIcono.width = 120 * r; hudIcono.height = 40 * r;
+    const g = hudIcono.getContext('2d');
+    g.setTransform(r, 0, 0, r, 0, 0);
+    g.clearRect(0, 0, 120, 40);
+    if (S) { g.translate(60, 20); const I = WEAPONS[S.id].icono; drawGunIcon(g, S.id, 104 / Math.max(I.len, 30) * 0.95, S.pap, true); }
+  }
+}
+
+
+// ------------------------------------------------------------
+// Compras: armeros de pared, puertas, la caja del Charro Negro y el Altar de Obsidiana
+// ------------------------------------------------------------
+const ARMEROS = [
+  { w: 'sw3',       room: 'despacho', lado: 'n', f: 0.26 },
+  { w: 'dinamita',  room: 'despacho', lado: 'o', f: 0.25 },
+  { w: 'remington', room: 'despacho', lado: 's', f: 0.82 },
+  { w: 'w1873',     room: 'patio',    lado: 'e', f: 0.22 },
+  { w: 'escopeta',  room: 'patio',    lado: 'e', f: 0.86 },
+  { w: 'w1894',     room: 'patio',    lado: 's', f: 0.78 },
+  { w: 'c96',       room: 'oficinas', lado: 'o', f: 0.8 },
+  { w: 'mauser10',  room: 'oficinas', lado: 'n', f: 0.82 },
+  { w: 'mauser95',  room: 'sotanos',  lado: 'o', f: 0.5 }
+];
+function armeroGeom(a) {
+  const r = ROOM[a.room];
+  if (a.lado === 'n') return { x: r.x + r.w * a.f, y: r.y, nx: 0, ny: 1 };
+  if (a.lado === 's') return { x: r.x + r.w * a.f, y: r.y + r.h, nx: 0, ny: -1 };
+  if (a.lado === 'o') return { x: r.x, y: r.y + r.h * a.f, nx: 1, ny: 0 };
+  return { x: r.x + r.w, y: r.y + r.h * a.f, nx: -1, ny: 0 };
+}
+function armeroPrecio(a) {
+  if (a.w === 'dinamita') return DINAMITA.precio;
+  const own = inv.slots.find(s => s.id === a.w);
+  const p = WEAPONS[a.w].precio;
+  if (!own) return p;
+  return own.pap ? p * 2 : Math.round(p / 2 / 10) * 10;
+}
+// Tabla del armero con la silueta del arma (se hornea en el piso)
+function drawArmero(g, a) {
+  const q = armeroGeom(a);
+  g.save();
+  g.translate(q.x, q.y);
+  g.rotate(Math.atan2(q.ny, q.nx) - Math.PI / 2);   // +Y local hacia dentro de la sala
+  g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillRect(-40, 2, 84, 26);
+  g.fillStyle = '#4a3220'; g.strokeStyle = '#1e140c'; g.lineWidth = 2;
+  g.fillRect(-42, 0, 84, 24); g.strokeRect(-42, 0, 84, 24);
+  g.fillStyle = '#2a1c10'; g.fillRect(-40, 2, 2, 20); g.fillRect(38, 2, 2, 20);
+  if (a.w === 'dinamita') {
+    for (let k = 0; k < 3; k++) { g.fillStyle = '#b3261e'; g.fillRect(-14 + k * 10, 5, 7, 15); g.fillStyle = '#e8d8a0'; g.fillRect(-12 + k * 10, 3, 3, 3); }
+  } else {
+    g.translate(0, 12);
+    drawGunIcon(g, a.w, 72 / Math.max(WEAPONS[a.w].icono.len, 30));
+  }
+  g.restore();
+}
+function armeroLabel(a) {
+  if (a.w === 'dinamita') return inv.dinamita >= DINAMITA.max ? 'Ya traes toda la dinamita' : `Dinamita (×${DINAMITA.max})`;
+  const own = inv.slots.find(s => s.id === a.w);
+  return own ? `Parque para ${stats(own).nombre}` : `Comprar ${WEAPONS[a.w].nombre}`;
+}
+function buyArmero(a) {
+  if (a.w === 'dinamita') {
+    if (inv.dinamita >= DINAMITA.max) return;
+    if (spend(DINAMITA.precio)) inv.dinamita = DINAMITA.max;
+    return;
+  }
+  const own = inv.slots.find(s => s.id === a.w);
+  if (own) {
+    const st = stats(own);
+    if (own.res >= st.res && own.mag >= st.mag) { addFloater('Ya está lleno', player.x, player.y - 34, '#b0b8c8'); return; }
+    if (spend(armeroPrecio(a))) { own.res = st.res; Sfx.reloadEnd(); }
+    return;
+  }
+  if (spend(armeroPrecio(a))) giveWeapon(a.w);
+}
+
+// ---------- la caja del Charro Negro ----------
+// Biblia: el Charro es el acreedor. Nunca miente, solo omite. Siempre cobra.
+const CAJA_COSTO = 950;
+const CAJA_SPOTS = [
+  { room: 'despacho', fx: 0.5, fy: 0.87 },
+  { room: 'patio', fx: 0.5, fy: 0.18 },
+  { room: 'oficinas', fx: 0.72, fy: 0.84 },
+  { room: 'sotanos', fx: 0.3, fy: 0.2 }
+];
+// Lo que dice al dar cada arma: todo es cierto, pero algo se calla
+const CHARRO_DICE = {
+  sw3: 'Se recarga de un jalón.',
+  c96: 'Diez tiros sin recargar.',
+  w1873: 'Catorce balas en el tubo.',
+  w1894: 'La que más se usó en toda la Revolución.',
+  w1895: 'Pega como mula.',
+  remington: 'Donde pone el ojo, pone la bala.',
+  mauser95: 'La del ejército de don Porfirio.',
+  mauser10: 'Hecha aquí, en México.',
+  mondragon: 'Dispara solita, como ninguna otra de su tiempo.',
+  escopeta: 'De cerquita no perdona.',
+  colt95: 'Escupe cuatrocientas cincuenta balas por minuto.',
+  hotchkiss: 'La trajeron de Francia.',
+  madsen: 'Ligera, para ser ametralladora.'
+};
+const CHARRO_SE_VA = 'Ya me cobré. Búsqueme en otro rincón del Palacio.';
+const caja = { spot: 0, state: 'idle', t: 0, uses: 0, result: null, show: 'colt', tick: 0, line: '', lineT: 0 };
+function cajaPos(i = caja.spot) { const c = CAJA_SPOTS[i], r = ROOM[c.room]; return { x: r.x + r.w * c.fx, y: r.y + r.h * c.fy }; }
+function resetCaja() {
+  Object.assign(caja, { spot: 0, state: 'idle', t: 0, uses: 0, result: null, line: '', lineT: 0 });
+  refreshObstacles();
+}
+function refreshObstacles() {
+  obstacles = [];
+  if (caja.state !== 'away') { const p = cajaPos(); obstacles.push({ x: p.x, y: p.y - 6, r: 30 }); }
+  const a = altarPos(); obstacles.push({ x: a.x, y: a.y, r: 32 });
+}
+function charroFacing() {
+  const p = cajaPos(), r = ROOM[CAJA_SPOTS[caja.spot].room];
+  const a = Math.atan2(r.y + r.h / 2 - p.y, r.x + r.w / 2 - p.x);
+  return Math.round(a / (Math.PI / 2)) * (Math.PI / 2);
+}
+function charroSay(text) { caja.line = text; caja.lineT = 4.5; }
+function useCaja() {
+  if (caja.state === 'offer') {
+    giveWeapon(caja.result);
+    caja.state = 'idle';
+    return;
+  }
+  if (caja.state !== 'idle') return;
+  if (!spend(CAJA_COSTO)) return;
+  caja.state = 'rolling'; caja.t = 2.8; caja.tick = 0; caja.uses++;
+  const p = cajaPos();
+  Sfx.boxOpen(p.x, p.y);
+  // A partir del cuarto uso, el Charro puede llevársela (y no devuelve nada)
+  if (caja.uses > 3 && Math.random() < 0.28) caja.result = 'cobra';
+  else {
+    const pool = Object.keys(WEAPONS).filter(id => WEAPONS[id].caja && !inv.slots.some(s => s.id === id));
+    caja.result = pickWeighted(pool, id => WEAPONS[id].caja);
+  }
+}
+function updateCaja(dt) {
+  caja.lineT = Math.max(0, caja.lineT - dt);
+  if (caja.state === 'idle') return;
+  caja.t -= dt;
+  const p = cajaPos();
+  if (caja.state === 'rolling') {
+    caja.tick -= dt;
+    if (caja.tick <= 0) {
+      const ids = Object.keys(WEAPONS).filter(id => WEAPONS[id].caja);
+      caja.show = ids[Math.floor(Math.random() * ids.length)];
+      caja.tick = 0.06 + (1 - caja.t / 2.8) * 0.22;
+      Sfx.boxTick(p.x, p.y, 1 - caja.t / 2.8);
+    }
+    if (caja.t <= 0) {
+      if (caja.result === 'cobra') {
+        caja.state = 'cobrando'; caja.t = 2.4;
+        charroSay(CHARRO_SE_VA);
+        Sfx.charroLaugh(p.x, p.y);
+        Sfx.boxMove(p.x, p.y);
+      } else {
+        caja.state = 'offer'; caja.t = 8; caja.show = caja.result;
+        charroSay(CHARRO_DICE[caja.result] || 'Todo tiene su precio.');
+      }
+    }
+  } else if (caja.state === 'offer' && caja.t <= 0) {
+    caja.state = 'idle';
+  } else if (caja.state === 'cobrando' && caja.t <= 0) {
+    caja.state = 'away'; caja.t = 3;
+    refreshObstacles();
+  } else if (caja.state === 'away' && caja.t <= 0) {
+    const others = CAJA_SPOTS.map((_, i) => i).filter(i => i !== caja.spot);
+    caja.spot = others[Math.floor(Math.random() * others.length)];
+    caja.state = 'idle'; caja.uses = 0;
+    refreshObstacles();
+    const r = ROOM[CAJA_SPOTS[caja.spot].room];
+    showBanner('El Charro Negro se mudó', `Su caja apareció en ${r.nombre}${roomOpen[r.id] ? '' : ' (todavía cerrada)'}`, 3, '#d8c8a8');
+  }
+}
+
+// ---------- el Altar de Obsidiana (biblia: los Guardianes curan con copal y obsidiana) ----------
+const ALTAR_SPOT = { room: 'sotanos', fx: 0.8, fy: 0.3 };
+const altar = { state: 'idle', t: 0, slot: null };
+function altarPos() { const r = ROOM[ALTAR_SPOT.room]; return { x: r.x + r.w * ALTAR_SPOT.fx, y: r.y + r.h * ALTAR_SPOT.fy }; }
+function resetAltar() { altar.state = 'idle'; altar.t = 0; altar.slot = null; }
+function useAltar() {
+  if (altar.state === 'ready') {
+    if (inv.slots.length >= 2) inv.slots[inv.cur] = altar.slot; else { inv.slots.push(altar.slot); inv.cur = inv.slots.length - 1; }
+    inv.reloading = false; inv.switchT = 0.3;
+    altar.state = 'idle'; altar.slot = null;
+    Sfx.pickup();
+    return;
+  }
+  if (altar.state !== 'idle') return;
+  const S = curSlot();
+  if (!S) return;
+  if (S.pap) { addFloater('Esa ya está curada', player.x, player.y - 34, '#b0b8c8'); return; }
+  if (!spend(ALTAR_COSTO)) return;
+  inv.slots.splice(inv.cur, 1);
+  inv.cur = 0; inv.reloading = false;
+  altar.slot = S; altar.state = 'working'; altar.t = 3.2;
+  const p = altarPos();
+  Sfx.papWork(p.x, p.y);
+}
+function updateAltar(dt) {
+  if (altar.state === 'idle') return;
+  altar.t -= dt;
+  if (altar.state === 'working' && altar.t <= 0) {
+    altar.slot.pap = true;
+    const st = stats(altar.slot);
+    altar.slot.mag = st.mag; altar.slot.res = st.res;
+    altar.state = 'ready'; altar.t = 12;
+    const p = altarPos();
+    Sfx.papDone(p.x, p.y);
+    addFloater(st.nombre, p.x, p.y - 50, '#7fe0c0');
+  } else if (altar.state === 'ready' && altar.t <= 0) {
+    showBanner('El altar se quedó con tu arma', 'Hay que recogerla a tiempo', 2.6, '#b0b8c8');
+    altar.state = 'idle'; altar.slot = null;
+  }
+}
+
+// ---------- con qué puede interactuar el jugador (tecla E) ----------
+function interactions() {
+  const list = [];
+  for (const g of GATES) {
+    if (g.open) continue;
+    list.push({ x: g.cx, y: g.cy, r: 90, label: `Abrir ${g.nombre}`, cost: g.cost, act: () => { if (spend(g.cost)) openGate(g); } });
+  }
+  for (const a of ARMEROS) {
+    if (!roomOpen[a.room]) continue;
+    const q = armeroGeom(a);
+    list.push({ x: q.x + q.nx * 34, y: q.y + q.ny * 34, r: 60, label: armeroLabel(a), cost: armeroPrecio(a), act: () => buyArmero(a) });
+  }
+  if (roomOpen[CAJA_SPOTS[caja.spot].room] && caja.state !== 'away' && caja.state !== 'cobrando') {
+    const p = cajaPos();
+    if (caja.state === 'idle') list.push({ x: p.x, y: p.y, r: 75, label: 'Caja del Charro Negro', cost: CAJA_COSTO, act: useCaja });
+    else if (caja.state === 'offer') list.push({ x: p.x, y: p.y, r: 75, label: `Tomar ${WEAPONS[caja.result].nombre}`, cost: 0, act: useCaja });
+  }
+  if (roomOpen[ALTAR_SPOT.room]) {
+    const p = altarPos(), S = curSlot();
+    if (altar.state === 'idle') list.push({ x: p.x, y: p.y, r: 80, label: S ? (S.pap ? 'Esa arma ya está curada' : `Curar ${stats(S).nombre} en el Altar de Obsidiana`) : 'Altar de Obsidiana (necesitas un arma)', cost: S && !S.pap ? ALTAR_COSTO : 0, act: useAltar });
+    else if (altar.state === 'ready') list.push({ x: p.x, y: p.y, r: 80, label: `Tomar ${stats(altar.slot).nombre}`, cost: 0, act: useAltar });
+  }
+  return list;
+}
+let nearInteract = null;
+function updateInteract() {
+  nearInteract = null;
+  if (state !== 'playing') return;
+  let bd = Infinity;
+  for (const it of interactions()) {
+    const d = Math.hypot(player.x - it.x, player.y - it.y);
+    if (d < it.r && d < bd) { bd = d; nearInteract = it; }
+  }
+}
+function interact() {
+  if (state !== 'playing' || !nearInteract) return;
+  nearInteract.act();
+}
+function syncPrompt() {
+  if (!hudCompra) return;
+  const it = nearInteract;
+  if (!it) { hudCompra.classList.remove('visible'); return; }
+  const falta = it.cost > points ? it.cost - points : 0;
+  const html = `<kbd>E</kbd> ${it.label}${it.cost ? ` <b>${it.cost}</b>` : ''}${falta ? ` <em>te faltan ${falta}</em>` : ''}`;
+  if (hudCompra.dataset.html !== html) { hudCompra.innerHTML = html; hudCompra.dataset.html = html; }
+  hudCompra.classList.add('visible');
+}
+
+// ---------- dibujo de la caja, el Charro y el altar ----------
+const SVG_CHARRO = `<svg ${SVG_HEAD}>
+  <ellipse cx="28" cy="32" rx="12" ry="21" fill="#0e0c10" stroke="#000" stroke-width="2"/>
+  <g fill="#cfd4dc"><circle cx="30" cy="14" r="1.3"/><circle cx="34" cy="16" r="1.3"/><circle cx="30" cy="50" r="1.3"/><circle cx="34" cy="48" r="1.3"/></g>
+  <path d="M34 18 L46 22 M34 46 L46 42" stroke="#0e0c10" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="47" cy="22" r="3" fill="#1a1418"/><circle cx="47" cy="42" r="3" fill="#1a1418"/>
+  <circle cx="30" cy="32" r="21" fill="#141016" stroke="#000" stroke-width="1.5"/>
+  <circle cx="30" cy="32" r="18.5" fill="none" stroke="#bfc6d0" stroke-width="1.4" stroke-dasharray="2 2.2"/>
+  <circle cx="30" cy="32" r="9.5" fill="#1e1820" stroke="#000" stroke-width="1"/>
+  <circle cx="30" cy="32" r="9.5" fill="none" stroke="#bfc6d0" stroke-width="1"/>
+  <path d="M30 23 Q34 32 30 41" stroke="#2a2430" stroke-width="1.2" fill="none"/>
+  <circle cx="44" cy="33" r="1.1" fill="#ff7a30"/>
+</svg>`;
+const charroImg = new Image();
+let charroReady = false;
+charroImg.onload = () => { charroReady = true; };
+charroImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(SVG_CHARRO);
+
+function drawCajaYAltar() {
+  // Altar de obsidiana: piedra labrada con espejo negro y copal
+  const a = altarPos();
+  ctx.save();
+  ctx.translate(a.x, a.y);
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(-30, -20, 66, 50);
+  ctx.fillStyle = '#4e463c'; ctx.strokeStyle = '#1e1a16'; ctx.lineWidth = 2;
+  ctx.fillRect(-32, -24, 64, 48); ctx.strokeRect(-32, -24, 64, 48);
+  ctx.strokeStyle = '#2e2822'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(-27, -19, 54, 38);
+  for (let k = 0; k < 6; k++) { ctx.beginPath(); ctx.moveTo(-24 + k * 9, -19); ctx.lineTo(-20 + k * 9, -14); ctx.lineTo(-16 + k * 9, -19); ctx.stroke(); }
+  const glow = altar.state === 'working' ? 0.5 + 0.5 * Math.sin(gameTime * 12) : altar.state === 'ready' ? 0.8 : 0.25;
+  ctx.fillStyle = '#07060a'; ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = `rgba(127,224,192,${0.35 + 0.5 * glow})`; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = `rgba(127,224,192,${0.15 + 0.25 * glow})`; ctx.beginPath(); ctx.ellipse(-4, -4, 5, 3, -0.6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#8a4a2a'; ctx.beginPath(); ctx.arc(22, 14, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ff8a30'; ctx.beginPath(); ctx.arc(22, 14, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  // Caja del Charro
+  if (caja.state === 'away') return;
+  const p = cajaPos();
+  const fade = caja.state === 'cobrando' ? Math.max(0, caja.t / 2.4) : 1;
+  ctx.save();
+  ctx.globalAlpha = fade;
+  ctx.translate(p.x, p.y);
+  if (charroReady) {   // el Charro, detrás de su caja, mirando hacia la sala
+    const a4 = charroFacing();
+    ctx.save();
+    ctx.translate(-Math.cos(a4) * 34, -Math.sin(a4) * 34);
+    ctx.rotate(a4);
+    ctx.drawImage(charroImg, -34, -34, 68, 68);
+    ctx.restore();
+  }
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(-30, -12, 64, 34);
+  const open = caja.state === 'rolling' || caja.state === 'offer';
+  ctx.fillStyle = '#3a2416'; ctx.strokeStyle = '#140c06'; ctx.lineWidth = 2;
+  ctx.fillRect(-32, -14, 64, 32); ctx.strokeRect(-32, -14, 64, 32);
+  ctx.fillStyle = '#6a6a72'; ctx.fillRect(-20, -14, 4, 32); ctx.fillRect(16, -14, 4, 32);
+  if (open) {
+    ctx.fillStyle = '#120a06'; ctx.fillRect(-28, -10, 56, 24);
+    const g = ctx.createRadialGradient(0, 2, 0, 0, 2, 30);
+    g.addColorStop(0, 'rgba(255,220,140,0.6)'); g.addColorStop(1, 'rgba(255,160,60,0)');
+    ctx.fillStyle = g; ctx.fillRect(-28, -10, 56, 24);
+  } else {
+    ctx.fillStyle = '#e8e2d0'; ctx.beginPath(); ctx.arc(0, 2, 5, 0, Math.PI * 2); ctx.fill();   // calavera
+    ctx.fillStyle = '#140c06'; ctx.fillRect(-2.6, 0, 2, 2); ctx.fillRect(0.8, 0, 2, 2); ctx.fillRect(-1.5, 4.5, 3, 1);
+  }
+  ctx.restore();
+}
+// Lo que flota sobre la caja y el altar: encima de la oscuridad para que se vea
+function drawShopFloating() {
+  if (altar.slot && altar.state !== 'idle') {
+    const a = altarPos(), k = altar.state === 'working' ? altar.t / 3.2 : 0;
+    ctx.save();
+    ctx.translate(a.x, a.y - 34 - 16 * k + Math.sin(gameTime * 3) * 3);
+    ctx.globalAlpha = altar.state === 'working' ? 0.4 + 0.6 * Math.abs(Math.sin(gameTime * 8)) : 1;
+    drawGunIcon(ctx, altar.slot.id, 0.95, altar.slot.pap, true);
+    if (altar.state === 'ready') {
+      ctx.strokeStyle = 'rgba(127,224,192,0.8)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, 40, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * altar.t / 12); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  if (caja.state === 'rolling' || caja.state === 'offer') {
+    const p = cajaPos();
+    ctx.save();
+    ctx.translate(p.x, p.y - 48 - (caja.state === 'offer' ? Math.sin(gameTime * 3) * 3 : 0));
+    drawGunIcon(ctx, caja.show, 1.1, false, true);
+    if (caja.state === 'offer') {
+      ctx.strokeStyle = 'rgba(255,210,122,0.8)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, 40, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * caja.t / 8); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+// Lo que dice el Charro: en el mundo, sobre su sombrero
+function drawCharroLine() {
+  if (caja.lineT <= 0 || caja.state === 'away') return;
+  const p = cajaPos();
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, caja.lineT / 0.5);
+  ctx.font = 'italic 15px Georgia, serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(caja.line).width + 20, y = p.y - 92;
+  ctx.fillStyle = 'rgba(10,8,12,0.85)'; ctx.fillRect(p.x - w / 2, y - 13, w, 26);
+  ctx.strokeStyle = '#8a7a5a'; ctx.lineWidth = 1; ctx.strokeRect(p.x - w / 2, y - 13, w, 26);
+  ctx.fillStyle = '#e8dcc0';
+  ctx.fillText(`«${caja.line}»`, p.x, y);
+  ctx.restore();
+}
+function drawDropsAndBombs() {
+  for (const d of drops) {
+    const blink = d.t < 5 && Math.floor(d.t * 6) % 2;
+    if (blink) continue;
+    ctx.save();
+    ctx.translate(d.x, d.y + Math.sin(gameTime * 4) * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(-12, -6, 28, 18);
+    ctx.fillStyle = '#5a4a2a'; ctx.strokeStyle = '#2a1e0e'; ctx.lineWidth = 1.5;
+    ctx.fillRect(-14, -9, 28, 18); ctx.strokeRect(-14, -9, 28, 18);
+    ctx.fillStyle = '#c9a23a'; ctx.font = '700 7px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('PARQUE', 0, 0);
+    ctx.restore();
+  }
+  for (const b of playerBombs) {
+    const k = b.t / b.dur, hgt = Math.sin(k * Math.PI) * 50;
+    const x = b.sx + (b.tx - b.sx) * k, y = b.sy + (b.ty - b.sy) * k;
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.translate(x, y - hgt);
+    ctx.rotate(b.spin + b.t * 12 * (k < 1 ? 1 : 0));
+    ctx.fillStyle = '#b3261e'; ctx.fillRect(-7, -2.5, 14, 5);
+    ctx.restore();
+  }
+}
+function shopLights() {
+  for (const a of ARMEROS) { if (!roomOpen[a.room]) continue; const q = armeroGeom(a); punch(q.x + q.nx * 14, q.y + q.ny * 14, 50, 0.4); }
+  if (caja.state !== 'away') { const p = cajaPos(); punch(p.x, p.y - 10, 95, caja.state === 'rolling' || caja.state === 'offer' ? 0.6 : 0.35); }
+  const a = altarPos();
+  punch(a.x, a.y, 90, altar.state === 'idle' ? 0.35 : 0.65);
+  for (const d of drops) punch(d.x, d.y, 50, 0.4);
+  for (const b of playerBombs) { const k = b.t / b.dur; punch(b.sx + (b.tx - b.sx) * k, b.sy + (b.ty - b.sy) * k, 30, 0.4); }
+}
+function drawShopEmissive() {
+  for (const a of ARMEROS) {
+    if (!roomOpen[a.room]) continue;
+    const q = armeroGeom(a), x = q.x + q.nx * 14, y = q.y + q.ny * 14;
+    const g0 = ctx.createRadialGradient(x, y, 0, x, y, 36);
+    g0.addColorStop(0, `rgba(255,200,120,${0.13 + 0.05 * Math.sin(gameTime * 2 + q.x)})`); g0.addColorStop(1, 'rgba(255,160,60,0)');
+    ctx.fillStyle = g0; ctx.beginPath(); ctx.arc(x, y, 36, 0, Math.PI * 2); ctx.fill();
+  }
+  const a = altarPos();
+  const gl = altar.state === 'working' ? 0.55 + 0.35 * Math.sin(gameTime * 12) : altar.state === 'ready' ? 0.6 : 0.2;
+  const g = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, 46);
+  g.addColorStop(0, `rgba(110,230,190,${gl * 0.6})`); g.addColorStop(1, 'rgba(60,160,140,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a.x, a.y, 46, 0, Math.PI * 2); ctx.fill();
+  if (caja.state !== 'away') {
+    const p = cajaPos(), a4 = charroFacing(), c = Math.cos(a4), sn = Math.sin(a4);
+    const ex = p.x - c * 34 + 12 * c - 1 * sn, ey = p.y - sn * 34 + 12 * sn + 1 * c;   // la brasa del puro
+    const e = ctx.createRadialGradient(ex, ey, 0, ex, ey, 8);
+    e.addColorStop(0, 'rgba(255,120,40,0.8)'); e.addColorStop(1, 'rgba(255,80,20,0)');
+    ctx.fillStyle = e; ctx.beginPath(); ctx.arc(ex, ey, 8, 0, Math.PI * 2); ctx.fill();
+  }
 }
 
 function damageZombie(z, b, hx, hy, base = 1) {
@@ -4161,11 +5481,11 @@ function damageZombie(z, b, hx, hy, base = 1) {
       return;
     }
   }
-  if (z.T.nahual && base > 1) dmg = macheteLevel >= MACHETE_MAX ? 3 : 2;   // el metal hiere al nahual (la obsidiana, más)
+  if (z.T.nahual && b.melee) dmg = macheteLevel >= MACHETE_MAX ? 3 : 2;   // el metal hiere al nahual (la obsidiana, más)
   if (z.T.ai === 'deuda') {
     // De frente la cubren los cuerpos; por la espalda está la silla.
     // El machete corta parejo por donde entre.
-    if (base > 1) dmg = 1;
+    if (b.melee || b.explosion) dmg = 1;
     else {
       const back = ux * Math.cos(z.angle) + uy * Math.sin(z.angle) > 0.35;
       dmg = back ? 1.5 : 0.25;
@@ -4180,17 +5500,22 @@ function damageZombie(z, b, hx, hy, base = 1) {
   if (z.T.ai === 'atarantado' && z.daze && z.daze.mode !== 'lunge' && Math.random() < 0.5) {
     z.daze.mode = 'tell'; z.daze.t = 0.35;                     // un tiro lo despierta... a veces
   }
+  const hpBefore = z.hp;
   z.hp -= dmg * base;
   z.hitFlash = 0.12;
+  if (b.player || b.melee) {
+    z.lastMelee = !!b.melee;
+    if (hpBefore > 0 && !b.explosion) addPoints(b.pellet ? 4 : 10);
+  }
   if (z.T.ai === 'tzitzimitl' && z.hp <= 0) { z.hp = 0.01; tzitziLeave(z, true); return; }
-  if (base === 1) Sfx.hitFlesh(hx, hy);
+  if (!b.melee) Sfx.hitFlesh(hx, hy);
   // Un golpe durante la preparación interrumpe el ataque
   if (z.attackT >= 0 && z.attackT < meleeOf(z).hitAt) {
     z.attackT = -1;
     z.attackCd = Math.max(z.attackCd, 0.35);
   }
-  z.kx += ux * 110 / z.mass;
-  z.ky += uy * 110 / z.mass;
+  z.kx += ux * 110 * (b.empuje || 1) / z.mass;
+  z.ky += uy * 110 * (b.empuje || 1) / z.mass;
   spawnBlood(hx, hy, ux, uy, 8);
   if (z.hp <= 0) killZombie(z, ux, uy);
 }
@@ -4200,6 +5525,8 @@ function killZombie(z, ux, uy) {
   if (idx < 0) return;
   zombies.splice(idx, 1);
   kills++;
+  if (z.lastMelee !== undefined) addPoints(z.T.boss ? 400 : z.lastMelee ? 130 : 60);
+  maybeDrop(z);
   if (!z.T.boss && !z.raised) {
     corpses.push({ x: z.x, y: z.y, type: z.T.corpse || z.type, angle: Math.atan2(uy, ux) + (Math.random() - 0.5) * 0.6, t: 0 });
     if (z.T.nahual && !nahualSeen) { nahualSeen = true; addFloater('Queda el cuerpo de un hombre', z.x, z.y - 30, '#e8a860'); }
@@ -5189,7 +6516,7 @@ function swingMachete() {
   for (const z of targets) {
     const dx = z.x - player.x, dy = z.y - player.y, d = Math.hypot(dx, dy) || 1;
     const ux = dx / d, uy = dy / d;
-    damageZombie(z, { vx: ux, vy: uy }, z.x - ux * z.r * 0.6, z.y - uy * z.r * 0.6, PMACHETE.dmg);
+    damageZombie(z, { vx: ux, vy: uy, melee: true }, z.x - ux * z.r * 0.6, z.y - uy * z.r * 0.6, PMACHETE.dmg * meleeScale());
     if (zombies.includes(z)) {
       z.kx += ux * PMACHETE.knock / z.mass;
       z.ky += uy * PMACHETE.knock / z.mass;
@@ -5336,6 +6663,11 @@ function resetWorld() {
   heat = 0.5; streak = 0; lastEvent = null; lastEventWave = -10;
   moonLevel = 1; moonTarget = 1;
   const f = inner();
+  for (const g of GATES) { g.open = false; g.openT = 0; }
+  for (const k in roomOpen) roomOpen[k] = k === 'despacho';
+  resetArsenal(); resetCaja(); resetAltar();
+  rebuildWalk();
+  cam.room = 'despacho';
   Object.assign(player, {
     x: f.x + f.w * 0.35, y: f.y + f.h * 0.6,
     hp: PLAYER_HP, invuln: 0, regenDelay: 0, hitFlash: 0, kx: 0, ky: 0,
@@ -5353,6 +6685,7 @@ function hideOverlays() {
 function startGame() {
   Sfx.init();   // el navegador solo deja iniciar el audio tras un clic o una tecla
   resetWorld();
+  updateCamera(0, true);
   hideOverlays();
   document.body.classList.remove('en-menu');
   state = 'playing';
@@ -5366,6 +6699,7 @@ function startGame() {
       let jefes = 0;
       for (let w = 1; w <= wave; w++) if (w % DIFF.bossEvery === 0) jefes++;
       setMacheteLevel(Math.min(MACHETE_MAX, jefes));
+      points = START_POINTS + 700 * wave;
     }
   } catch (e) { /* sin parámetros */ }
   startWave();
@@ -5421,61 +6755,69 @@ function drawVignette() {
 }
 
 function buildFloor() {
+  floorRes = clamp(DPR * VS, 1, 1.5);
+  floor.width = Math.round(MAP.w * floorRes);
+  floor.height = Math.round(MAP.h * floorRes);
   const g = flctx;
-  const f = inner();
+  g.setTransform(floorRes, 0, 0, floorRes, -MAP.x * floorRes, -MAP.y * floorRes);
 
   // Exterior
   g.fillStyle = '#07090f';
-  g.fillRect(0, 0, W, H);
-
-  // Muros
-  g.fillStyle = '#262b38';
-  g.fillRect(room.x, room.y, room.w, room.h);
-  g.strokeStyle = '#11141c';
-  g.lineWidth = 2;
-  g.strokeRect(room.x + 1, room.y + 1, room.w - 2, room.h - 2);
-
-  // Piso de duela
-  g.save();
-  g.beginPath();
-  g.rect(f.x, f.y, f.w, f.h);
-  g.clip();
-
-  const ph = 34;
-  let row = 0;
-  for (let y = f.y; y < f.y + f.h; y += ph, row++) {
-    let x = f.x - rand(row + 1) * 160;
-    let i = 0;
-    while (x < f.x + f.w) {
-      const len = 120 + rand(row * 31 + i * 3 + 7) * 160;
-      const shade = rand(row * 17 + i * 7 + 3);
-      g.fillStyle = `hsl(${24 + shade * 8}, ${22 + shade * 12}%, ${22 + shade * 9}%)`;
-      g.fillRect(x, y, len, ph);
-
-      // vetas
-      g.strokeStyle = 'rgba(0,0,0,0.12)';
-      g.lineWidth = 1;
-      for (let k = 0; k < 3; k++) {
-        const gy = y + 6 + rand(row * 5 + i * 11 + k) * (ph - 12);
-        g.beginPath();
-        g.moveTo(x + 6, gy);
-        g.bezierCurveTo(x + len * 0.3, gy - 2, x + len * 0.6, gy + 2, x + len - 6, gy);
-        g.stroke();
-      }
-
-      // junta vertical
-      g.fillStyle = 'rgba(0,0,0,0.45)';
-      g.fillRect(x, y, 2, ph);
-      x += len;
-      i++;
-    }
-    // junta horizontal
-    g.fillStyle = 'rgba(0,0,0,0.5)';
-    g.fillRect(f.x, y, f.w, 1.5);
+  g.fillRect(MAP.x, MAP.y, MAP.w, MAP.h);
+  // Muros de todas las zonas
+  for (const r of ROOMS) {
+    g.fillStyle = '#262b38';
+    g.fillRect(r.x - WALL, r.y - WALL, r.w + WALL * 2, r.h + WALL * 2);
   }
-
-  // Sombra interior junto a los muros
-  const sh = 26;
+  for (const r of ROOMS) {
+    g.strokeStyle = '#11141c'; g.lineWidth = 2;
+    g.strokeRect(r.x - WALL + 1, r.y - WALL + 1, r.w + WALL * 2 - 2, r.h + WALL * 2 - 2);
+  }
+  // Pisos
+  for (const r of ROOMS) {
+    g.save();
+    g.beginPath(); g.rect(r.x, r.y, r.w, r.h); g.clip();
+    if (r.piso === 'duela') floorDuela(g, r);
+    else if (r.piso === 'piedra') floorPiedra(g, r);
+    else if (r.piso === 'mosaico') floorMosaico(g, r);
+    else floorRoca(g, r);
+    wallShadow(g, r, r.cielo ? 40 : 26, r.cielo ? 0.45 : 0.55);
+    g.restore();
+  }
+  // Umbrales de las puertas que se compran (la hoja se dibuja aparte)
+  for (const gt of GATES) {
+    const R = gateRect(gt, 0);
+    g.fillStyle = '#2e2116'; g.fillRect(R.x, R.y, R.w, R.h);
+    g.fillStyle = '#1a1f2b';
+    if (gt.vertical) { g.fillRect(R.x, R.y - 6, R.w, 6); g.fillRect(R.x, R.y + R.h, R.w, 6); }
+    else { g.fillRect(R.x - 6, R.y, 6, R.h); g.fillRect(R.x + R.w, R.y, 6, R.h); }
+  }
+  // Ventana del despacho, alineada con la luz de la luna
+  const ww = 110, wx = moon.x - ww / 2, wy = room.y + 5, wh = WALL - 10;
+  g.fillStyle = '#a9bde6'; g.fillRect(wx, wy, ww, wh);
+  g.fillStyle = '#1a1f2b';
+  g.fillRect(wx + ww / 2 - 2, wy, 4, wh); g.fillRect(wx + ww / 4 - 1.5, wy, 3, wh); g.fillRect(wx + (ww * 3) / 4 - 1.5, wy, 3, wh);
+  g.strokeStyle = '#11141c'; g.lineWidth = 3; g.strokeRect(wx, wy, ww, wh);
+  // Entradas de los muertos
+  for (const d of doors) {
+    if (d.kind === 'door') drawDoor(g, d);
+    else drawGrieta(g, d);
+  }
+  // Lámparas y antorchas (soportes)
+  for (const l of LAMPS) {
+    const p = lampPos(l);
+    if (l.tipo === 'antorcha') { g.fillStyle = '#3a2a1a'; g.fillRect(p.x - 4, p.y - 4, 8, 8); }
+    else { g.fillStyle = '#5a3a22'; g.fillRect(p.x - 26, p.y - 16, 52, 32); g.fillStyle = '#e8e0cc'; g.fillRect(p.x - 18, p.y - 10, 14, 10); g.fillRect(p.x + 4, p.y - 6, 12, 14); g.fillStyle = '#c9a23a'; g.beginPath(); g.arc(p.x, p.y, 5, 0, Math.PI * 2); g.fill(); }
+  }
+  // La silla del retrato, en el despacho
+  const D = ROOM.despacho, sx = D.x + D.w * 0.62, sy = D.y + 46;
+  g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(sx - 20, sy - 14, 44, 38);
+  g.fillStyle = '#7a1a1a'; g.strokeStyle = '#c9a23a'; g.lineWidth = 2.5;
+  g.fillRect(sx - 18, sy - 12, 36, 30); g.strokeRect(sx - 18, sy - 12, 36, 30);
+  g.fillStyle = '#5e1212'; g.fillRect(sx - 22, sy - 20, 44, 9); g.strokeRect(sx - 22, sy - 20, 44, 9);
+  g.fillStyle = '#e8c860'; g.beginPath(); g.arc(sx, sy - 15.5, 3, 0, Math.PI * 2); g.fill();
+}
+function wallShadow(g, f, sh, a) {
   const sides = [
     [f.x, f.y, f.x, f.y + sh, f.x, f.y, f.w, sh],
     [f.x, f.y + f.h, f.x, f.y + f.h - sh, f.x, f.y + f.h - sh, f.w, sh],
@@ -5484,30 +6826,113 @@ function buildFloor() {
   ];
   for (const [x0, y0, x1, y1, rx, ry, rw, rh] of sides) {
     const lg = g.createLinearGradient(x0, y0, x1, y1);
-    lg.addColorStop(0, 'rgba(0,0,0,0.55)');
-    lg.addColorStop(1, 'rgba(0,0,0,0)');
-    g.fillStyle = lg;
-    g.fillRect(rx, ry, rw, rh);
+    lg.addColorStop(0, `rgba(0,0,0,${a})`); lg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = lg; g.fillRect(rx, ry, rw, rh);
   }
+}
+function floorDuela(g, f) {
+  const ph = 34;
+  let row = 0;
+  for (let y = f.y; y < f.y + f.h; y += ph, row++) {
+    let x = f.x - rand(row + 1) * 160, i = 0;
+    while (x < f.x + f.w) {
+      const len = 120 + rand(row * 31 + i * 3 + 7) * 160, shade = rand(row * 17 + i * 7 + 3);
+      g.fillStyle = `hsl(${24 + shade * 8}, ${22 + shade * 12}%, ${22 + shade * 9}%)`;
+      g.fillRect(x, y, len, ph);
+      g.strokeStyle = 'rgba(0,0,0,0.12)'; g.lineWidth = 1;
+      for (let k = 0; k < 3; k++) {
+        const gy = y + 6 + rand(row * 5 + i * 11 + k) * (ph - 12);
+        g.beginPath(); g.moveTo(x + 6, gy); g.bezierCurveTo(x + len * 0.3, gy - 2, x + len * 0.6, gy + 2, x + len - 6, gy); g.stroke();
+      }
+      g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(x, y, 2, ph);
+      x += len; i++;
+    }
+    g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(f.x, y, f.w, 1.5);
+  }
+}
+function floorPiedra(g, f) {
+  const s = 84;
+  for (let j = 0; j * s < f.h; j++) for (let i = 0; i * s < f.w; i++) {
+    const sh = rand(i * 13 + j * 71 + 5);
+    g.fillStyle = `hsl(${30 + sh * 12}, ${8 + sh * 6}%, ${30 + sh * 10}%)`;
+    g.fillRect(f.x + i * s, f.y + j * s, s, s);
+    g.fillStyle = 'rgba(0,0,0,0.35)';
+    g.fillRect(f.x + i * s, f.y + j * s, s, 2); g.fillRect(f.x + i * s, f.y + j * s, 2, s);
+    if (sh > 0.7) { g.strokeStyle = 'rgba(0,0,0,0.25)'; g.lineWidth = 1; g.beginPath(); g.moveTo(f.x + i * s + 10, f.y + j * s + s * sh); g.lineTo(f.x + i * s + s - 12, f.y + j * s + s * (1 - sh) + 20); g.stroke(); }
+  }
+  // Arcadas: columnas a lo largo de los muros
+  const inset = 60;
+  g.fillStyle = 'rgba(0,0,0,0.25)';
+  g.fillRect(f.x, f.y, f.w, inset - 14); g.fillRect(f.x, f.y + f.h - inset + 14, f.w, inset - 14);
+  g.fillRect(f.x, f.y, inset - 14, f.h); g.fillRect(f.x + f.w - inset + 14, f.y, inset - 14, f.h);
+  const col = (x, y) => {
+    g.fillStyle = 'rgba(0,0,0,0.4)'; g.beginPath(); g.arc(x + 4, y + 5, 14, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#8a8070'; g.strokeStyle = '#3a342c'; g.lineWidth = 2;
+    g.beginPath(); g.arc(x, y, 13, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.fillStyle = '#a49a88'; g.beginPath(); g.arc(x - 3, y - 3, 6, 0, Math.PI * 2); g.fill();
+  };
+  for (let x = f.x + inset; x <= f.x + f.w - inset + 1; x += (f.w - inset * 2) / 7) { col(x, f.y + inset); col(x, f.y + f.h - inset); }
+  for (let y = f.y + inset; y <= f.y + f.h - inset + 1; y += (f.h - inset * 2) / 7) { col(f.x + inset, y); col(f.x + f.w - inset, y); }
+}
+function floorMosaico(g, f) {
+  const s = 40;
+  for (let j = 0; j * s < f.h; j++) for (let i = 0; i * s < f.w; i++) {
+    const sh = rand(i * 7 + j * 29 + 3) * 0.08;
+    g.fillStyle = (i + j) % 2 ? `hsl(18, 38%, ${30 + sh * 100}%)` : `hsl(40, 22%, ${46 + sh * 100}%)`;
+    g.fillRect(f.x + i * s, f.y + j * s, s, s);
+  }
+  g.fillStyle = 'rgba(0,0,0,0.18)';
+  for (let j = 0; j * s < f.h; j++) g.fillRect(f.x, f.y + j * s, f.w, 1);
+  for (let i = 0; i * s < f.w; i++) g.fillRect(f.x + i * s, f.y, 1, f.h);
+  // Archiveros junto al muro norte y papeles regados (los documentos de Díaz, Madero y Huerta)
+  for (let k = 0; k < 4; k++) {
+    const x = f.x + 40 + k * 70;
+    g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(x + 4, f.y + 6, 54, 30);
+    g.fillStyle = '#4a4036'; g.fillRect(x, f.y + 2, 54, 30);
+    g.fillStyle = '#2a241e'; for (let d = 0; d < 3; d++) g.fillRect(x + 4 + d * 17, f.y + 26, 14, 3);
+  }
+  for (let k = 0; k < 26; k++) {
+    const x = f.x + 60 + rand(k * 3 + 1) * (f.w - 120), y = f.y + 80 + rand(k * 5 + 2) * (f.h - 160);
+    g.save(); g.translate(x, y); g.rotate(rand(k * 7) * 6);
+    g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(-7, -9, 16, 20);
+    g.fillStyle = '#d8ceb4'; g.fillRect(-8, -10, 16, 20);
+    g.fillStyle = 'rgba(40,30,20,0.5)'; for (let l = 0; l < 4; l++) g.fillRect(-6, -7 + l * 4, 12, 1);
+    g.restore();
+  }
+}
+function floorRoca(g, f) {
+  g.fillStyle = '#1e1c1a'; g.fillRect(f.x, f.y, f.w, f.h);
+  for (let k = 0; k < 160; k++) {
+    const x = f.x + rand(k * 11 + 1) * f.w, y = f.y + rand(k * 17 + 4) * f.h, r = 20 + rand(k * 5 + 9) * 50;
+    g.fillStyle = `rgba(${50 + rand(k) * 30},${45 + rand(k + 1) * 25},${40 + rand(k + 2) * 20},0.35)`;
+    g.beginPath(); g.ellipse(x, y, r, r * 0.7, rand(k * 3) * 3, 0, Math.PI * 2); g.fill();
+  }
+  // Bloques labrados: aquí estuvieron las casas de Moctezuma
+  for (let k = 0; k < 7; k++) {
+    const x = f.x + 90 + rand(k * 19 + 3) * (f.w - 180), y = f.y + 70 + rand(k * 23 + 8) * (f.h - 140);
+    g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillRect(x - 22, y - 16, 48, 36);
+    g.fillStyle = '#4a443c'; g.fillRect(x - 24, y - 18, 46, 34);
+    g.strokeStyle = '#2a2620'; g.lineWidth = 1.5;
+    g.strokeRect(x - 18, y - 12, 34, 22);
+    g.beginPath(); g.arc(x - 1, y - 1, 6, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.moveTo(x - 14, y + 6); g.lineTo(x - 6, y - 4); g.lineTo(x + 4, y + 6); g.lineTo(x + 12, y - 4); g.stroke();
+  }
+  // Charcos
+  for (let k = 0; k < 6; k++) {
+    const x = f.x + rand(k * 41 + 2) * f.w, y = f.y + rand(k * 43 + 6) * f.h;
+    g.fillStyle = 'rgba(70,90,110,0.18)'; g.beginPath(); g.ellipse(x, y, 40, 16, 0.3, 0, Math.PI * 2); g.fill();
+  }
+}
+function drawGrieta(g, d) {
+  g.save();
+  g.translate(d.cx, d.cy);
+  g.fillStyle = 'rgba(0,0,0,0.6)';
+  g.beginPath(); g.ellipse(0, 0, 38, 20, 0.3, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#5a0e0a'; g.lineWidth = 4; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(-36, -6); g.lineTo(-14, 4); g.lineTo(2, -8); g.lineTo(18, 6); g.lineTo(36, -2); g.stroke();
+  g.strokeStyle = '#c0281f'; g.lineWidth = 1.6;
+  g.beginPath(); g.moveTo(-34, -6); g.lineTo(-14, 4); g.lineTo(2, -8); g.lineTo(18, 6); g.lineTo(34, -2); g.stroke();
   g.restore();
-
-  // Ventana en el muro superior, alineada con la luz
-  const ww = 110;
-  const wx = moon.x - ww / 2;
-  const wy = room.y + 5;
-  const wh = WALL - 10;
-  g.fillStyle = '#a9bde6';
-  g.fillRect(wx, wy, ww, wh);
-  g.fillStyle = '#1a1f2b';
-  g.fillRect(wx + ww / 2 - 2, wy, 4, wh);
-  g.fillRect(wx + ww / 4 - 1.5, wy, 3, wh);
-  g.fillRect(wx + (ww * 3) / 4 - 1.5, wy, 3, wh);
-  g.strokeStyle = '#11141c';
-  g.lineWidth = 3;
-  g.strokeRect(wx, wy, ww, wh);
-
-  // Puertas en las otras tres paredes
-  for (const d of doors) drawDoor(g, d);
 }
 
 // ------------------------------------------------------------
@@ -5539,6 +6964,16 @@ addEventListener('keydown', e => {
   }
   if (state === 'paused') return;
   if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) swingMachete(); return; }
+  if (['KeyE', 'KeyR', 'KeyQ', 'KeyG', 'Digit1', 'Digit2'].includes(e.code)) {
+    keys.add(e.code);
+    if (e.repeat) return;
+    if (e.code === 'KeyE') interact();
+    else if (e.code === 'KeyR') startReload();
+    else if (e.code === 'KeyQ') switchWeapon();
+    else if (e.code === 'KeyG') throwPlayerBomb();
+    else switchWeapon(e.code === 'Digit1' ? 0 : 1);
+    return;
+  }
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
     keys.add(e.code);
     e.preventDefault();
@@ -5550,27 +6985,23 @@ addEventListener('blur', () => { keys.clear(); mouse.down = false; pauseGame(); 
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 
 canvas.addEventListener('mousemove', e => {
-  mouse.x = e.clientX;
-  mouse.y = e.clientY;
+  mouse.sx = e.clientX; mouse.sy = e.clientY;
+  syncMouse();
 });
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('mousedown', e => {
   if (e.button === 2 && state === 'playing') {
-    mouse.x = e.clientX; mouse.y = e.clientY;
+    mouse.sx = e.clientX; mouse.sy = e.clientY; syncMouse();
     mouse.right = true;
     swingMachete();
     return;
   }
   if (e.button !== 0 || state !== 'playing') return;
-  mouse.x = e.clientX;
-  mouse.y = e.clientY;
+  mouse.sx = e.clientX; mouse.sy = e.clientY; syncMouse();
   mouse.down = true;
-  if (fireCooldown <= 0) {
-    player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
-    shoot();
-    fireCooldown = FIRE_RATE;
-  }
+  player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
 });
+canvas.addEventListener('wheel', e => { if (state === 'playing') { e.preventDefault(); switchWeapon(); } }, { passive: false });
 addEventListener('mouseup', e => { if (e.button === 0) mouse.down = false; if (e.button === 2) mouse.right = false; });
 
 // ------------------------------------------------------------
@@ -5621,7 +7052,8 @@ function update(dt) {
     if (keys.has('KeyD')) dx += 1;
   }
   // Frenado por alambre de púas o por la reata de un rural
-  const slow = (player.inWire ? 0.45 : 1) * (player.slowT > 0 ? 0.6 : 1);
+  const cs = curSlot();
+  const slow = (player.inWire ? 0.45 : 1) * (player.slowT > 0 ? 0.6 : 1) * (cs ? (WEAPONS[cs.id].lento || 1) : 1);
   player.slowT = Math.max(0, (player.slowT || 0) - dt);
   player.vx = 0; player.vy = 0;
   if (dx || dy) {
@@ -5654,12 +7086,13 @@ function update(dt) {
   player.ky *= kd;
 
   // Contra el muro el empujón se pierde (no se acumula ni rebota)
-  const px = clamp(player.x, f.x + player.radius, f.x + f.w - player.radius);
-  const py = clamp(player.y, f.y + player.radius, f.y + f.h - player.radius);
-  if (px !== player.x) player.kx = 0;
-  if (py !== player.y) player.ky = 0;
-  player.x = px;
-  player.y = py;
+  {
+    const ox = player.x, oy = player.y;
+    if (obstacles.length) pushOutObstacles(player, player.radius);
+    walkClamp(player, player.radius);
+    if (Math.abs(ox - player.x) > 0.01) player.kx = 0;
+    if (Math.abs(oy - player.y) > 0.01) player.ky = 0;
+  }
 
   // Vida: invulnerabilidad breve y regeneración tras unos segundos sin daño
   player.invuln = Math.max(0, player.invuln - dt);
@@ -5680,6 +7113,8 @@ function update(dt) {
   moonLevel += (moonTarget - moonLevel) * Math.min(1, dt * 0.7);
 
   // Zombis (aparición, persecución, ataques y colisiones)
+  updateNav(dt);
+  updateGates(dt);
   updateZombies(dt, f);
   updateFactionStuff(dt, f);
   updateMachete(dt);
@@ -5688,15 +7123,18 @@ function update(dt) {
   updateEventStuff(dt);
   Sfx.update(dt, zombies);
 
+  updateCamera(dt);
+  syncMouse();
   // Apuntar al cursor
   if (alive) player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
 
-  // Disparo continuo al mantener el clic
-  fireCooldown -= dt;
-  if (alive && mouse.down && fireCooldown <= 0) {
-    shoot();
-    fireCooldown = FIRE_RATE;
-  }
+  // Armas, dinamita, parque, compras
+  updateWeapon(dt, alive);
+  updatePlayerBombs(dt);
+  updateDrops(dt);
+  updateCaja(dt);
+  updateAltar(dt);
+  updateInteract();
 
   // Balas
   for (let i = bullets.length - 1; i >= 0; i--) {
@@ -5710,7 +7148,7 @@ function update(dt) {
     // para que una bala rápida no atraviese a un zombi sin tocarlo
     let hitZ = null, hitT = 2, hitF = null;
     for (const z of zombies) {
-      if (z.intangible) continue;
+      if (z.intangible || (b.hits && b.hits.includes(z))) continue;
       const t = segmentCircle(px, py, b.x, b.y, z.x, z.y, z.r);
       if (z.T.ai === 'tzitzimitl' && !z.inLight) {   // la atraviesan
         if (t >= 0 && Math.random() < 0.04) addFloater('La atraviesa', z.x, z.y - z.r - 10, '#b0b8c8');
@@ -5742,30 +7180,24 @@ function update(dt) {
       continue;
     }
     if (hitZ) {
-      damageZombie(hitZ, b, px + (b.x - px) * hitT, py + (b.y - py) * hitT);
+      const frac = b.life0 ? 1 - b.life / b.life0 : 0;
+      damageZombie(hitZ, b, px + (b.x - px) * hitT, py + (b.y - py) * hitT, (b.dmg || 1) * (1 - (b.caida || 0) * frac));
+      if (b.pierce > 0) {   // los rifles atraviesan: sigue con menos fuerza
+        b.pierce--; b.dmg *= 0.75; b.hits.push(hitZ);
+        continue;
+      }
       bullets.splice(i, 1);
       continue;
     }
 
-    // Balas que ya salieron por una puerta: vuelan hasta salir de la pantalla
-    if (b.escaped) {
-      if (b.x < -40 || b.x > W + 40 || b.y < -40 || b.y > H + 40 || b.life <= 0) {
-        bullets.splice(i, 1);
-      }
-      continue;
-    }
-    const outside = b.x < f.x || b.x > f.x + f.w || b.y < f.y || b.y > f.y + f.h;
-    if (outside && doors.some(d => throughDoor(d, b, f))) {
-      b.escaped = true;
-      continue;
-    }
-
+    // Contra los muros (por los vanos de las entradas sí pasan)
     let hit = false, nx = 0, ny = 0;
-    if (b.x < f.x)            { b.x = f.x;       nx = 1;  hit = true; }
-    else if (b.x > f.x + f.w) { b.x = f.x + f.w; nx = -1; hit = true; }
-    if (b.y < f.y)            { b.y = f.y;       ny = 1;  hit = true; }
-    else if (b.y > f.y + f.h) { b.y = f.y + f.h; ny = -1; hit = true; }
-
+    if (!isShotPassable(b.x, b.y)) {
+      hit = true;
+      const sp = Math.hypot(b.vx, b.vy) || 1;
+      nx = -b.vx / sp; ny = -b.vy / sp;
+      b.x = px; b.y = py;
+    }
     if (hit) {
       spawnSparks(b.x, b.y, nx, ny);
       Sfx.ricochet(b.x, b.y);
@@ -5808,18 +7240,19 @@ function punch(x, y, r, strength) {
 
 function draw(t) {
   ctx.globalCompositeOperation = 'source-over';
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  screenTransform(ctx);
+  ctx.fillStyle = '#05070d';
+  ctx.fillRect(0, 0, W, H);
+  worldTransform(ctx);
 
-  // Sacudida de cámara al recibir un golpe
-  if (shake > 0) {
-    ctx.fillStyle = '#05070d';
-    ctx.fillRect(0, 0, W, H);
-    const s = 6 * (shake / 0.2);
-    ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+  // 1) Cuarto (solo el pedazo que se ve)
+  {
+    const vx = cam.x + cam.sx - 20, vy = cam.y + cam.sy - 20, vw = VIEW_W + 40, vh = VIEW_H + 40;
+    const sx = Math.max(0, (vx - MAP.x) * floorRes), sy = Math.max(0, (vy - MAP.y) * floorRes);
+    const sw = Math.min(floor.width - sx, vw * floorRes), sh = Math.min(floor.height - sy, vh * floorRes);
+    if (sw > 0 && sh > 0) ctx.drawImage(floor, sx, sy, sw, sh, MAP.x + sx / floorRes, MAP.y + sy / floorRes, sw / floorRes, sh / floorRes);
   }
-
-  // 1) Cuarto
-  ctx.drawImage(floor, 0, 0, W, H);
+  drawGates();
 
   // Sangre en el piso y zombis (también quedan bajo la oscuridad)
   drawGore();
@@ -5827,7 +7260,9 @@ function draw(t) {
   drawRoofRubble();
   drawFactionGround();
   drawEventGround();
+  drawCajaYAltar();
   drawZombies();
+  drawDropsAndBombs();
 
   // 2) Personaje (queda bajo la oscuridad; en el menú el cuarto está vacío)
   const showPlayer = state !== 'menu';
@@ -5844,6 +7279,7 @@ function draw(t) {
     if (state === 'dead') ctx.globalAlpha = 0.6;
     else if (player.invuln > 0 && Math.floor(player.invuln * 20) % 2) ctx.globalAlpha = 0.55; // parpadeo
     ctx.drawImage(sprite, -h, -h, SPRITE_SIZE, SPRITE_SIZE);
+    if (showPlayer) drawHeldWeapon();
     ctx.globalAlpha = 1;
     if (showPlayer && player.hitFlash > 0 && playerFlash) {
       ctx.globalAlpha = player.hitFlash / 0.18;
@@ -5856,16 +7292,20 @@ function draw(t) {
   // 3) Capa de oscuridad con huecos de luz
   const breathe = 1 + Math.sin(t * 0.0006) * 0.015;
   fctx.globalCompositeOperation = 'source-over';
+  screenTransform(fctx);
   fctx.clearRect(0, 0, W, H);
   fctx.fillStyle = 'rgba(3,5,12,0.94)';
   fctx.fillRect(0, 0, W, H);
+  worldTransform(fctx);
   fctx.globalCompositeOperation = 'destination-out';
+  zoneLights();
   const ml = moonLevel;
   punch(moon.x, moon.y, moon.r * breathe * (0.55 + 0.45 * ml), 0.35 + 0.65 * ml);
 
   // Luz más tenue que entra por las puertas (varias capas para bordes suaves)
   const LAYERS = 4;
   for (const d of doors) {
+    if (d.kind !== 'door') continue;
     const a = d.s * ml / LAYERS;
     for (let i = 0; i < LAYERS; i++) {
       doorFan(fctx, d, 0.12 + i * 0.14, c => {
@@ -5880,13 +7320,16 @@ function draw(t) {
   if (showPlayer) punch(player.x, player.y, 75, 0.3);
   factionLights();
   eventLights();
+  shopLights();
   for (const b of bullets) punch(b.x, b.y, 45, 0.45);
   for (const s of sparks) punch(s.x, s.y, 30, 0.3 * (s.life / s.max));
   if (flash > 0) {
     const m = muzzleWorld();
     punch(m.x, m.y, 140, 0.8 * (flash / 0.06));
   }
+  screenTransform(ctx);
   ctx.drawImage(fog, 0, 0, W, H);
+  worldTransform(ctx);
 
   // 4) Tinte azulado de la luna + haz desde la ventana
   ctx.globalCompositeOperation = 'screen';
@@ -5924,6 +7367,7 @@ function draw(t) {
 
   // Tinte azulado de la luz de las puertas
   for (const d of doors) {
+    if (d.kind !== 'door') continue;
     doorFan(ctx, d, 0.35, c => {
       const g = c.createRadialGradient(0, 0, 0, 0, 0, d.L);
       g.addColorStop(0, `rgba(150,175,230,${0.22 * d.s * ml})`);
@@ -5946,22 +7390,27 @@ function draw(t) {
   drawEyes();
   drawFactionEmissive();
   drawEventEmissive();
+  drawZoneEmissive();
+  drawShopEmissive();
   for (const b of bullets) {
-    const glow = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 12);
-    glow.addColorStop(0, 'rgba(255,210,120,0.9)');
-    glow.addColorStop(1, 'rgba(255,140,40,0)');
+    const R = b.pellet ? 7 : 12, fade = b.life0 ? Math.min(1, b.life / Math.min(0.12, b.life0)) : 1;
+    const glow = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, R);
+    glow.addColorStop(0, b.pap ? `rgba(140,255,215,${0.9 * fade})` : `rgba(255,210,120,${0.9 * fade})`);
+    glow.addColorStop(1, b.pap ? 'rgba(60,200,170,0)' : 'rgba(255,140,40,0)');
     ctx.fillStyle = glow;
     ctx.beginPath();
-    ctx.arc(b.x, b.y, 12, 0, Math.PI * 2);
+    ctx.arc(b.x, b.y, R, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = '#fff3c4';
-    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = b.pap ? '#d8fff2' : '#fff3c4';
+    ctx.globalAlpha = fade;
+    ctx.lineWidth = b.pellet ? 1.6 : 2.5;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(b.x - b.vx * 0.022, b.y - b.vy * 0.022);
     ctx.lineTo(b.x, b.y);
     ctx.stroke();
+    ctx.globalAlpha = 1;
   }
 
   for (const s of sparks) {
@@ -5989,10 +7438,25 @@ function draw(t) {
   ctx.globalCompositeOperation = 'source-over';
   drawMachete();
   drawFactionOverlay();
-  drawVignette();
+  drawShopFloating();
+  drawCharroLine();
 
+  // Lo que va sobre la pantalla, no sobre el mundo
+  screenTransform(ctx);
+  drawScreenFlash();
+  drawVignette();
   drawBossBar();
   drawBanner();
+  // Franjas a los lados: la vista es igual en cualquier ventana
+  ctx.fillStyle = '#05070d';
+  if (OX > 0.5) { ctx.fillRect(0, 0, OX, H); ctx.fillRect(W - OX, 0, OX, H); }
+  if (OY > 0.5) { ctx.fillRect(0, 0, W, OY); ctx.fillRect(0, H - OY, W, OY); }
+}
+function drawScreenFlash() {
+  if (prot && prot.flashT > 0) {
+    ctx.fillStyle = `rgba(255,255,240,${0.35 * prot.flashT / 0.35})`;
+    ctx.fillRect(0, 0, W, H);
+  }
 }
 
 // ------------------------------------------------------------
@@ -6348,7 +7812,6 @@ const REGISTRO = [
   },
   {
     id: 'armas', titulo: 'Armas', indice: 'El armamento del cuartel',
-    aviso: 'El cuartel está haciendo inventario. En la próxima edición se publicará la lista completa del armamento disponible.',
     entradas: [
       { id: 'machete', arma: true, nombre: 'El machete', volanta: 'Arma del jugador',
         titular: 'Para cuando se acercan demasiado',
@@ -6357,9 +7820,110 @@ const REGISTRO = [
                 `Pega a los ${PMACHETE.maxTargets} más cercanos en el abanico frente a usted con el doble de daño que una bala, los empuja y les corta el golpe que preparaban. También corta reatas y derriba lechuzas.`,
                 `Cada oleada de jefe que supera (la 5, la 10, la 15…) lo mejora un nivel: más daño, más alcance, recarga más corta y más enemigos por tajo, hasta el ${MACHETE_LEVELS[MACHETE_MAX].nombre.toLowerCase()}: dicen que la obsidiana hiere hasta a los nahuales.`],
         consejo: `Úselo cuando lo rodeen, no como arma principal: tarda ${PMACHETE.cooldown} segundos en estar listo otra vez y, mientras lo blande, no puede disparar. Contra machetes y trinches es ideal: les corta el golpe mientras se preparan.` },
-      { id: 'mauser', nombre: 'Fusil Mauser', proximamente: true },
-      { id: 'carabina', nombre: 'Carabina 30-30', proximamente: true },
-      { id: 'hotchkiss', nombre: 'Ametralladora Hotchkiss', proximamente: true }
+      // ---------- Armas de fuego (las más usadas en la Revolución) ----------
+      { id: 'colt', arma: true, icono: 'colt', nombre: 'Colt Pacificadora', volanta: 'Revólver · con el que empieza',
+        titular: 'El revólver de todos los bandos',
+        pie: 'Colt de acción simple, el «Peacemaker».',
+        texto: ['El revólver Colt de acción simple, al que en inglés le decían «Peacemaker», colgaba del cinto de federales y revolucionarios por igual. La variante Bisley era la favorita de Francisco Villa: la traía cuando lo emboscaron en 1923.',
+                'Seis tiros que se recargan bala por bala; se puede disparar a media recarga. Es con lo que usted empieza la noche.'],
+        consejo: 'No alcanza para toda la noche: junte puntos y cómprese algo mejor cuanto antes.' },
+      { id: 'sw3', arma: true, icono: 'sw3', nombre: 'Smith & Wesson Modelo 3', volanta: 'Revólver de quiebre',
+        titular: 'Pesado, abultado y potente',
+        pie: 'Smith & Wesson Modelo 3: se abre por la mitad para recargar.',
+        texto: ['Se usó en México en calibres .38 S&W y .44-40 Winchester. Era voluminoso y pesado, pero pegaba fuerte, y como tantos otros revólveres formó parte del arsenal con que los rebeldes se armaron como pudieron.',
+                'Se abre por la mitad y se recarga de un jalón. Pega más que la Colt, pero dispara un poco más lento.'],
+        consejo: 'La primera compra natural: está en la pared norte del despacho y cuesta lo mismo que traes al empezar.' },
+      { id: 'c96', arma: true, icono: 'c96', nombre: 'Mauser C96', volanta: 'Pistola semiautomática',
+        titular: 'Diez tiros en una pistola de 1896',
+        pie: 'Mauser C96, con el cargador fijo delante del gatillo.',
+        texto: ['Pistola alemana de cargador fijo para diez cartuchos que se llena con peine. Entre 1898 y 1900 el gobierno mexicano recibió un número pequeño, y muchos oficiales la compraban por su cuenta.',
+                'Dispara rápido y trae diez tiros, pero el peine tarda en cargarse.'],
+        consejo: 'Buena para limpiar a los comunes de las oficinas; contra jefes se queda corta.' },
+      { id: 'w1873', arma: true, icono: 'w1873', nombre: 'Winchester 1873', volanta: 'Carabina de palanca',
+        titular: 'La de los vaqueros alzados',
+        pie: 'Winchester 1873, de tubo bajo el cañón.',
+        texto: ['Las Winchester de palanca de 1866, 1873 y 1892 fueron de las armas largas más populares entre los revolucionarios a caballo. Usaban cartuchos de revólver, como el .44-40, y perdían precisión a la distancia.',
+                'Catorce balas en el tubo, que se recargan una por una. No pega mucho, pero dura.'],
+        consejo: 'Ideal para aguantar oleadas largas en el patio sin recargar a cada rato.' },
+      { id: 'w1894', arma: true, icono: 'w1894', nombre: 'Winchester 1894', volanta: 'Carabina de palanca · «la treinta-treinta»',
+        titular: 'La carabina más usada de la Revolución',
+        pie: 'Winchester 1894, calibre .30-30.',
+        texto: ['Fue el arma larga más usada de la Revolución: confiable, con buen poder de fuego y precisa hasta unos 200 metros. Hay quien la llama «el AK-47 de la Revolución», y hasta corrido tiene.',
+                'Siete tiros que se recargan uno por uno. La bala atraviesa a un muerto y sigue.'],
+        consejo: 'La mejor compra del patio. Póngase en fila con ellos: la bala sigue de largo.' },
+      { id: 'w1895', arma: true, icono: 'w1895', nombre: 'Winchester 1895', volanta: 'Rifle de palanca con cajón',
+        titular: 'Palanca y cartuchos de rifle',
+        pie: 'Winchester 1895, con cargador de caja.',
+        texto: ['A diferencia de sus hermanas de tubo, la 1895 tenía cargador de caja, lo que le permitía usar cartuchos militares de punta, como el .30-40 Krag o el .30-06. Aparece en fotos de la Revolución.',
+                'Cinco tiros fuertes que atraviesan a dos. Solo sale en la caja del Charro.'],
+        consejo: 'Pega como mula, pero son solo cinco: no la gaste en los que caen de un tiro.' },
+      { id: 'remington', arma: true, icono: 'remington', nombre: 'Remington Rolling Block', volanta: 'Rifle de un tiro',
+        titular: 'Un tiro, pero certero',
+        pie: 'Remington de bloque rodante, de un solo tiro.',
+        texto: ['Rifle de un solo tiro muy apreciado por su precisión a distancias donde las carabinas de palanca ya no llegaban. Lo usaban los Rurales y fue arma de segunda para los revolucionarios.',
+                'Un tiro y a recargar, pero la bala atraviesa a tres muertos.'],
+        consejo: 'Barato y brutal contra una fila de muertos en el pasillo. En pleno tumulto, mejor otra.' },
+      { id: 'mauser95', arma: true, icono: 'mauser95', nombre: 'Mauser 1895', volanta: 'Fusil de cerrojo · «el Mauser chileno»',
+        titular: 'El fusil del ejército de don Porfirio',
+        pie: 'Mauser modelo 1895, calibre 7 mm.',
+        texto: ['Fue el arma reglamentaria del ejército de Porfirio Díaz, en calibre 7 mm. Villistas y zapatistas la adoptaron al capturar las existencias federales.',
+                'Cinco tiros con peine; cada bala atraviesa a tres. El mejor daño por tiro de los rifles de pared.'],
+        consejo: 'Está en los sótanos, junto al altar: cómprela y cúrela ahí mismo.' },
+      { id: 'mauser10', arma: true, icono: 'mauser10', nombre: 'Carabina Mauser 1910', volanta: 'Carabina de cerrojo · «el Mauser mexicano»',
+        titular: 'Hecha en México',
+        pie: 'Carabina Mauser 1910, de fabricación nacional.',
+        texto: ['Los Mauser de 1902 y 1910 se hicieron solo para el ejército mexicano; el de 1910 se fabricó en México para no depender del extranjero. Las carabinas, más cortas, eran comunes en la caballería.',
+                'Más ligera que el fusil: recarga más rápido y atraviesa a dos.'],
+        consejo: 'Buena para moverse rápido por las oficinas y no quedarse sin tiro.' },
+      { id: 'mondragon', arma: true, icono: 'mondragon', nombre: 'Mondragón 1908', volanta: 'Fusil semiautomático · el raro',
+        titular: 'El primer fusil semiautomático del mundo era mexicano',
+        pie: 'Fusil Porfirio Díaz Sistema Mondragón Modelo 1908.',
+        texto: ['Lo diseñó el general Manuel Mondragón y México lo adoptó en 1908. Se encargaron 4 000 a una fábrica suiza, pero solo llegaron unos cuarenta antes de que se cancelara el pedido: se ensuciaba y fallaba con el parque de la época.',
+                'Diez tiros que salen tan rápido como usted aprieta. De vez en cuando se traba.'],
+        consejo: 'Solo sale en la caja, y rara vez. Si se traba, aléjese y espere un momento. Curado en el altar ya no se traba.' },
+      { id: 'escopeta', arma: true, icono: 'escopeta', nombre: 'Escopeta de dos cañones', volanta: 'Escopeta',
+        titular: 'Con lo que había en casa',
+        pie: 'Escopeta de dos cañones, de caza.',
+        texto: ['Las escopetas, como las de Colt, eran parte del arsenal básico de los rebeldes que se armaban con lo que tenían a la mano.',
+                'Dos tiros de siete perdigones que empujan fuerte. De lejos no hace casi nada.'],
+        consejo: 'Para cuando lo acorralan. Dispare con los muertos encima, no a media sala.' },
+      { id: 'colt95', arma: true, icono: 'colt95', nombre: 'Colt-Browning 1895', volanta: 'Ametralladora · «la machingón»',
+        titular: 'Cuatrocientas cincuenta balas por minuto',
+        pie: 'Colt-Browning M1895, alimentada por cinta.',
+        texto: ['Disparaba unas 450 balas por minuto con alcance de unos 550 metros. El ejército porfiriano compró 150; los villistas consiguieron algunas, y sus operadores la apodaron «la machingón».',
+                'Cien balas en la cinta. Pesa: con ella en la mano camina más lento, y recargar tarda.'],
+        consejo: 'Recargue antes de que la rodeen: la cinta tarda más de cuatro segundos.' },
+      { id: 'hotchkiss', arma: true, icono: 'hotchkiss', nombre: 'Hotchkiss 1900', volanta: 'Ametralladora francesa',
+        titular: 'La que les quitaron a los federales',
+        pie: 'Hotchkiss M1900, alimentada con peines metálicos.',
+        texto: ['Ametralladora francesa que compró el gobierno de Díaz; disparaba hasta 600 balas por minuto. Las fuerzas de Zapata y de Villa capturaron algunas, y con eso se acortó la ventaja federal.',
+                'La más rápida de todas. Se alimenta con peines de treinta, así que recarga seguido pero rápido.'],
+        consejo: 'Es la reina de las oleadas grandes. También camina lento con ella.' },
+      { id: 'madsen', arma: true, icono: 'madsen', nombre: 'Madsen 1911', volanta: 'Ametralladora ligera',
+        titular: 'Una ametralladora para un solo hombre',
+        pie: 'Madsen, con el cargador curvo arriba.',
+        texto: ['Ametralladora ligera danesa, con el cargador encima, que un solo hombre podía cargar. Aparece entre las ametralladoras que usaron los revolucionarios.',
+                'Veinticinco tiros. Es la más ligera de las tres: casi no la frena al caminar.'],
+        consejo: 'La mejor para correr y disparar a la vez.' },
+      { id: 'dinamita', arma: true, icono: 'dinamita', nombre: 'Bombas de dinamita', volanta: 'Explosivo · tecla G',
+        titular: 'La artillería de los pobres',
+        pie: 'Cartuchos de dinamita de las minas del norte.',
+        texto: ['En el norte minero la dinamita sobraba, y la División del Norte la usó como bomba de mano para asaltar trincheras. En Torreón muchas no reventaron.',
+                'Se lanza hacia el cursor con la G y revienta tras la mecha. Trae hasta tres; se compran en la pared oeste del despacho.'],
+        consejo: 'No se quede cerca: la explosión también lo alcanza a usted.' },
+      // ---------- La caja y el altar ----------
+      { id: 'caja', arma: true, icono: 'caja', nombre: 'La caja del Charro Negro', volanta: 'Caja misteriosa',
+        titular: 'El acreedor tiene una caja',
+        pie: 'El Charro Negro, detrás de su caja.',
+        texto: ['El Charro Negro es el acreedor: solo le importa que la deuda se pague, no quién la pague. Nunca miente; solo omite. Al darle un arma le dice algo cierto, pero nunca todo.',
+                'Por 950 puntos gira la caja y le ofrece un arma al azar, incluidas las que no se venden en las paredes. Después de unos usos puede llevársela a otro rincón del Palacio, y no devuelve nada: siempre cobra.'],
+        consejo: 'Escuche lo que dice el Charro y piense en lo que no dijo.' },
+      { id: 'altar', arma: true, icono: 'altar', nombre: 'El Altar de Obsidiana', volanta: 'Mejora de armas',
+        titular: 'Lo que los Guardianes curan con copal y obsidiana',
+        pie: 'Altar de piedra con espejo de obsidiana, en los sótanos.',
+        texto: ['Los sótanos del Palacio están construidos sobre las casas de Moctezuma. Ahí quedó una piedra con un espejo de obsidiana, y los Guardianes saben curar las armas con copal y obsidiana, que hiere a lo que no es de este mundo.',
+                'Por 5 000 puntos el arma sale con el doble de daño, más balas, recarga más rápida, atraviesa a uno más y con nombre nuevo. Hay que recogerla a tiempo o el altar se queda con ella.'],
+        consejo: 'Cure primero el arma con la que más mata. Cada arma solo se cura una vez.' },
     ]
   },
   {
@@ -6514,6 +8078,28 @@ function renderIndex(sec) {
 }
 
 // Nota de un arma del jugador
+function armaDonde(id) {
+  const a = ARMEROS.find(q => q.w === id);
+  if (!a) return id === 'colt' ? 'La trae desde el principio' : 'Solo en la caja del Charro';
+  const lado = { n: 'norte', s: 'sur', o: 'oeste', e: 'este' }[a.lado];
+  const n = ROOM[a.room].nombre;
+  return `Pared ${lado} ${n.startsWith('el ') ? 'del ' + n.slice(3) : 'de ' + n}`;
+}
+function armaDatos(entry) {
+  if (entry.datos) return entry.datos;
+  const W0 = WEAPONS[entry.icono];
+  if (W0) return [
+    ['Daño', `${W0.perdigones ? W0.perdigones + ' × ' : ''}${W0.dmg}${W0.pierce ? ` · atraviesa ${W0.pierce}` : ''}`],
+    ['Cargador', `${W0.mag} / ${W0.res}`],
+    ['Recarga', W0.recarga === 'tiro' ? 'Bala por bala' : `${W0.rt} s`],
+    ['Precio', W0.precio ? `${W0.precio} (parque ${Math.round(W0.precio / 20) * 10})` : '—'],
+    ['Dónde', armaDonde(entry.icono)]
+  ];
+  if (entry.icono === 'dinamita') return [['Daño', `${DINAMITA.dmg} en área`], ['Trae', `Hasta ${DINAMITA.max}`], ['Precio', `${DINAMITA.precio}`], ['Uso', 'Tecla G']];
+  if (entry.icono === 'caja') return [['Costo', `${CAJA_COSTO}`], ['Empieza', 'En el despacho'], ['Devuelve', 'Nunca']];
+  if (entry.icono === 'altar') return [['Costo', `${ALTAR_COSTO}`], ['Dónde', 'Los sótanos'], ['Daño', 'Doble']];
+  return [];
+}
 function renderWeaponNote(entry) {
   const cv = el('canvas', { 'aria-hidden': 'true' });
   regNote.replaceChildren(
@@ -6521,9 +8107,9 @@ function renderWeaponNote(entry) {
     el('h2', { text: entry.titular }),
     el('p', { class: 'nota-bajada', text: entry.nombre }),
     el('div', { class: 'nota-grid' },
-      el('figure', { class: 'grabado' }, cv, el('figcaption', { text: 'Machete de campo, de los que se usaban para la caña.' })),
+      el('figure', { class: 'grabado' }, cv, el('figcaption', { text: entry.pie || 'Machete de campo, de los que se usaban para la caña.' })),
       el('div', {},
-        el('div', { class: 'ficha' }, ...entry.datos.map(([k, v]) => el('div', {}, el('span', { text: k }), el('b', { text: v })))),
+        el('div', { class: 'ficha' }, ...armaDatos(entry).map(([k, v]) => el('div', {}, el('span', { text: k }), el('b', { text: v })))),
         el('div', { class: 'nota-texto' }, ...entry.texto.map(t => el('p', { text: t }))),
         el('p', { class: 'consejo' }, el('strong', { text: 'Consejo del cuartel. ' }), entry.consejo)))
   );
@@ -6532,6 +8118,32 @@ function renderWeaponNote(entry) {
   const g = cv.getContext('2d');
   g.setTransform(r, 0, 0, r, 0, 0);
   g.translate(px / 2, px / 2);
+  if (entry.icono && WEAPONS[entry.icono]) {
+    g.rotate(-0.5);
+    drawGunIcon(g, entry.icono, 150 / Math.max(WEAPONS[entry.icono].icono.len, 30));
+    return;
+  }
+  if (entry.icono === 'dinamita') {
+    g.rotate(-0.3);
+    for (let k = 0; k < 3; k++) { g.fillStyle = '#b3261e'; g.strokeStyle = '#4a0a06'; g.lineWidth = 1.5; g.fillRect(-36 + k * 26, -40, 20, 74); g.strokeRect(-36 + k * 26, -40, 20, 74); }
+    g.strokeStyle = '#3a2a1a'; g.lineWidth = 2; g.beginPath(); g.moveTo(-10, -40); g.quadraticCurveTo(0, -70, 20, -62); g.stroke();
+    return;
+  }
+  if (entry.icono === 'caja') {
+    if (charroReady) g.drawImage(charroImg, -60, -95, 120, 120);
+    g.fillStyle = '#3a2416'; g.strokeStyle = '#140c06'; g.lineWidth = 3;
+    g.fillRect(-60, 0, 120, 60); g.strokeRect(-60, 0, 120, 60);
+    g.fillStyle = '#6a6a72'; g.fillRect(-38, 0, 8, 60); g.fillRect(30, 0, 8, 60);
+    g.fillStyle = '#e8e2d0'; g.beginPath(); g.arc(0, 30, 10, 0, Math.PI * 2); g.fill();
+    return;
+  }
+  if (entry.icono === 'altar') {
+    g.fillStyle = '#4e463c'; g.strokeStyle = '#1e1a16'; g.lineWidth = 3;
+    g.fillRect(-64, -48, 128, 96); g.strokeRect(-64, -48, 128, 96);
+    g.fillStyle = '#07060a'; g.beginPath(); g.arc(0, 0, 28, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = 'rgba(127,224,192,0.8)'; g.lineWidth = 3; g.stroke();
+    return;
+  }
   g.rotate(-0.7);
   g.fillStyle = '#4a2e14'; g.fillRect(-70, -7, 42, 14);
   g.fillStyle = '#2a1a0a'; for (const x of [-62, -50, -38]) { g.beginPath(); g.arc(x, 0, 2, 0, Math.PI * 2); g.fill(); }
@@ -6689,6 +8301,8 @@ function syncHud() {
   hudRight.classList.toggle('usando', macheteT > 0);
   setText(hudMacheteTxt, macheteLevel ? `Disparo · Machete Nv ${macheteLevel}` : 'Disparo · Machete');
   hudPause.classList.toggle('on', state === 'paused');
+  syncWeaponHud();
+  syncPrompt();
   setText(stWave, wave);
   setText(stLeft, zombies.length + spawnQueue.length);
   setText(stKills, kills);
