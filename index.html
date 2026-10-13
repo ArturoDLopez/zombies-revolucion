@@ -250,9 +250,11 @@
   .secciones .pronto { font-weight: 400; font-style: italic; text-transform: none; letter-spacing: 0; color: var(--rojo); }
 
   .cuerpo {
-    display: grid; grid-template-columns: 250px 1fr;
-    min-height: 0; overflow: auto;
+    display: grid; grid-template-columns: 250px 1fr; grid-template-rows: minmax(0, 1fr);
+    flex: 1 1 auto; min-height: 0; overflow: hidden;
   }
+  /* El índice y la nota se desplazan por separado: así la nota siempre se ve completa */
+  .indice, .nota { min-height: 0; overflow-y: auto; }
   .indice {
     list-style: none; margin: 0; padding: 14px 18px 18px 28px;
     border-right: 1px solid rgba(42, 33, 24, .35);
@@ -339,7 +341,8 @@
 
   @media (max-width: 720px) {
     .cabecera, .nota, .pie-papel { padding-left: 16px; padding-right: 16px; }
-    .cuerpo { grid-template-columns: 1fr; }
+    .cuerpo { grid-template-columns: 1fr; grid-template-rows: none; overflow: auto; }
+    .indice, .nota { overflow: visible; }
     .indice { border-right: 0; border-bottom: 1px solid rgba(42, 33, 24, .35); padding: 10px 16px; }
     .nota-grid { grid-template-columns: 1fr; }
     .grabado { max-width: 220px; }
@@ -593,6 +596,11 @@ function hatSVG(h) {
         <ellipse cx="26.5" cy="32" rx="7.5" ry="6.5" fill="${h.c2}" stroke="#4a4630" stroke-width="1"/>
         <path d="M19 32 L34 32" stroke="#4a4630" stroke-width="1"/>
         <circle cx="33.5" cy="32" r="1.4" fill="#d9b44a"/>`;
+    case 'vendaje':   // sin sombrero: cabeza vendada tras el cañonazo
+      return `<path d="M22 27.5 Q29 24 36 28.5" stroke="#e8e2d0" stroke-width="3.2" fill="none"/>
+        <path d="M21.5 35 Q29 38.5 36 34" stroke="#e8e2d0" stroke-width="3" fill="none"/>
+        <path d="M23 26 L35 37" stroke="#d9d2bc" stroke-width="2.4"/>
+        <circle cx="31" cy="29.5" r="2.2" fill="#8b0f0f"/>`;
     case 'quepi':     // quepí kaki con banda blanca
       return `<rect x="21.5" y="25" width="13" height="14" rx="5" fill="${h.c1}" stroke="#1e252f" stroke-width="1.2"/>
         <rect x="23" y="26.5" width="10" height="11" rx="4" fill="none" stroke="${h.c2}" stroke-width="1.2"/>
@@ -655,6 +663,24 @@ const SVG_CAPITAN = `<svg ${SVG_HEAD}>
   <path d="M32.6 32 l1.7 -1.7 l1.7 1.7 l-1.7 1.7z" fill="#e2b93b"/>
 </svg>`;
 
+// El Tlacatecolo, brujo del Culto: capa de plumas, máscara de búho y bastón de obsidiana
+const SVG_BRUJO = `<svg ${SVG_HEAD}>
+  <path d="M40 47 L60 47" stroke="#3a2a18" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M58 44 L63 47 L58 50Z" fill="#1d2a26" stroke="#4fd1b0" stroke-width=".8"/>
+  <ellipse cx="27" cy="32" rx="14" ry="19.5" fill="#2a2233" stroke="#120e16" stroke-width="2"/>
+  <g fill="none" stroke="#5a4a3a" stroke-width="1.6" stroke-linecap="round">
+    <path d="M15 22 q4 3 0 6 M15 30 q4 3 0 6 M15 38 q4 3 0 6"/>
+    <path d="M20 16 q3 4 -1 6 M20 44 q3 4 -1 6"/>
+  </g>
+  <path d="M30 14 Q22 32 30 50" stroke="#4a3a5a" stroke-width="1.4" fill="none" stroke-dasharray="2 2.5"/>
+  <circle cx="30" cy="32" r="9" fill="#6b5a44" stroke="#2a2016" stroke-width="1.3"/>
+  <path d="M24 25 l-2 -4 l5 2.5z M24 39 l-2 4 l5 -2.5z" fill="#4a3c2c"/>
+  <circle cx="31.5" cy="28.3" r="3.3" fill="#e8d27a"/><circle cx="31.5" cy="35.7" r="3.3" fill="#e8d27a"/>
+  <circle cx="32.3" cy="28.3" r="1.5" fill="#120e08"/><circle cx="32.3" cy="35.7" r="1.5" fill="#120e08"/>
+  <path d="M37.5 30.6 L41 32 L37.5 33.4Z" fill="#c9a14a"/>
+  <circle cx="20" cy="42" r="2.4" fill="#7a0a0a"/>
+</svg>`;
+
 // Pieles: svg + color de manga (brazos animados) + sombrero que cae al morir
 const SKINS = {
   suriano:     { svg: SVG_SURIANO, sleeve: '#d6c9a8', hat: { shape: 'palma', c1: '#b8955a', c2: '#a07c45' } },
@@ -672,10 +698,12 @@ const SKINS = {
   capitan:     { svg: SVG_CAPITAN, sleeve: '#7c7550', hat: { shape: 'texana', c1: '#55452f', c2: '#46382a' } },
   jefe:        { sleeve: '#efe8d6', o: { body: '#efe8d6', edge: '#5d5446', cananas: true, epaulets: '#c9a23a', hat: { shape: 'charro', c1: '#e3d6b4', c2: '#d4c49c', trim: '#6b4a2a', band: '#3a2a1a' } } },
   general:     { sleeve: '#7b7a52', o: { body: '#7b7a52', strap: '#4a3f2a', epaulets: '#d9b24a', hat: { shape: 'salacot', c1: '#b9ad7d', c2: '#a89c6c' } } },
+  atarantado:  { sleeve: '#47536e', dropHat: { shape: 'kepi', c1: '#3d4a5c' }, o: { body: '#47536e', edge: '#1e252f', strap: '#c8b48a', hat: { shape: 'vendaje' } } },
+  brujo:       { svg: SVG_BRUJO, sleeve: '#2a2233', hat: { shape: 'palma', c1: '#3a2f45', c2: '#2a2233' } },
   cabecilla:   { sleeve: '#9b8c72', o: { body: '#9b8c72', sash: '#b3201a', cananas: true, bandana: '#c0281f', pack: 'bandera', hat: { shape: 'charro', c1: '#6a553b', c2: '#5a472f', trim: '#c0281f', band: '#c0281f' } } }
 };
 for (const [k, sk] of Object.entries(SKINS)) {
-  if (!sk.svg) sk.hat = sk.o.hat;
+  if (!sk.svg) sk.hat = sk.dropHat || sk.o.hat;
   const svg = sk.svg || skinSVG(sk.o);
   sk.img = new Image();
   sk.flash = null; sk.tinted = {}; sk.ready = false;
@@ -746,12 +774,15 @@ const ZTYPES = {
   dorado:      { reg: 'dorado',       faction: 'villistas',    skin: 'dorado',       r: 21, hp: 14, speed: [36, 44],  scale: 1.4,  cost: 4,   knock: 1.5, heavy: true },
   ametrallador:{ reg: 'ametrallador', faction: 'federales',    skin: 'ametrallador', r: 15, hp: 6, speed: [40, 50],   scale: 1,    cost: 3,   knock: 1,   ai: 'shooter', heavy: true },
   alambrista:  { reg: 'alambrista',   faction: 'carrancistas', skin: 'alambrista',   r: 15, hp: 5, speed: [50, 65],   scale: 1,    cost: 2.5, knock: 1,   ai: 'thrower', payload: 'alambre' },
+  atarantado:  { reg: 'atarantado',   faction: 'federales',    skin: 'atarantado',   r: 15, hp: 5, speed: [34, 46],   scale: 1,    cost: 1.3, knock: 1,   ai: 'atarantado', pace: 'Impredecible' },
   incendiario: { reg: 'incendiario',  faction: 'colorados',    skin: 'incendiario',  r: 15, hp: 4, speed: [60, 75],   scale: 1,    cost: 2.5, knock: 1,   ai: 'thrower', payload: 'antorcha', torch: true },
   // --- jefes, uno por facción ---
   coronel:   { reg: 'coronel',     faction: 'federales',    skin: 'federal',  r: 24, hp: 45, speed: [48, 52], scale: 1.6,  knock: 1.8, boss: true, ai: 'coronel', name: 'El Coronel', pace: 'Lenta; embiste', tint: 'rgba(150,110,20,0.32)' },
   capitan:   { reg: 'capitan',     faction: 'villistas',    skin: 'capitan',  r: 26, hp: 60, speed: [55, 60], scale: 1.9,  knock: 2,   boss: true, ai: 'jinete',  name: 'El Capitán de Dorados', pace: 'Al galope', noArms: true },
   jefe:      { reg: 'jefesuriano', faction: 'zapatistas',   skin: 'jefe',     r: 22, hp: 40, speed: [70, 76], scale: 1.5,  knock: 1.6, boss: true, ai: 'sombra',  name: 'El Jefe Suriano', pace: 'Se esfuma' },
   general:   { reg: 'general',     faction: 'carrancistas', skin: 'general',  r: 23, hp: 55, speed: [42, 46], scale: 1.55, knock: 1.6, boss: true, ai: 'general', name: 'El General Constitucionalista', pace: 'Lenta' },
+  brujo:     { reg: 'brujo',       faction: 'culto',        skin: 'brujo',    r: 22, hp: 50, speed: [58, 64], scale: 1.5,  knock: 1.4, boss: true, ai: 'brujo',   name: 'El Tlacatecolo', pace: 'Huye de usted',
+               bossSub: 'Un brujo del Culto ronda el Palacio: los caídos no descansan' },
   cabecilla: { reg: 'cabecilla',   faction: 'colorados',    skin: 'cabecilla', r: 23, hp: 50, speed: [55, 60], scale: 1.55, knock: 1.7, boss: true, ai: 'bandera', name: 'El Cabecilla Colorado', pace: 'Normal' }
 };
 
@@ -761,7 +792,8 @@ const FACTIONS = {
   zapatistas:   { nombre: 'Zapatistas',   grito: 'Bajan del sur, de manta y huarache' },
   villistas:    { nombre: 'Villistas',    grito: 'Retumban cascos del norte: los villistas' },
   carrancistas: { nombre: 'Carrancistas', grito: 'Marchan en orden: los carrancistas' },
-  colorados:    { nombre: 'Colorados',    grito: 'Ondea la bandera roja: los colorados' }
+  colorados:    { nombre: 'Colorados',    grito: 'Ondea la bandera roja: los colorados' },
+  culto:        { nombre: 'El Culto',     grito: 'Algo más camina entre los muertos', jefeDe: 'brujo del Culto' }
 };
 
 // Desde qué oleada aparece cada tipo y con qué peso relativo
@@ -772,10 +804,14 @@ const ROSTER = [
   { t: 'desertor',    from: 3, w: 1 },   { t: 'liebre',      from: 3, w: 1 },
   { t: 'rural',       from: 4, w: 0.8 }, { t: 'dinamitero',  from: 5, w: 0.7 },
   { t: 'dorado',      from: 6, w: 0.5 }, { t: 'ametrallador', from: 7, w: 0.6 },
-  { t: 'alambrista',  from: 8, w: 0.6 }, { t: 'incendiario', from: 9, w: 0.7 }
+  { t: 'alambrista',  from: 8, w: 0.6 }, { t: 'incendiario', from: 9, w: 0.7 },
+  { t: 'atarantado',  from: 3, w: 0.8 }
 ];
 // Un jefe cada 5 oleadas, rotando facciones
 const BOSS_ORDER = ['coronel', 'capitan', 'jefe', 'general', 'cabecilla'];
+// El Tlacatecolo no es de ninguna facción: aparece en la oleada 8 y luego cada 10
+const BRUJO_FIRST = 8, BRUJO_EVERY = 10;
+function isBrujoWave(w) { return w >= BRUJO_FIRST && (w - BRUJO_FIRST) % BRUJO_EVERY === 0; }
 
 // Embestida del Coronel
 const CHARGE_PREP = 0.7;      // aviso antes de embestir
@@ -897,9 +933,11 @@ const Sfx = (() => {
 
   // Voces simultáneas por tipo y separación mínima (segundos) entre dos iguales
   const LIMIT = { disparo: 4, impacto: 5, pared: 3, paso: 2, arrastre: 1, gemido: 2, muerte: 2, zarpazo: 2, golpe: 1, rugido: 1, toque: 2,
-                  balaEnemiga: 4, mecha: 2, explosion: 2, lanzar: 2, lazo: 2, fuego: 2, chispa: 2, alambre: 2, raspa: 1, bandera: 2, madera: 3, galope: 2, relincho: 1, corneta: 1, sombra: 1, cerrojo: 2 };
+                  balaEnemiga: 4, mecha: 2, explosion: 2, lanzar: 2, lazo: 2, fuego: 2, chispa: 2, alambre: 2, raspa: 1, bandera: 2, madera: 3, galope: 2, relincho: 1, corneta: 1, sombra: 1, cerrojo: 2,
+                  gruñido: 2, conjuro: 1, lechuza: 2, levantar: 1, roto: 1 };
   const GAP   = { disparo: 0.05, impacto: 0.025, pared: 0.06, paso: 0.1, arrastre: 0.2, gemido: 0.6, muerte: 0.12, zarpazo: 0.1, golpe: 0.2, rugido: 0.4, toque: 0,
-                  balaEnemiga: 0.06, mecha: 0.2, explosion: 0.05, lanzar: 0.15, lazo: 0.3, fuego: 0.3, chispa: 0.08, alambre: 0.2, raspa: 0.6, bandera: 0.3, madera: 0.04, galope: 0.06, relincho: 1, corneta: 1, sombra: 0.5, cerrojo: 0.3 };
+                  balaEnemiga: 0.06, mecha: 0.2, explosion: 0.05, lanzar: 0.15, lazo: 0.3, fuego: 0.3, chispa: 0.08, alambre: 0.2, raspa: 0.6, bandera: 0.3, madera: 0.04, galope: 0.06, relincho: 1, corneta: 1, sombra: 0.5, cerrojo: 0.3,
+                  gruñido: 0.3, conjuro: 1, lechuza: 0.2, levantar: 0.5, roto: 0.5 };
   const active = {}, lastAt = {};
   const stats = { played: 0, dropped: 0, peak: {} };
 
@@ -922,7 +960,9 @@ const Sfx = (() => {
     capitan:        { f0: 58,  f1: 420, f2: 760, dist: true },
     jefesuriano:    { f0: 70,  f1: 450, f2: 800 },
     general:        { f0: 54,  f1: 400, f2: 720, dist: true },
-    cabecilla:      { f0: 62,  f1: 430, f2: 780, dist: true }
+    cabecilla:      { f0: 62,  f1: 430, f2: 780, dist: true },
+    atarantado:     { f0: 82,  f1: 470, f2: 820 },
+    brujo:          { f0: 66,  f1: 340, f2: 620, dist: true }
   };
 
   function init() {
@@ -1523,6 +1563,79 @@ const Sfx = (() => {
     n.connect(bp).connect(g).connect(dest);
   }
 
+  // ---------- el Atarantado y el Tlacatecolo ----------
+  function grunt(z) {   // aviso del Atarantado justo antes de lanzarse
+    if (!can('gruñido')) return;
+    claim('gruñido', 0.3);
+    const t = ac.currentTime;
+    voice(t, VOICES.atarantado, 0.28, 1.5, 1.25, 1.1, spot(place(z.x, z.y)));
+  }
+  function chant(x, y) {   // conjuro: coro grave y trémulo mientras invoca
+    if (!can('conjuro')) return;
+    claim('conjuro', 1.7);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    [110, 110 * 1.19, 110 * 1.5, 55].forEach((f, i) => {
+      const o = osc(i === 3 ? 'sine' : 'sawtooth', f * (0.995 + Math.random() * 0.01), t, 1.6);
+      const bp = filt('bandpass', 400 + i * 180, 3);
+      const g = ac.createGain();
+      const trem = osc('sine', 5 + i, t, 1.6), td = ac.createGain();
+      td.gain.value = 0.12;
+      trem.connect(td).connect(g.gain);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(i === 3 ? 0.5 : 0.35, t + 0.4);
+      g.gain.setValueAtTime(i === 3 ? 0.5 : 0.35, t + 1.3);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+      o.connect(bp).connect(g).connect(dest);
+    });
+  }
+  function rise(x, y) {   // los cuerpos se levantan
+    if (!can('levantar')) return;
+    claim('levantar', 0.9);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.8, 0.5), lp = filt('lowpass', 200, 1), g = ac.createGain();
+    lp.frequency.exponentialRampToValueAtTime(1400, t + 0.6);
+    env(g, t, 0.1, 0.7, 0.7);
+    n.connect(lp).connect(g).connect(dest);
+    const o = osc('sine', 60, t, 0.8);
+    o.frequency.linearRampToValueAtTime(110, t + 0.7);
+    const og = ac.createGain();
+    env(og, t, 0.05, 0.5, 0.7);
+    o.connect(og).connect(dest);
+  }
+  function hoot(x, y) {   // ulular de la lechuza al salir
+    if (!can('lechuza')) return;
+    claim('lechuza', 0.7);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    [[0, 0.22], [0.32, 0.3]].forEach(([d, len]) => {
+      const o = osc('sine', 420, t + d, len);
+      o.frequency.setValueAtTime(440, t + d);
+      o.frequency.linearRampToValueAtTime(380, t + d + len);
+      const bp = filt('bandpass', 420, 2), g = ac.createGain();
+      env(g, t + d, 0.04, 0.5, len);
+      o.connect(bp).connect(g).connect(dest);
+    });
+  }
+  function owlDown(x, y) {
+    if (!can('lechuza')) return;
+    claim('lechuza', 0.2);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.15, 1.2), bp = filt('bandpass', 1800, 1.5), g = ac.createGain();
+    env(g, t, 0.002, 0.4, 0.13);
+    n.connect(bp).connect(g).connect(dest);
+  }
+  function interrupt(x, y) {   // conjuro roto
+    if (!can('roto')) return;
+    claim('roto', 0.5);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    [1800, 2400, 3100].forEach((f, i) => {
+      const o = osc('triangle', f, t + i * 0.03, 0.35);
+      o.frequency.exponentialRampToValueAtTime(f * 0.5, t + 0.35);
+      const g = ac.createGain();
+      env(g, t + i * 0.03, 0.002, 0.18, 0.3);
+      o.connect(g).connect(dest);
+    });
+  }
+
   // ---------- se llama en cada cuadro ----------
   let groanTimer = 1.5;
   function update(dt, zs) {
@@ -1573,6 +1686,7 @@ const Sfx = (() => {
     shot, hitFlesh, ricochet, step, groan, zombieDeath, swipe, playerHurt, roar, waveStart, playerDeath,
     enemyShot, cock, toss, fuse, explosion, dud, fireStart, crackle, wire, snag, lasso, lassoHit,
     flagPlant, flagBreak, hitWood, gallop, neigh, bugleWorld, vanish,
+    grunt, chant, rise, hoot, owlDown, interrupt,
     _debug: () => ({ ac, out, stats })
   };
 })();
@@ -1754,10 +1868,16 @@ function planWave(w) {
   const factions = [...new Set(bases.map(r => ZTYPES[r.t].faction))];
   let focus = pickWeighted(factions, f => (f === lastFocus && factions.length > 1 ? 0.25 : 1));
 
-  const isBoss = w % DIFF.bossEvery === 0;
-  const afterBoss = w > 1 && (w - 1) % DIFF.bossEvery === 0;
+  const isBrujo = isBrujoWave(w) && w % DIFF.bossEvery !== 0;
+  const isBoss = w % DIFF.bossEvery === 0 || isBrujo;
+  const afterBoss = w > 1 && ((w - 1) % DIFF.bossEvery === 0 || isBrujoWave(w - 1));
 
-  if (isBoss) {
+  if (isBrujo) {
+    plan.bosses.push('brujo');
+    plan.event = 'jefe';
+    plan.sub = ZTYPES.brujo.bossSub;
+    budget *= 0.7;   // su escolta es más grande: necesita cadáveres que levantar
+  } else if (isBoss) {
     // Rotan los jefes; a partir de la sexta ronda de jefes salen de dos en dos
     const k = w / DIFF.bossEvery - 1;
     plan.bosses.push(BOSS_ORDER[k % BOSS_ORDER.length]);
@@ -1945,12 +2065,15 @@ const flags = [];     // banderas rojas del Cabecilla Colorado
 const lassos = [];    // reatas de los rurales
 const floaters = [];  // textos flotantes ("¡Falló!", "¡Aturdido!")
 const blasts = [];    // destellos de explosión (para la luz)
+const corpses = [];   // cuerpos tirados que el Tlacatecolo puede levantar
+const owls = [];      // lechuzas del Tlacatecolo
+const MAX_CORPSES = 30;
 const ENEMY_BULLET_SPEED = 330;
 const EXPLOSION_R = 78;
 const FLAG_RADIUS = 150;
 
 function clearFactionStuff() {
-  for (const a of [eShots, thrown, bombs, hazards, flags, lassos, floaters, blasts]) a.length = 0;
+  for (const a of [eShots, thrown, bombs, hazards, flags, lassos, floaters, blasts, corpses, owls]) a.length = 0;
 }
 function nearFlag(z) {
   for (const fl of flags) if (Math.hypot(fl.x - z.x, fl.y - z.y) < FLAG_RADIUS) return true;
@@ -2294,6 +2417,109 @@ const AI = {
   }
 };
 
+// El Atarantado: quedó aturdido por un cañonazo. Deambula, se queda
+// meciéndose, a ratos te sigue y de pronto se lanza (con un temblor de aviso)
+AI.atarantado = function (z, dt, dist, toPlayer, f) {
+  if (z.attackT >= 0) return null;   // si ya tiró el zarpazo, que lo termine
+  const d = z.daze || (z.daze = { mode: 'wander', t: 0.5 + Math.random() * 1.5, dir: Math.random() * Math.PI * 2 });
+  d.t -= dt;
+  if (d.mode === 'tell') {
+    if (d.t <= 0) { d.mode = 'lunge'; d.t = 0.75; d.dir = toPlayer; Sfx.grunt(z); }
+    return toPlayer + Math.sin(gameTime * 60) * 0.15;   // tiembla antes de lanzarse
+  }
+  if (d.mode === 'lunge') {
+    d.dir = lerpAngle(d.dir, toPlayer, Math.min(1, dt * 1.5));
+    z.x += Math.cos(d.dir) * 200 * dt;
+    z.y += Math.sin(d.dir) * 200 * dt;
+    if (state === 'playing' && z.attackCd <= 0 && dist <= z.r + player.radius + ATTACK_RANGE) {
+      z.attackT = 0; z.attackCd = 1.2;
+      d.mode = 'wander'; d.t = 1 + Math.random(); d.dir = Math.random() * Math.PI * 2;
+      return toPlayer;
+    }
+    if (d.t <= 0) { d.mode = 'idle'; d.t = 0.6 + Math.random() * 0.8; }
+    return d.dir;
+  }
+  if (d.t <= 0) {
+    // Decide qué hacer ahora, sin patrón fijo
+    const near = dist < 260 && state === 'playing';
+    const r = Math.random();
+    if (near && r < 0.28) { d.mode = 'tell'; d.t = 0.35; }
+    else if (r < 0.5) { d.mode = 'follow'; d.t = 0.8 + Math.random() * 1.5; }
+    else if (r < 0.72) { d.mode = 'idle'; d.t = 0.6 + Math.random() * 1.6; }
+    else { d.mode = 'wander'; d.t = 1 + Math.random() * 2; d.dir = Math.random() < 0.5 ? Math.random() * Math.PI * 2 : toPlayer + (Math.random() - 0.5) * 3; }
+  }
+  if (d.mode === 'follow') return null;   // camina y pelea como cualquier otro
+  // Muy cerca, a veces tira el zarpazo aunque parezca distraído
+  if (state === 'playing' && z.attackCd <= 0 && dist <= z.r + player.radius + ATTACK_RANGE) {
+    z.attackCd = 0.8;
+    if (Math.random() < 0.5) { z.attackT = 0; z.attackCd = 1.2; return toPlayer; }
+  }
+  if (d.mode === 'idle') return z.angle + Math.sin(gameTime * 2.5 + z.phase) * 0.35;   // se mece en su lugar
+  // Deambular tambaleándose; da la vuelta al topar con un muro
+  const a = d.dir + Math.sin(gameTime * 2 + z.phase) * 0.7;
+  moveZ(z, a, 0.8, dt);
+  if (z.x < f.x + z.r + 4 || z.x > f.x + f.w - z.r - 4 || z.y < f.y + z.r + 4 || z.y > f.y + f.h - z.r - 4) {
+    d.dir = Math.atan2(f.y + f.h / 2 - z.y, f.x + f.w / 2 - z.x) + (Math.random() - 0.5);
+  }
+  return a;
+};
+
+// El Tlacatecolo, brujo del Culto: levanta a los caídos que estén tirados,
+// suelta lechuzas que te persiguen y huye si te le acercas.
+// Mientras invoca recibe el doble de daño; 4 tiros le cortan el conjuro.
+AI.brujo = function (z, dt, dist, toPlayer, f) {
+  z.raiseCd = (z.raiseCd ?? 2.5) - dt;
+  z.owlCd = (z.owlCd ?? 4) - dt;
+  z.side = z.side || (Math.random() < 0.5 ? 1 : -1);
+  if (z.act === 'raise') {
+    z.actT -= dt;
+    if (z.channelDmg >= 4) {
+      z.act = null; z.raiseTargets = null; z.raiseCd = 4;
+      addFloater('¡Conjuro roto!', z.x, z.y - z.r - 14, '#7fe6c8');
+      Sfx.interrupt(z.x, z.y);
+      return z.angle;
+    }
+    if (z.actT <= 0) {
+      for (const c of z.raiseTargets) {
+        const i = corpses.indexOf(c);
+        if (i < 0) continue;
+        if (Math.hypot(player.x - c.x, player.y - c.y) < player.radius + ZTYPES[c.type].r + 10) continue;
+        corpses.splice(i, 1);
+        const nz = makeZombie(c.type, c.x, c.y, { angle: c.angle, raised: true, rise: 0.7 });
+        nz.hp = nz.maxHp = Math.ceil(ZTYPES[c.type].hp * 0.6);
+        for (let k = 0; k < 10; k++) sparks.push({ x: c.x, y: c.y, vx: (Math.random() - 0.5) * 120, vy: -40 - Math.random() * 120, life: 0.6, max: 0.6, mist: true });
+      }
+      Sfx.rise(z.x, z.y);
+      z.act = null; z.raiseTargets = null;
+      z.raiseCd = 7 + Math.random() * 2;
+    }
+    return z.angle;
+  }
+  if (state !== 'playing') return null;
+  if (z.raiseCd <= 0 && z.attackT < 0) {
+    const targets = corpses.filter(c => Math.hypot(c.x - z.x, c.y - z.y) < 340)
+      .sort((a, b) => Math.hypot(a.x - z.x, a.y - z.y) - Math.hypot(b.x - z.x, b.y - z.y)).slice(0, 3);
+    if (targets.length) {
+      z.act = 'raise'; z.actT = 1.6; z.channelDmg = 0; z.raiseTargets = targets;
+      Sfx.chant(z.x, z.y);
+      return z.angle;
+    }
+    z.raiseCd = 1.2;   // sin cuerpos cerca: vuelve a buscar en un momento
+  }
+  if (z.owlCd <= 0 && dist < 440 && z.attackT < 0) {
+    const a = toPlayer + (Math.random() - 0.5) * 1.2;
+    owls.push({ x: z.x + Math.cos(a) * 24, y: z.y + Math.sin(a) * 24, a, life: 7, flap: Math.random() * 6 });
+    Sfx.hoot(z.x, z.y);
+    z.owlCd = 5.5 + Math.random() * 1.5;
+  }
+  // Mantiene la distancia: huye si te acercas, te rodea a media distancia
+  if (z.attackT < 0) {
+    if (dist < 170) { const a = toPlayer + Math.PI + Math.sin(gameTime * 1.3 + z.phase) * 0.6; moveZ(z, a, 1.05, dt); return toPlayer; }
+    if (dist < 300) { moveZ(z, toPlayer + (Math.PI / 2) * z.side, 0.55, dt); if (Math.random() < dt * 0.3) z.side = -z.side; return toPlayer; }
+  }
+  return null;
+};
+
 // ---------- actualización de proyectiles y peligros ----------
 function updateFactionStuff(dt, f) {
   // Balas enemigas
@@ -2374,6 +2600,20 @@ function updateFactionStuff(dt, f) {
       if (l.t <= 0) { lassos.splice(i, 1); l.owner.lassoOut = false; }
     }
   }
+  // Lechuzas: vuelan hacia el jugador girando poco a poco; un tiro las derriba
+  for (let i = owls.length - 1; i >= 0; i--) {
+    const o = owls[i];
+    o.life -= dt; o.flap += dt * 14;
+    o.a = lerpAngle(o.a, Math.atan2(player.y - o.y, player.x - o.x), Math.min(1, dt * 1.6));
+    o.x += Math.cos(o.a) * 150 * dt; o.y += Math.sin(o.a) * 150 * dt;
+    if (state === 'playing' && Math.hypot(o.x - player.x, o.y - player.y) < player.radius + 8) {
+      hurtPlayer({ x: o.x, y: o.y, T: { knock: 0.5 } });
+      owls.splice(i, 1);
+      continue;
+    }
+    if (o.life <= 0 || state !== 'playing') owls.splice(i, 1);
+  }
+  for (const c of corpses) c.t += dt;
   for (let i = floaters.length - 1; i >= 0; i--) {
     const t = floaters[i];
     t.t -= dt * 0.8; t.y -= 22 * dt;
@@ -2416,6 +2656,7 @@ function updateZombies(dt, f) {
   for (const z of zombies) {
     z.hitFlash = Math.max(0, z.hitFlash - dt);
     z.haste = Math.max(0, z.haste - dt);
+    if (z.rise > 0) { z.rise -= dt; continue; }
     let target;
     if (z.entering) {
       // Cruza el vano en línea recta hacia dentro
@@ -2575,6 +2816,13 @@ function damageZombie(z, b, hx, hy) {
     if (Math.random() < 0.25) addFloater('Escudo', z.x, z.y - z.r - 10, '#ff9a8a');
   }
   if (z.T.ai === 'sombra') z.reveal = 1.2;                     // el Jefe Suriano se deja ver al recibir un tiro
+  if (z.T.ai === 'brujo' && z.act === 'raise') {               // invocando, su bastón queda expuesto
+    dmg = 2;
+    z.channelDmg = (z.channelDmg || 0) + 1;
+  }
+  if (z.T.ai === 'atarantado' && z.daze && z.daze.mode !== 'lunge' && Math.random() < 0.5) {
+    z.daze.mode = 'tell'; z.daze.t = 0.35;                     // un tiro lo despierta... a veces
+  }
   z.hp -= dmg;
   z.hitFlash = 0.12;
   Sfx.hitFlesh(hx, hy);
@@ -2594,6 +2842,10 @@ function killZombie(z, ux, uy) {
   if (idx < 0) return;
   zombies.splice(idx, 1);
   kills++;
+  if (!z.T.boss && !z.raised) {
+    corpses.push({ x: z.x, y: z.y, type: z.type, angle: Math.atan2(uy, ux) + (Math.random() - 0.5) * 0.6, t: 0 });
+    if (corpses.length > MAX_CORPSES) corpses.shift();
+  }
   noteKill(z.reg);
   Sfx.zombieDeath(z);
   const s = z.T.scale;
@@ -2800,6 +3052,27 @@ function drawFactionGround() {
   }
 }
 
+// Cuerpos tirados: oscuros y quietos; brillan si el Tlacatecolo los está llamando
+function drawCorpses() {
+  const called = new Set();
+  for (const z of zombies) if (z.act === 'raise' && z.raiseTargets) z.raiseTargets.forEach(c => called.add(c));
+  for (const c of corpses) {
+    const T = ZTYPES[c.type], spr = SKINS[T.skin];
+    if (!spr.ready) continue;
+    const size = ZOMBIE_SIZE * T.scale * 0.95;
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    ctx.rotate(c.angle);
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(tintedSprite(spr, 'rgba(25,18,12,0.55)'), -size / 2, -size / 2, size, size);
+    if (called.has(c)) {
+      ctx.globalAlpha = 0.45 + 0.35 * Math.sin(gameTime * 12);
+      ctx.drawImage(tintedSprite(spr, 'rgba(90,230,190,0.75)'), -size / 2, -size / 2, size, size);
+    }
+    ctx.restore();
+  }
+}
+
 // Fuentes de luz de las facciones (se recortan de la oscuridad)
 function factionLights() {
   for (const h of hazards) {
@@ -2817,6 +3090,11 @@ function factionLights() {
   for (const b of eShots) punch(b.x, b.y, 28, 0.35);
   for (const fl of flags) punch(fl.x, fl.y, 46, 0.3);
   for (const bl of blasts) punch(bl.x, bl.y, 240, Math.min(1, bl.t / 0.3));
+  for (const o of owls) punch(o.x, o.y, 34, 0.35);
+  for (const z of zombies) if (z.act === 'raise') {
+    punch(z.x, z.y, 90, 0.4);
+    for (const c of z.raiseTargets || []) punch(c.x, c.y, 50, 0.45);
+  }
 }
 
 // Lo que brilla: llamas, mechas, balas enemigas y explosiones
@@ -2867,6 +3145,42 @@ function drawFactionEmissive() {
     const k = bl.t / 0.3;
     flame(bl.x, bl.y, EXPLOSION_R * (1.3 - 0.5 * k), 0.9 * k);
   }
+  // Conjuro del Tlacatecolo: hilos de neblina hacia cada cuerpo que llama
+  for (const z of zombies) {
+    if (z.act !== 'raise' || !z.raiseTargets) continue;
+    const k = 1 - z.actT / 1.6;
+    for (const c of z.raiseTargets) {
+      ctx.strokeStyle = `rgba(100,230,200,${0.25 + 0.4 * k})`;
+      ctx.lineWidth = 2 + 2 * k;
+      ctx.beginPath();
+      ctx.moveTo(z.x, z.y);
+      const mx = (z.x + c.x) / 2 + Math.sin(gameTime * 6 + c.x) * 22, my = (z.y + c.y) / 2 + Math.cos(gameTime * 5 + c.y) * 22;
+      ctx.quadraticCurveTo(mx, my, c.x, c.y);
+      ctx.stroke();
+    }
+    const g = ctx.createRadialGradient(z.x, z.y, 0, z.x, z.y, z.r + 20);
+    g.addColorStop(0, `rgba(100,230,200,${0.35 * k})`);
+    g.addColorStop(1, 'rgba(100,230,200,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(z.x, z.y, z.r + 20, 0, Math.PI * 2); ctx.fill();
+  }
+  // Ojos de las lechuzas y de los levantados
+  for (const o of owls) {
+    const c = Math.cos(o.a), sn = Math.sin(o.a);
+    for (const side of [-1, 1]) {
+      const x = o.x + c * 3 - sn * side * 2.6, y = o.y + sn * 3 + c * side * 2.6;
+      ctx.fillStyle = 'rgba(255,220,90,0.95)';
+      ctx.beginPath(); ctx.arc(x, y, 1.8, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  for (const z of zombies) {
+    if (!z.raised || zombieAlpha(z) < 0.3) continue;
+    const g = ctx.createRadialGradient(z.x, z.y, 0, z.x, z.y, z.r + 6);
+    g.addColorStop(0, 'rgba(90,230,190,0.18)');
+    g.addColorStop(1, 'rgba(90,230,190,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(z.x, z.y, z.r + 6, 0, Math.PI * 2); ctx.fill();
+  }
 }
 
 // Encima de todo: cargas en vuelo, reatas, miras, avisos y textos
@@ -2882,6 +3196,18 @@ function drawFactionOverlay() {
     if (p.kind === 'dinamita') { ctx.fillStyle = '#b3261e'; ctx.fillRect(-7, -2.5, 14, 5); }
     else if (p.kind === 'antorcha') { ctx.fillStyle = '#5a3a1e'; ctx.fillRect(-8, -1.8, 16, 3.6); }
     else { ctx.strokeStyle = '#9a9ea4'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.arc(0, 0, 3.5, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.restore();
+  }
+  for (const o of owls) {
+    ctx.save();
+    ctx.translate(o.x, o.y);
+    ctx.rotate(o.a);
+    const w = Math.sin(o.flap) * 0.6;
+    ctx.fillStyle = '#4a3c2c';
+    ctx.beginPath(); ctx.moveTo(-2, 0); ctx.quadraticCurveTo(-4, -9 - w * 6, -10, -12 - w * 8); ctx.quadraticCurveTo(-3, -4, 2, -1); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-2, 0); ctx.quadraticCurveTo(-4, 9 + w * 6, -10, 12 + w * 8); ctx.quadraticCurveTo(-3, 4, 2, 1); ctx.fill();
+    ctx.fillStyle = '#6b5a44';
+    ctx.beginPath(); ctx.ellipse(0, 0, 6, 4.5, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
   for (const l of lassos) {
@@ -2981,7 +3307,7 @@ function drawZombies() {
     const sc = z.T.scale;
     const size = ZOMBIE_SIZE * sc;
     ctx.save();
-    ctx.globalAlpha = zombieAlpha(z);
+    ctx.globalAlpha = zombieAlpha(z) * (z.rise > 0 ? 1 - z.rise / 0.7 * 0.8 : 1);
     ctx.translate(z.x, z.y);
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.beginPath();
@@ -2993,6 +3319,12 @@ function drawZombies() {
     if (spr.ready) {
       const h = size / 2;
       ctx.drawImage(z.T.tint ? tintedSprite(spr, z.T.tint) : spr.img, -h, -h, size, size);
+      if (z.raised) {
+        const base = ctx.globalAlpha;
+        ctx.globalAlpha = base * 0.4;
+        ctx.drawImage(tintedSprite(spr, 'rgba(80,200,170,0.7)'), -h, -h, size, size);
+        ctx.globalAlpha = base;
+      }
       // El Coronel parpadea en rojo mientras prepara la embestida
       const prepGlow = z.charge === 'prep' ? 0.35 + 0.35 * Math.sin(gameTime * 30) : 0;
       const fl = Math.max(z.hitFlash / 0.12, prepGlow);
@@ -3621,6 +3953,18 @@ function update(dt) {
       const t = segmentCircle(px, py, b.x, b.y, fl.x, fl.y, 11);
       if (t >= 0 && t < hitT) { hitT = t; hitF = fl; hitZ = null; }
     }
+    let hitO = null;
+    for (const o of owls) {
+      const t = segmentCircle(px, py, b.x, b.y, o.x, o.y, 10);
+      if (t >= 0 && t < hitT) { hitT = t; hitO = o; hitF = null; hitZ = null; }
+    }
+    if (hitO) {
+      owls.splice(owls.indexOf(hitO), 1);
+      for (let k = 0; k < 6; k++) blood.push({ x: hitO.x, y: hitO.y, vx: (Math.random() - 0.5) * 200, vy: (Math.random() - 0.5) * 200, life: 0.3, size: 1.5 });
+      Sfx.owlDown(hitO.x, hitO.y);
+      bullets.splice(i, 1);
+      continue;
+    }
     if (hitF) {
       hitF.hp--; hitF.hit = 0.12;
       spawnSparks(hitF.x, hitF.y, -b.vx, -b.vy);
@@ -3710,6 +4054,7 @@ function draw(t) {
 
   // Sangre en el piso y zombis (también quedan bajo la oscuridad)
   drawGore();
+  drawCorpses();
   drawFactionGround();
   drawZombies();
 
@@ -3834,7 +4179,7 @@ function draw(t) {
 
   for (const s of sparks) {
     const a = s.life / s.max;
-    ctx.strokeStyle = `rgba(255,200,110,${a})`;
+    ctx.strokeStyle = s.mist ? `rgba(110,230,200,${a * 0.8})` : `rgba(255,200,110,${a})`;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(s.x, s.y);
@@ -3941,7 +4286,7 @@ function speedLabel(T) {
 }
 
 // Notas de cada facción (resumen de la investigación histórica)
-const FACTION_ORDER = ['federales', 'zapatistas', 'villistas', 'carrancistas', 'colorados'];
+const FACTION_ORDER = ['federales', 'zapatistas', 'villistas', 'carrancistas', 'colorados', 'culto'];
 const FACTION_NOTES = {
   federales: {
     titulo: 'El Ejército Federal', bajada: 'Huertistas · disuelto el 13 de agosto de 1914',
@@ -3987,11 +4332,21 @@ const FACTION_NOTES = {
     ],
     vestian: 'Ningún corresponsal les describe uniforme. Se les reconoce por el rojo de su bandera en listones y paliacates.',
     peleaban: 'Guerrilla a caballo, incendios y sabotaje.'
+  },
+  culto: {
+    titulo: 'El Culto', bajada: 'Los Tlacatecolo, "hombres-búho"',
+    texto: [
+      'No figuran en ningún parte militar. Se murmura que siempre han estado cerca del poder, y que la silla presidencial donde se sentó Villa es uno de sus objetos.',
+      'No quieren que los muertos descansen: los alimentan de matanzas y cuerpos sin sepultura, y esta noche los levantan para que sigan cobrando.'
+    ],
+    vestian: 'Capas de plumas y máscaras de búho. Llevan siempre consigo un objeto de poder.',
+    peleaban: 'No pelean: invocan y controlan a los de abajo. Dicen que se les debilita rompiendo su objeto de poder.'
   }
 };
 
 // Desde cuándo aparece cada tipo (se calcula de ROSTER y BOSS_ORDER para no desfasarse)
 function apareceDe(tipo) {
+  if (tipo === 'brujo') return `Oleada ${BRUJO_FIRST}, luego cada ${BRUJO_EVERY}`;
   const bi = BOSS_ORDER.indexOf(tipo);
   if (bi >= 0) return `Oleada ${(bi + 1) * DIFF.bossEvery}`;
   const r = ROSTER.find(x => x.t === tipo);
@@ -4031,6 +4386,13 @@ const REGISTRO = [
                 'Se emplaza a media distancia, apunta y suelta una ráfaga de cinco tiros. Mientras apunta, una línea roja delata hacia dónde.'],
         tactica: 'Ráfaga de 5 balas tras apuntar',
         consejo: 'Salga de la línea roja antes de la ráfaga. De cerca no puede usar la ametralladora: es el momento de rematarlo.' },
+      { id: 'atarantado', tipo: 'atarantado', faccion: 'federales',
+        nombre: 'El Atarantado', volanta: 'Sobreviviente del cañoneo de Zacatecas',
+        titular: 'Anda perdido, hasta que deja de estarlo',
+        texto: ['Defendía el cerro de La Bufa cuando la artillería villista lo cubrió de fuego. Le quedó la cabeza vendada y la mirada perdida; ni muerto ha vuelto en sí.',
+                'Deambula sin rumbo, se queda meciéndose, a ratos lo sigue a uno... y de pronto tiembla y se lanza con una rapidez que nadie le esperaría.'],
+        tactica: 'Impredecible: deambula y de pronto se lanza',
+        consejo: 'No le pierda la pista aunque parezca distraído. Si lo ve temblar, apártese: se lanza en línea recta. Un tiro a veces lo despierta.' },
       { id: 'coronel', tipo: 'coronel', faccion: 'federales', jefe: true,
         nombre: 'El Coronel', volanta: 'Jefe de los caídos federales',
         titular: 'Amaneció abierta la tumba del Coronel',
@@ -4132,7 +4494,15 @@ const REGISTRO = [
         texto: ['Cabecilla de una partida de colorados. Trae la bandera roja a la espalda y planta una tras otra donde se detiene.',
                 'Mientras ondee alguna de sus banderas, las balas apenas le hacen daño y los muertos que están cerca se apuran. También lanza antorchas.'],
         tactica: 'Banderas que lo protegen y apuran a los demás',
-        consejo: 'Derribe primero las banderas: seis tiros cada una. Sin ellas queda expuesto. Cincuenta tiros.' }
+        consejo: 'Derribe primero las banderas: seis tiros cada una. Sin ellas queda expuesto. Cincuenta tiros.' },
+      // ---------- El Culto ----------
+      { id: 'brujo', tipo: 'brujo', faccion: 'culto', jefe: true,
+        nombre: 'El Tlacatecolo', volanta: 'Brujo del Culto',
+        titular: 'El hombre-búho que no deja descansar a los muertos',
+        texto: ['Nadie sabe de qué bando es, porque no es de ninguno. Viste capa de plumas, máscara de búho y un bastón de obsidiana que brilla cuando canta.',
+                'Huye si uno se le acerca. Canta sobre los cuerpos tirados y los levanta, de tres en tres, más débiles pero de pie otra vez; los que levanta ya no vuelven a pararse. Sus lechuzas persiguen a los vivos.'],
+        tactica: 'Levanta cadáveres, suelta lechuzas y huye',
+        consejo: 'Mientras canta recibe el doble de daño, y cuatro tiros le rompen el conjuro. Derribe las lechuzas de un tiro. Cincuenta tiros.' }
     ]
   },
   {
@@ -4353,7 +4723,7 @@ function renderNote(sec) {
   regNote.replaceChildren(
     el('p', { class: 'nota-volanta', text: `${FACTIONS[entry.faccion].nombre} · ${entry.volanta}` }),
     el('h2', { text: entry.titular }),
-    el('p', { class: 'nota-bajada', text: entry.jefe ? `${entry.nombre}, jefe de los ${FACTIONS[entry.faccion].nombre.toLowerCase()}` : entry.nombre }),
+    el('p', { class: 'nota-bajada', text: entry.jefe ? `${entry.nombre}, ${FACTIONS[entry.faccion].jefeDe || 'jefe de los ' + FACTIONS[entry.faccion].nombre.toLowerCase()}` : entry.nombre }),
     el('div', { class: 'nota-grid' }, fig,
       el('div', {},
         el('div', { class: 'ficha' },
@@ -4370,9 +4740,12 @@ function renderNote(sec) {
 
 function renderRegistry() {
   const sec = REGISTRO.find(s => s.id === regSection);
+  const keep = regIndex.scrollTop;
   renderTabs();
   renderIndex(sec);
   renderNote(sec);
+  regIndex.scrollTop = keep;   // el índice no salta al elegir una nota
+  regNote.scrollTop = 0;       // cada nota empieza desde arriba
 }
 
 function openRegistry() {
