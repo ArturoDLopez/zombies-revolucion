@@ -50,6 +50,8 @@
   .mouse .der { right: 0; }
   .mouse.on { border-color: #ffd27a; box-shadow: 0 0 12px rgba(255, 190, 90, .6); }
   .mouse.on .izq { background: #ffd27a; }
+  .mouse .der.listo { box-shadow: inset 0 0 0 1px #c9d6ff; }
+  .mouse .der.usando { background: #c9d6ff !important; }
 
   #stats {
     position: fixed; left: 14px; top: 12px;
@@ -384,7 +386,7 @@
       <div class="btn izq"></div>
       <div class="btn der"></div>
     </div>
-    <span>Disparar</span>
+    <span id="hud-machete-txt">Disparo · Machete</span>
   </div>
   <div class="grupo">
     <kbd class="solo" id="hud-pausa">P</kbd>
@@ -681,6 +683,29 @@ const SVG_BRUJO = `<svg ${SVG_HEAD}>
   <circle cx="20" cy="42" r="2.4" fill="#7a0a0a"/>
 </svg>`;
 
+// La Deuda de la Silla: un amasijo de muertos de todos los bandos fundidos
+// alrededor de la silla presidencial, que lleva incrustada en la espalda
+const SVG_DEUDA = `<svg ${SVG_HEAD}>
+  <rect x="3" y="22" width="15" height="20" rx="2" fill="#7a1a1a" stroke="#c9a23a" stroke-width="1.6"/>
+  <rect x="5" y="25" width="11" height="14" rx="1.5" fill="#8f2424"/>
+  <path d="M6 22 Q10.5 16 15 22" fill="#c9a23a"/><circle cx="10.5" cy="19.5" r="1.6" fill="#e8c860"/>
+  <ellipse cx="31" cy="32" rx="19" ry="25" fill="#4a5340" stroke="#1e2318" stroke-width="2"/>
+  <ellipse cx="24" cy="20" rx="8" ry="6" fill="#3f4a62"/><ellipse cx="25" cy="45" rx="8" ry="6" fill="#d6c9a8"/>
+  <ellipse cx="38" cy="22" rx="6" ry="5" fill="#76734a"/><ellipse cx="38" cy="43" rx="6" ry="5" fill="#a39579"/>
+  <path d="M16 18 L44 50 M16 46 L44 14" stroke="#5a3a1e" stroke-width="3"/>
+  <path d="M16 18 L44 50 M16 46 L44 14" stroke="#d1ad4c" stroke-width="1.3" stroke-dasharray="1.4 1.8"/>
+  <path d="M20 12 L42 54" stroke="#c0281f" stroke-width="3" opacity=".85"/>
+  <path d="M20 12 L42 54" stroke="#e8e2d0" stroke-width="1" opacity=".7"/>
+  <path d="M20 12 L42 54" stroke="#2f6b3a" stroke-width="1" opacity=".8" transform="translate(1.5 0)"/>
+  <circle cx="22" cy="31" r="4" fill="#7f9a6b"/><circle cx="21" cy="31" r="4.6" fill="none" stroke="#b8955a" stroke-width="2"/>
+  <circle cx="30" cy="16" r="3.4" fill="#7f9a6b"/><circle cx="30" cy="48" r="3.4" fill="#7f9a6b"/>
+  <path d="M27 13 l5 0 l-1 -3 z" fill="#3d4a5c"/>
+  <circle cx="38" cy="32" r="9.5" fill="#6f8a5d" stroke="#1e2318" stroke-width="1.6"/>
+  <circle cx="42" cy="28.5" r="2" fill="#ffcf5a"/><circle cx="42" cy="35.5" r="2" fill="#ffcf5a"/>
+  <path d="M45 30 L48 32 L45 34" stroke="#2a1010" stroke-width="1.5" fill="none"/>
+  <path d="M29 24 q6 -2 6 3 q-3 3 -6 0z M33 40 q5 2 3 6 q-4 0 -3 -6z M18 38 q3 -1 3 2 q-2 2 -3 -2z" fill="#7a0a0a"/>
+</svg>`;
+
 // Pieles: svg + color de manga (brazos animados) + sombrero que cae al morir
 const SKINS = {
   suriano:     { svg: SVG_SURIANO, sleeve: '#d6c9a8', hat: { shape: 'palma', c1: '#b8955a', c2: '#a07c45' } },
@@ -698,7 +723,10 @@ const SKINS = {
   capitan:     { svg: SVG_CAPITAN, sleeve: '#7c7550', hat: { shape: 'texana', c1: '#55452f', c2: '#46382a' } },
   jefe:        { sleeve: '#efe8d6', o: { body: '#efe8d6', edge: '#5d5446', cananas: true, epaulets: '#c9a23a', hat: { shape: 'charro', c1: '#e3d6b4', c2: '#d4c49c', trim: '#6b4a2a', band: '#3a2a1a' } } },
   general:     { sleeve: '#7b7a52', o: { body: '#7b7a52', strap: '#4a3f2a', epaulets: '#d9b24a', hat: { shape: 'salacot', c1: '#b9ad7d', c2: '#a89c6c' } } },
+  machetero:   { sleeve: '#ddd3b8', o: { body: '#ddd3b8', edge: '#5d5446', bandana: '#a8352a', hat: { shape: 'palma', c1: '#a8874e', c2: '#8f703c' } } },
+  jornalero:   { sleeve: '#a99a7c', o: { body: '#a99a7c', sash: '#b3201a', hat: { shape: 'palma', c1: '#c4a86e', c2: '#a88e58' } } },
   atarantado:  { sleeve: '#47536e', dropHat: { shape: 'kepi', c1: '#3d4a5c' }, o: { body: '#47536e', edge: '#1e252f', strap: '#c8b48a', hat: { shape: 'vendaje' } } },
+  deuda:       { svg: SVG_DEUDA, sleeve: '#4a5340', hat: { shape: 'kepi', c1: '#3d4a5c' } },
   brujo:       { svg: SVG_BRUJO, sleeve: '#2a2233', hat: { shape: 'palma', c1: '#3a2f45', c2: '#2a2233' } },
   cabecilla:   { sleeve: '#9b8c72', o: { body: '#9b8c72', sash: '#b3201a', cananas: true, bandana: '#c0281f', pack: 'bandera', hat: { shape: 'charro', c1: '#6a553b', c2: '#5a472f', trim: '#c0281f', band: '#c0281f' } } }
 };
@@ -774,6 +802,8 @@ const ZTYPES = {
   dorado:      { reg: 'dorado',       faction: 'villistas',    skin: 'dorado',       r: 21, hp: 14, speed: [36, 44],  scale: 1.4,  cost: 4,   knock: 1.5, heavy: true },
   ametrallador:{ reg: 'ametrallador', faction: 'federales',    skin: 'ametrallador', r: 15, hp: 6, speed: [40, 50],   scale: 1,    cost: 3,   knock: 1,   ai: 'shooter', heavy: true },
   alambrista:  { reg: 'alambrista',   faction: 'carrancistas', skin: 'alambrista',   r: 15, hp: 5, speed: [50, 65],   scale: 1,    cost: 2.5, knock: 1,   ai: 'thrower', payload: 'alambre' },
+  machetero:   { reg: 'machetero',    faction: 'zapatistas',   skin: 'machetero',    r: 15, hp: 5, speed: [55, 72],   scale: 1,    cost: 2,   knock: 1.2, melee: 'machete' },
+  jornalero:   { reg: 'jornalero',    faction: 'colorados',    skin: 'jornalero',    r: 15, hp: 5, speed: [50, 64],   scale: 1,    cost: 2,   knock: 1,   melee: 'trinche' },
   atarantado:  { reg: 'atarantado',   faction: 'federales',    skin: 'atarantado',   r: 15, hp: 5, speed: [34, 46],   scale: 1,    cost: 1.3, knock: 1,   ai: 'atarantado', pace: 'Impredecible' },
   incendiario: { reg: 'incendiario',  faction: 'colorados',    skin: 'incendiario',  r: 15, hp: 4, speed: [60, 75],   scale: 1,    cost: 2.5, knock: 1,   ai: 'thrower', payload: 'antorcha', torch: true },
   // --- jefes, uno por facción ---
@@ -781,6 +811,8 @@ const ZTYPES = {
   capitan:   { reg: 'capitan',     faction: 'villistas',    skin: 'capitan',  r: 26, hp: 60, speed: [55, 60], scale: 1.9,  knock: 2,   boss: true, ai: 'jinete',  name: 'El Capitán de Dorados', pace: 'Al galope', noArms: true },
   jefe:      { reg: 'jefesuriano', faction: 'zapatistas',   skin: 'jefe',     r: 22, hp: 40, speed: [70, 76], scale: 1.5,  knock: 1.6, boss: true, ai: 'sombra',  name: 'El Jefe Suriano', pace: 'Se esfuma' },
   general:   { reg: 'general',     faction: 'carrancistas', skin: 'general',  r: 23, hp: 55, speed: [42, 46], scale: 1.55, knock: 1.6, boss: true, ai: 'general', name: 'El General Constitucionalista', pace: 'Lenta' },
+  deuda:     { reg: 'deuda',       faction: 'culto',        skin: 'deuda',    r: 44, hp: 420, speed: [30, 34], scale: 3.2, knock: 2.6, boss: true, ai: 'deuda', melee: 'gigante', turn: 1.5, name: 'La Deuda de la Silla', pace: 'Lenta, imparable',
+               bossSub: 'La deuda de la silla está llena: el ancla se levanta a cobrar' },
   brujo:     { reg: 'brujo',       faction: 'culto',        skin: 'brujo',    r: 22, hp: 50, speed: [58, 64], scale: 1.5,  knock: 1.4, boss: true, ai: 'brujo',   name: 'El Tlacatecolo', pace: 'Huye de usted',
                bossSub: 'Un brujo del Culto ronda el Palacio: los caídos no descansan' },
   cabecilla: { reg: 'cabecilla',   faction: 'colorados',    skin: 'cabecilla', r: 23, hp: 50, speed: [55, 60], scale: 1.55, knock: 1.7, boss: true, ai: 'bandera', name: 'El Cabecilla Colorado', pace: 'Normal' }
@@ -805,13 +837,25 @@ const ROSTER = [
   { t: 'rural',       from: 4, w: 0.8 }, { t: 'dinamitero',  from: 5, w: 0.7 },
   { t: 'dorado',      from: 6, w: 0.5 }, { t: 'ametrallador', from: 7, w: 0.6 },
   { t: 'alambrista',  from: 8, w: 0.6 }, { t: 'incendiario', from: 9, w: 0.7 },
-  { t: 'atarantado',  from: 3, w: 0.8 }
+  { t: 'atarantado',  from: 3, w: 0.8 },
+  { t: 'machetero',   from: 5, w: 0.8 }, { t: 'jornalero',   from: 7, w: 0.7 }
 ];
 // Un jefe cada 5 oleadas, rotando facciones
 const BOSS_ORDER = ['coronel', 'capitan', 'jefe', 'general', 'cabecilla'];
 // El Tlacatecolo no es de ninguna facción: aparece en la oleada 8 y luego cada 10
 const BRUJO_FIRST = 8, BRUJO_EVERY = 10;
 function isBrujoWave(w) { return w >= BRUJO_FIRST && (w - BRUJO_FIRST) % BRUJO_EVERY === 0; }
+// Cuántos jefes salen en una oleada de jefe: 1 hasta la 15; desde la 20, 3, 3, 4, 4, ... hasta 8
+function bossTitle(list) {
+  const names = [...new Set(list.map(b => ZTYPES[b].name))];
+  return list.length > 2 ? `${list.length} jefes` : names.join(' y ');
+}
+const BOSS_GAP = 9;     // segundos mínimos entre un jefe y el siguiente (si el anterior sigue vivo)
+let lastBossAt = -99;
+function bossCountFor(w) { return w < 20 ? 1 : Math.min(8, 3 + Math.floor((w - 20) / 10)); }
+// La Deuda de la Silla: oleada 80 y luego cada 20
+const DEUDA_FIRST = 80, DEUDA_EVERY = 20;
+function isDeudaWave(w) { return w >= DEUDA_FIRST && (w - DEUDA_FIRST) % DEUDA_EVERY === 0; }
 
 // Embestida del Coronel
 const CHARGE_PREP = 0.7;      // aviso antes de embestir
@@ -858,6 +902,24 @@ const ATTACK_WINDUP = 0.18;   // echa los brazos hacia atrás
 const ATTACK_STRIKE = 0.10;   // lanza las manos al frente
 const ATTACK_HIT = 0.24;      // instante en que el golpe conecta
 const ATTACK_TOTAL = 0.5;     // duración completa con la recuperación
+
+// Ataque cuerpo a cuerpo. El alcance se mide en "unidades": 1 = lo que llega un zarpazo
+// (14 px más allá del cuerpo). Machete = 2 unidades, trinche = 3.
+const REACH = 14;
+const DEFAULT_MELEE = { start: ATTACK_RANGE, hit: HIT_RANGE, windup: ATTACK_WINDUP, strike: ATTACK_STRIKE,
+                        hitAt: ATTACK_HIT, total: ATTACK_TOTAL, cd: [1.1, 1.5], dmg: 1 };
+const MELEE = {
+  // Tajo de machete: doble alcance y doble daño, pero avisa más (abanico rojo) y tarda más en repetir
+  machete: { start: REACH * 2 - 6, hit: REACH * 2, windup: 0.34, strike: 0.1, hitAt: 0.4, total: 0.72,
+             cd: [1.7, 2.1], dmg: 2, cone: 1.0, weapon: 'machete' },
+  // Picotazo de trinche: triple alcance, solo en línea recta; se queda a esa distancia
+  trinche: { start: REACH * 3 - 6, hit: REACH * 3, windup: 0.32, strike: 0.12, hitAt: 0.4, total: 0.75,
+             cd: [1.7, 2.1], dmg: 1, cone: 0.32, knock: 1.3, stopGap: REACH * 2, weapon: 'trinche' }
+};
+const LOCK_AT = 0.55;   // fracción de la preparación en que el arma fija su dirección
+MELEE.gigante = { start: 10, hit: 20, windup: 0.42, strike: 0.12, hitAt: 0.5, total: 0.85, cd: [1.6, 2.0], dmg: 2, cone: 1.2 };
+function meleeOf(z) { return z.T.melee ? MELEE[z.T.melee] : DEFAULT_MELEE; }
+function angleDiff(a, b) { return Math.atan2(Math.sin(a - b), Math.cos(a - b)); }
 
 // Jugador
 const PLAYER_HP = 5;          // golpes que aguanta
@@ -934,10 +996,14 @@ const Sfx = (() => {
   // Voces simultáneas por tipo y separación mínima (segundos) entre dos iguales
   const LIMIT = { disparo: 4, impacto: 5, pared: 3, paso: 2, arrastre: 1, gemido: 2, muerte: 2, zarpazo: 2, golpe: 1, rugido: 1, toque: 2,
                   balaEnemiga: 4, mecha: 2, explosion: 2, lanzar: 2, lazo: 2, fuego: 2, chispa: 2, alambre: 2, raspa: 1, bandera: 2, madera: 3, galope: 2, relincho: 1, corneta: 1, sombra: 1, cerrojo: 2,
-                  gruñido: 2, conjuro: 1, lechuza: 2, levantar: 1, roto: 1 };
+                  gruñido: 2, conjuro: 1, lechuza: 2, levantar: 1, roto: 1,
+                  tajo: 1, tajoGolpe: 1, filo: 2, derrumbe: 1, caida: 2,
+                  forja: 1, azote: 1, malaire: 1, bramido: 1, emerger: 1, sello: 1 };
   const GAP   = { disparo: 0.05, impacto: 0.025, pared: 0.06, paso: 0.1, arrastre: 0.2, gemido: 0.6, muerte: 0.12, zarpazo: 0.1, golpe: 0.2, rugido: 0.4, toque: 0,
                   balaEnemiga: 0.06, mecha: 0.2, explosion: 0.05, lanzar: 0.15, lazo: 0.3, fuego: 0.3, chispa: 0.08, alambre: 0.2, raspa: 0.6, bandera: 0.3, madera: 0.04, galope: 0.06, relincho: 1, corneta: 1, sombra: 0.5, cerrojo: 0.3,
-                  gruñido: 0.3, conjuro: 1, lechuza: 0.2, levantar: 0.5, roto: 0.5 };
+                  gruñido: 0.3, conjuro: 1, lechuza: 0.2, levantar: 0.5, roto: 0.5,
+                  tajo: 0.1, tajoGolpe: 0.1, filo: 0.15, derrumbe: 1, caida: 0.12,
+                  forja: 0.5, azote: 0.3, malaire: 1, bramido: 1, emerger: 2, sello: 2 };
   const active = {}, lastAt = {};
   const stats = { played: 0, dropped: 0, peak: {} };
 
@@ -962,7 +1028,10 @@ const Sfx = (() => {
     general:        { f0: 54,  f1: 400, f2: 720, dist: true },
     cabecilla:      { f0: 62,  f1: 430, f2: 780, dist: true },
     atarantado:     { f0: 82,  f1: 470, f2: 820 },
-    brujo:          { f0: 66,  f1: 340, f2: 620, dist: true }
+    brujo:          { f0: 66,  f1: 340, f2: 620, dist: true },
+    machetero:      { f0: 94,  f1: 540, f2: 900 },
+    jornalero:      { f0: 108, f1: 620, f2: 1100 },
+    deuda:          { f0: 38,  f1: 300, f2: 560, dist: true }
   };
 
   function init() {
@@ -1636,6 +1705,174 @@ const Sfx = (() => {
     });
   }
 
+  // ---------- machetes y trinches ----------
+  function macheteSwing() {   // el tajo del jugador
+    if (!can('tajo')) return;
+    claim('tajo', 0.25);
+    const t = ac.currentTime, dest = spot(null);
+    const n = noiseSrc(t, 0.2, 1.1), bp = filt('bandpass', 3200, 1.4), g = ac.createGain();
+    bp.frequency.exponentialRampToValueAtTime(900, t + 0.18);
+    env(g, t, 0.01, 0.6, 0.17);
+    n.connect(bp).connect(g).connect(dest);
+    const o = osc('triangle', 3400, t, 0.15);
+    const og = ac.createGain();
+    env(og, t, 0.002, 0.06, 0.13);
+    o.connect(og).connect(dest);
+  }
+  function macheteHit() {     // el filo entra: golpe seco y pesado
+    if (!can('tajoGolpe')) return;
+    claim('tajoGolpe', 0.2);
+    const t = ac.currentTime + 0.04, dest = spot(null);
+    const n = noiseSrc(t, 0.14, 0.7), lp = filt('lowpass', 1100, 1), g = ac.createGain();
+    env(g, t, 0.002, 0.8, 0.12);
+    n.connect(lp).connect(g).connect(dest);
+    const o = osc('sine', 150, t, 0.14);
+    o.frequency.exponentialRampToValueAtTime(55, t + 0.12);
+    const og = ac.createGain();
+    env(og, t, 0.002, 0.7, 0.12);
+    o.connect(og).connect(dest);
+  }
+  function weaponTell(z, weapon) {   // aviso: se oye el filo o el palo antes del golpe
+    if (!can('filo')) return;
+    claim('filo', 0.3);
+    const t = ac.currentTime, dest = spot(place(z.x, z.y));
+    if (weapon === 'machete') {
+      [2600, 3900].forEach((f, i) => {
+        const o = osc('triangle', f, t + i * 0.02, 0.3);
+        const g = ac.createGain();
+        env(g, t + i * 0.02, 0.002, 0.18, 0.26);
+        o.connect(g).connect(dest);
+      });
+    } else {
+      const n = noiseSrc(t, 0.25, 0.6), bp = filt('bandpass', 500, 1.5), g = ac.createGain();
+      bp.frequency.exponentialRampToValueAtTime(1100, t + 0.22);
+      env(g, t, 0.05, 0.45, 0.2);
+      n.connect(bp).connect(g).connect(dest);
+    }
+  }
+
+  // ---------- el techo ----------
+  function roofCollapse(x, y) {   // crujido, estruendo y escombro rebotando
+    if (!can('derrumbe')) return;
+    claim('derrumbe', 2.2);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    [0, 0.12, 0.3].forEach(d => {
+      const n = noiseSrc(t + d, 0.08, 1.2), bp = filt('bandpass', 1800 + Math.random() * 800, 2), g = ac.createGain();
+      env(g, t + d, 0.002, 0.7, 0.07);
+      n.connect(bp).connect(g).connect(dest);
+    });
+    const n = noiseSrc(t + 0.3, 1.8, 0.4), lp = filt('lowpass', 900, 0.8), g = ac.createGain();
+    lp.frequency.exponentialRampToValueAtTime(120, t + 2);
+    env(g, t + 0.3, 0.02, 1.0, 1.7);
+    n.connect(lp).connect(g).connect(dest);
+    const o = osc('sine', 52, t + 0.3, 1.6);
+    o.frequency.exponentialRampToValueAtTime(28, t + 1.8);
+    const og = ac.createGain();
+    env(og, t + 0.3, 0.01, 0.9, 1.5);
+    o.connect(og).connect(dest);
+    for (let i = 0; i < 10; i++) {   // piedras rebotando
+      const d = 0.5 + Math.random() * 1.2;
+      const c = noiseSrc(t + d, 0.03, 1), cb = filt('bandpass', 900 + Math.random() * 1500, 3), cg = ac.createGain();
+      env(cg, t + d, 0.001, 0.25, 0.03);
+      c.connect(cb).connect(cg).connect(dest);
+    }
+    duck(0.5, 0.8);
+  }
+  function land(x, y) {   // un muerto cae del techo
+    if (!can('caida')) return;
+    claim('caida', 0.2);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const o = osc('sine', 85, t, 0.16);
+    o.frequency.exponentialRampToValueAtTime(38, t + 0.14);
+    const og = ac.createGain();
+    env(og, t, 0.002, 0.7, 0.14);
+    o.connect(og).connect(dest);
+    const n = noiseSrc(t, 0.18, 0.6), lp = filt('lowpass', 500), g = ac.createGain();
+    env(g, t, 0.003, 0.45, 0.16);
+    n.connect(lp).connect(g).connect(dest);
+  }
+
+  // ---------- el machete mejora y La Deuda ----------
+  function forge() {   // dos golpes de yunque: el machete subió de nivel
+    if (!can('forja')) return;
+    claim('forja', 0.6);
+    const t = ac.currentTime;
+    [0, 0.18].forEach(d => {
+      [1, 2.76, 5.4].forEach((m, i) => {
+        const o = osc('sine', 880 * m, t + d, 0.5);
+        const g = ac.createGain();
+        env(g, t + d, 0.002, 0.18 / (i + 1), 0.45);
+        o.connect(g).connect(stingBus);
+      });
+    });
+  }
+  function slam(x, y) {   // el puño de la Deuda contra el piso
+    if (!can('azote')) return;
+    claim('azote', 1);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const o = osc('sine', 60, t, 0.9);
+    o.frequency.exponentialRampToValueAtTime(24, t + 0.8);
+    const og = ac.createGain();
+    env(og, t, 0.003, 1.1, 0.85);
+    o.connect(og).connect(dest);
+    const n = noiseSrc(t, 0.9, 0.5), lp = filt('lowpass', 1200), g = ac.createGain();
+    lp.frequency.exponentialRampToValueAtTime(100, t + 0.8);
+    env(g, t, 0.003, 0.9, 0.8);
+    n.connect(lp).connect(g).connect(dest);
+    duck(0.5, 0.5);
+  }
+  function breath(x, y) {   // aspira y exhala el mal aire
+    if (!can('malaire')) return;
+    claim('malaire', 3);
+    const t = ac.currentTime, dest = spot(place(x, y), zombieBus);
+    const n = noiseSrc(t, 2.9, 0.5), bp = filt('bandpass', 500, 1), g = ac.createGain();
+    bp.frequency.setValueAtTime(300, t);
+    bp.frequency.linearRampToValueAtTime(900, t + 0.7);
+    bp.frequency.linearRampToValueAtTime(400, t + 2.9);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.5, t + 0.6);
+    g.gain.linearRampToValueAtTime(1.1, t + 0.9);
+    g.gain.setValueAtTime(1.0, t + 2.6);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 2.9);
+    n.connect(bp).connect(g).connect(dest);
+    voice(t + 0.7, VOICES.deuda, 2.1, 1, 0.8, 0.9, dest);
+  }
+  function deudaRoar(x, y) {
+    if (!can('bramido')) return;
+    claim('bramido', 1.6);
+    voice(ac.currentTime, VOICES.deuda, 1.5, 1.2, 0.6, 1.4, spot(place(x, y)));
+  }
+  function emerge(x, y) {   // retumbo largo: algo sube desde los sótanos
+    if (!can('emerger')) return;
+    claim('emerger', 2.6);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const o = osc('sine', 30, t, 2.6);
+    o.frequency.linearRampToValueAtTime(48, t + 2.2);
+    const og = ac.createGain();
+    og.gain.setValueAtTime(0.0001, t);
+    og.gain.linearRampToValueAtTime(0.4, t + 1.8);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
+    o.connect(og).connect(dest);
+    const n = noiseSrc(t, 2.6, 0.3), lp = filt('lowpass', 300), g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.35, t + 2);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
+    n.connect(lp).connect(g).connect(dest);
+    voice(t + 1.9, VOICES.deuda, 1.4, 1, 0.7, 0.6, dest);
+  }
+  function sealed() {   // la deuda queda sellada: campana grave y acorde que se apaga
+    if (!can('sello')) return;
+    claim('sello', 4);
+    const t = ac.currentTime + 0.3;
+    bell(t, 110, 0.22, 5);
+    [220, 277, 330].forEach(f => {
+      const o = osc('triangle', f, t + 0.4, 3);
+      const g = ac.createGain();
+      env(g, t + 0.4, 0.6, 0.055, 2.4);
+      o.connect(g).connect(stingBus);
+    });
+  }
+
   // ---------- se llama en cada cuadro ----------
   let groanTimer = 1.5;
   function update(dt, zs) {
@@ -1686,7 +1923,7 @@ const Sfx = (() => {
     shot, hitFlesh, ricochet, step, groan, zombieDeath, swipe, playerHurt, roar, waveStart, playerDeath,
     enemyShot, cock, toss, fuse, explosion, dud, fireStart, crackle, wire, snag, lasso, lassoHit,
     flagPlant, flagBreak, hitWood, gallop, neigh, bugleWorld, vanish,
-    grunt, chant, rise, hoot, owlDown, interrupt,
+    grunt, chant, rise, hoot, owlDown, interrupt, macheteSwing, macheteHit, weaponTell, roofCollapse, land, forge, slam, breath, deudaRoar, emerge, sealed,
     _debug: () => ({ ac, out, stats })
   };
 })();
@@ -1877,15 +2114,21 @@ function planWave(w) {
     plan.event = 'jefe';
     plan.sub = ZTYPES.brujo.bossSub;
     budget *= 0.7;   // su escolta es más grande: necesita cadáveres que levantar
+  } else if (isDeudaWave(w)) {
+    plan.bosses.push('deuda');
+    plan.event = 'jefe';
+    plan.sub = ZTYPES.deuda.bossSub;
+    budget *= 0.45;
   } else if (isBoss) {
-    // Rotan los jefes; a partir de la sexta ronda de jefes salen de dos en dos
+    // Rotan los jefes. Desde la oleada 20 salen varios a la vez (3, 3, 4, 4, ... hasta 8)
     const k = w / DIFF.bossEvery - 1;
-    plan.bosses.push(BOSS_ORDER[k % BOSS_ORDER.length]);
-    if (k >= BOSS_ORDER.length) plan.bosses.push(BOSS_ORDER[(k + 2) % BOSS_ORDER.length]);
+    const n = bossCountFor(w);
+    for (let i = 0; i < n; i++) plan.bosses.push(BOSS_ORDER[(k + i) % BOSS_ORDER.length]);
     focus = ZTYPES[plan.bosses[0]].faction;
     plan.event = 'jefe';
-    plan.sub = 'Se levantó de su tumba con todo y escolta';
-    budget *= 0.55;
+    plan.sub = n > 1 ? `${n} jefes se levantaron de sus tumbas` : 'Se levantó de su tumba con todo y escolta';
+    // Con más jefes, menos escolta: si no, la oleada sería una pared
+    budget *= 0.55 / (1 + 0.25 * (n - 1));
   } else if (heat < DIFF.reliefHeat) {
     plan.event = 'respiro';
     plan.sub = 'Los muertos dan tregua… por ahora';
@@ -1936,9 +2179,9 @@ function planWave(w) {
     const j = plan.queue.findIndex(t => !ZTYPES[t].heavy);
     if (j > 0) [plan.queue[0], plan.queue[j]] = [plan.queue[j], plan.queue[0]];
   }
-  // El jefe sale después de la primera parte de su escolta
-  const at = Math.floor(plan.queue.length * 0.35);
-  plan.bosses.forEach((b, i) => plan.queue.splice(at + i * 3, 0, b));
+  // Los jefes salen después de la primera parte de su escolta, espaciados
+  const at = Math.floor(plan.queue.length * (plan.bosses.length > 2 ? 0.2 : 0.35));
+  plan.bosses.forEach((b, i) => plan.queue.splice(Math.min(plan.queue.length, at + i * 4), 0, b));
   return plan;
 }
 
@@ -1946,13 +2189,22 @@ function startWave() {
   wave++;
   wavePause = 0;
   waveCleared = false;
+  lastBossAt = -99;
   currentWave = planWave(wave);
   spawnQueue = currentWave.queue.slice();
   spawnTimer = wave === 1 ? 3 : 1.5;
   waveStats = { hits: 0, minHp: player.hp, start: survivalTime, spawnEnd: null };
   moonTarget = currentWave.event === 'eclipse' ? 0.38 : 1;
+  const holesNow = holesFor(wave);
+  let roofBroke = false;
+  while (roofHoles.length < holesNow) {
+    const animated = roofHoles.length === holesNow - 1 && wave % ROOF_EVERY === 0;
+    breakRoof(animated);
+    roofBroke = roofBroke || animated;
+  }
+  if (roofBroke) currentWave.sub = 'Se vino abajo un pedazo del techo: también caerán desde arriba';
   const ev = currentWave.event && EVENT_INFO[currentWave.event];
-  const evTitle = currentWave.event === 'jefe' ? currentWave.bosses.map(b => ZTYPES[b].name).join(' y ') : ev && ev.title;
+  const evTitle = currentWave.event === 'jefe' ? bossTitle(currentWave.bosses) : ev && ev.title;
   showBanner(ev ? `Oleada ${wave} · ${evTitle}` : `Oleada ${wave}`,
              currentWave.sub, ev ? 3.4 : 2.5, ev ? ev.color : '#c9d6ff');
   Sfx.waveStart(currentWave.event);
@@ -1972,8 +2224,13 @@ function evaluateWave() {
   else streak = Math.max(0, streak - 1);
 
   moonTarget = 1;
-  // Superar un evento o un jefe da recompensa
   const ev = currentWave && currentWave.event;
+  // Superar una oleada de jefe (las de cada 5) mejora el machete
+  if (ev === 'jefe' && wave % DIFF.bossEvery === 0 && upgradeMachete()) {
+    const L = MACHETE_LEVELS[macheteLevel];
+    addFloater(`Machete: ${L.nombre} (${L.mejora})`, player.x, player.y - 52, '#c9d6ff');
+  }
+  // Superar un evento o un jefe da recompensa
   if (ev && ev !== 'respiro') {
     const before = player.hp;
     player.hp = Math.min(PLAYER_HP, player.hp + 2);
@@ -2001,6 +2258,7 @@ function makeZombie(typeName, x, y, extra) {
     ...extra
   };
   zombies.push(z);
+  if (T.boss) lastBossAt = survivalTime;
   noteSighting(z.reg);
   return z;
 }
@@ -2073,7 +2331,7 @@ const EXPLOSION_R = 78;
 const FLAG_RADIUS = 150;
 
 function clearFactionStuff() {
-  for (const a of [eShots, thrown, bombs, hazards, flags, lassos, floaters, blasts, corpses, owls]) a.length = 0;
+  for (const a of [eShots, thrown, bombs, hazards, flags, lassos, floaters, blasts, corpses, owls, roofHoles, roofDust, gas, quakes]) a.length = 0;
 }
 function nearFlag(z) {
   for (const fl of flags) if (Math.hypot(fl.x - z.x, fl.y - z.y) < FLAG_RADIUS) return true;
@@ -2113,6 +2371,10 @@ function lightAt(x, y) {
     const p = worldToDoor(d, x, y);
     if (p.lx > 0 && p.lx < d.L && Math.abs(p.ly) < d.w / 2 + p.lx * 0.4) l = Math.max(l, d.s * moonLevel * (1 - p.lx / d.L));
   }
+  for (const h of roofHoles) {
+    const p = holePos(h);
+    l = Math.max(l, 0.55 * moonLevel * Math.max(0, 1 - Math.hypot(x - p.x, y - p.y) / p.r));
+  }
   if (Math.hypot(x - player.x, y - player.y) < 75) l = Math.max(l, 0.3);
   return l;
 }
@@ -2138,6 +2400,13 @@ function landPayload(p) {
   } else if (p.kind === 'antorcha') {
     hazards.push({ kind: 'fuego', x: p.tx, y: p.ty, r: 46, t: 5.5, max: 5.5, seed: Math.random() * 10 });
     Sfx.fireStart(p.tx, p.ty);
+  } else if (p.kind === 'muerto') {
+    const nz = spawnFree(p.type || 'federal', p.tx, p.ty) || spawnFree(p.type || 'federal', p.tx + 30, p.ty);
+    if (nz) nz.rise = 0.3;
+    quake(p.tx, p.ty, 40);
+    Sfx.land(p.tx, p.ty);
+    const d = Math.hypot(player.x - p.tx, player.y - p.ty);
+    if (state === 'playing' && d < 40) { player.kx += (player.x - p.tx) / (d || 1) * 240; player.ky += (player.y - p.ty) / (d || 1) * 240; }
   } else if (p.kind === 'alambre') {
     hazards.push({ kind: 'alambre', x: p.tx, y: p.ty, r: 36, t: 14, max: 14, seed: Math.random() * 10 });
     Sfx.wire(p.tx, p.ty);
@@ -2159,7 +2428,7 @@ function explode(b) {
       const ux = (z.x - b.x) / (d || 1), uy = (z.y - b.y) / (d || 1);
       z.kx += ux * 220 / z.mass;
       z.ky += uy * 220 / z.mass;
-      z.hp -= 3;
+      z.hp -= z.T.ai === 'deuda' ? 9 : 3;   // la dinamita sí le hace mella
       z.hitFlash = 0.12;
       if (z.hp <= 0) killZombie(z, ux, uy);
     }
@@ -2191,6 +2460,211 @@ function darkSpot(z, f) {
     if (score < bestScore) { bestScore = score; best = { x, y }; }
   }
   return best || { x: z.x, y: z.y };
+}
+
+// ---------- el techo se viene abajo ----------
+// Cada 10 oleadas cae un pedazo del techo en una esquina (máximo 4, en la oleada 40).
+// Por el hueco entra luz de luna, pero también caen muertos desde arriba.
+// No agrega enemigos: solo abre nuevas entradas para los que ya tocaban.
+const ROOF_EVERY = 10, ROOF_MAX = 4;
+const ROOF_ORDER = [0, 2, 1, 3];          // arriba-izq, abajo-der, arriba-der, abajo-izq
+const roofHoles = [];                      // { corner, seed, t }
+const roofDust = [];                       // escombro y polvo del derrumbe
+const ROOF_FALL = 0.65;                    // segundos que tarda en caer un muerto
+function holesFor(w) { return Math.min(ROOF_MAX, Math.floor(w / ROOF_EVERY)); }
+function holePos(h) {
+  const f = inner(), m = Math.min(f.w, f.h) * 0.15 + 20;
+  const right = h.corner === 1 || h.corner === 2, bottom = h.corner === 2 || h.corner === 3;
+  return { x: right ? f.x + f.w - m : f.x + m, y: bottom ? f.y + f.h - m : f.y + m, r: Math.min(f.w, f.h) * 0.13 };
+}
+function breakRoof(animated) {
+  const corner = ROOF_ORDER[roofHoles.length];
+  const h = { corner, seed: Math.random() * 100, t: animated ? 0 : 99 };
+  roofHoles.push(h);
+  if (!animated) return;
+  const p = holePos(h);
+  shake = Math.max(shake, 0.45);
+  Sfx.roofCollapse(p.x, p.y);
+  for (let i = 0; i < 26; i++) {
+    roofDust.push({ x: p.x + (Math.random() - 0.5) * p.r * 1.6, y: p.y + (Math.random() - 0.5) * p.r * 1.6,
+                    h: 120 + Math.random() * 160, vh: 0, life: 2.5, kind: Math.random() < 0.35 ? 'viga' : 'piedra',
+                    a: Math.random() * 6, s: 3 + Math.random() * 6 });
+  }
+  addFloater('¡Se vino abajo el techo!', p.x, p.y - 20, '#c9d6ff');
+  // Si el jugador estaba debajo, lo avienta (sin quitarle vida)
+  const dp = Math.hypot(player.x - p.x, player.y - p.y);
+  if (state === 'playing' && dp < p.r) {
+    const ux = (player.x - p.x) / (dp || 1), uy = (player.y - p.y) / (dp || 1);
+    player.kx += ux * 320; player.ky += uy * 320;
+  }
+}
+function updateRoof(dt) {
+  for (const h of roofHoles) h.t += dt;
+  for (let i = roofDust.length - 1; i >= 0; i--) {
+    const d = roofDust[i];
+    if (d.h > 0) { d.vh += 900 * dt; d.h = Math.max(0, d.h - d.vh * dt); }
+    d.life -= dt;
+    if (d.life <= 0) roofDust.splice(i, 1);
+  }
+}
+// Un muerto cae por un hueco del techo (nunca los jefes)
+function spawnFromRoof(h, typeName) {
+  const T = ZTYPES[typeName];
+  if (T.boss) return false;
+  const p = holePos(h);
+  const a = Math.random() * Math.PI * 2, rr = Math.random() * p.r * 0.5;
+  const x = p.x + Math.cos(a) * rr, y = p.y + Math.sin(a) * rr;
+  if (zombies.some(z => Math.hypot(z.x - x, z.y - y) < z.r + T.r + 4)) return false;
+  makeZombie(typeName, x, y, { fall: ROOF_FALL, intangible: true, angle: Math.atan2(player.y - y, player.x - x) });
+  Sfx.toss(x, y);
+  return true;
+}
+function landFromRoof(z) {
+  z.fall = 0;
+  z.intangible = false;
+  Sfx.land(z.x, z.y);
+  shake = Math.max(shake, 0.05);
+  for (let i = 0; i < 8; i++) {
+    const a = Math.random() * Math.PI * 2;
+    sparks.push({ x: z.x, y: z.y, vx: Math.cos(a) * 90, vy: Math.sin(a) * 90, life: 0.4, max: 0.4, dust: true });
+  }
+  // Si cae junto al jugador, lo empuja (la sombra en el piso avisa antes)
+  const d = Math.hypot(player.x - z.x, player.y - z.y);
+  if (state === 'playing' && d < z.r + player.radius + 12) {
+    const ux = (player.x - z.x) / (d || 1), uy = (player.y - z.y) / (d || 1);
+    player.kx += ux * 260; player.ky += uy * 260;
+  }
+}
+
+// ---------- La Deuda de la Silla ----------
+const gas = [];      // mal aire que exhala la Deuda
+const quakes = [];   // ondas de los golpes contra el piso
+// Sale del piso (los sótanos del Palacio dan al Mictlán), lejos del jugador
+function spawnDeuda() {
+  const f = inner();
+  const spots = [[0.5, 0.5], [0.3, 0.35], [0.7, 0.35], [0.3, 0.65], [0.7, 0.65]].map(([a, b]) => ({ x: f.x + f.w * a, y: f.y + f.h * b }));
+  spots.sort((a, b) => Math.hypot(b.x - player.x, b.y - player.y) - Math.hypot(a.x - player.x, a.y - player.y));
+  const p = spots[0];
+  for (const z of zombies) {   // los muertos que estén ahí se hacen a un lado
+    const d = Math.hypot(z.x - p.x, z.y - p.y);
+    if (d < 80) { z.kx += (z.x - p.x) / (d || 1) * 300; z.ky += (z.y - p.y) / (d || 1) * 300; }
+  }
+  const z = makeZombie('deuda', p.x, p.y, { rise: 2.4, riseMax: 2.4, angle: Math.atan2(player.y - p.y, player.x - p.x), stage: 0 });
+  addDecal({ type: 'grieta', x: p.x, y: p.y, r: 70, seed: Math.random() * 10 });
+  shake = Math.max(shake, 0.6);
+  Sfx.emerge(p.x, p.y);
+  return z;
+}
+function quake(x, y, r) { quakes.push({ x, y, r, t: 0.6 }); }
+
+function aiDeuda(z, dt, dist, toPlayer, f) {
+  const rage = 1 + 0.25 * z.stage;
+  z.slamCd = (z.slamCd ?? 2.5) - dt * rage;
+  z.breathCd = (z.breathCd ?? 5) - dt * rage;
+  z.throwCd = (z.throwCd ?? 4) - dt * rage;
+  // Al perder vida se le desprenden muertos y se enfurece
+  const ratio = z.hp / z.maxHp;
+  if ((z.stage < 1 && ratio < 0.66) || (z.stage < 2 && ratio < 0.33)) {
+    z.stage++;
+    z.speed *= 1.15;
+    // Tres muertos, probando varias posiciones alrededor por si alguna está ocupada
+    const a0 = Math.random() * Math.PI * 2;
+    for (let i = 0, made = 0; i < 16 && made < 3; i++) {
+      const a = a0 + i * 2.4, d = z.r + 25 + (i >> 2) * 22;
+      const base = ['federal', 'suriano', 'villista', 'colorado', 'carrancista'][Math.floor(Math.random() * 5)];
+      if (spawnFree(base, z.x + Math.cos(a) * d, z.y + Math.sin(a) * d)) made++;
+    }
+    addFloater('¡Se le desprenden los muertos!', z.x, z.y - z.r - 20, '#ff9a8a');
+    Sfx.deudaRoar(z.x, z.y);
+    shake = Math.max(shake, 0.3);
+  }
+  // Golpe contra el piso: aviso de un círculo rojo, luego estruendo
+  if (z.act === 'slam') {
+    z.actT -= dt;
+    if (!z.slammed && z.actT <= 0) {
+      z.slammed = true;
+      quake(z.slamX, z.slamY, 110);
+      shake = Math.max(shake, 0.4);
+      Sfx.slam(z.slamX, z.slamY);
+      if (state === 'playing' && Math.hypot(player.x - z.slamX, player.y - z.slamY) < 110 + player.radius * 0.5) {
+        hurtPlayer({ x: z.slamX, y: z.slamY, T: { knock: 2.2 } }, 2);
+      }
+      for (const o of zombies) {
+        if (o === z) continue;
+        const d = Math.hypot(o.x - z.slamX, o.y - z.slamY);
+        if (d < 110) { o.kx += (o.x - z.slamX) / (d || 1) * 260 / o.mass; o.ky += (o.y - z.slamY) / (d || 1) * 260 / o.mass; }
+      }
+    }
+    if (z.actT <= -0.6) z.act = null;
+    return z.angle;
+  }
+  // Mal aire: aspira y luego exhala un cono que frena y lastima
+  if (z.act === 'breath') {
+    z.actT -= dt;
+    if (z.actT < 0) {
+      z.breathDir = lerpAngle(z.breathDir, toPlayer, Math.min(1, dt * 0.7));
+      for (let i = 0; i < 3; i++) {
+        const a = z.breathDir + (Math.random() - 0.5) * 0.8, sp = 140 + Math.random() * 80;
+        gas.push({ x: z.x + Math.cos(z.breathDir) * z.r, y: z.y + Math.sin(z.breathDir) * z.r, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1.5, max: 1.5, s: 6 + Math.random() * 8 });
+      }
+      if (state === 'playing' && dist < 260 + z.r && Math.abs(angleDiff(toPlayer, z.breathDir)) < 0.45) {
+        player.slowT = Math.max(player.slowT, 0.4);
+        z.gasTick = (z.gasTick ?? 0.3) - dt;
+        if (z.gasTick <= 0) { hurtPlayer({ x: z.x, y: z.y, T: { knock: 0.2 } }, 1); z.gasTick = 0.8; }
+      }
+    }
+    if (z.actT <= -2.2) z.act = null;
+    return z.breathDir;
+  }
+  // Arranca un muerto de su cuerpo y te lo lanza
+  if (z.act === 'throw') {
+    z.actT -= dt;
+    if (z.actT <= 0) {
+      const base = ['federal', 'suriano', 'villista', 'colorado', 'carrancista'][Math.floor(Math.random() * 5)];
+      const a = Math.random() * Math.PI * 2;
+      throwPayload(z, 'muerto', player.x + Math.cos(a) * 50, player.y + Math.sin(a) * 50);
+      thrown[thrown.length - 1].type = base;
+      thrown[thrown.length - 1].dur *= 1.3;
+      z.act = null;
+    }
+    return toPlayer;
+  }
+  if (state !== 'playing' || z.attackT >= 0) return null;
+  if (z.slamCd <= 0 && dist < z.r + 120) {
+    z.act = 'slam'; z.actT = 1.0; z.slammed = false; z.slamCd = 5;
+    z.slamX = z.x + Math.cos(toPlayer) * (z.r + 45);
+    z.slamY = z.y + Math.sin(toPlayer) * (z.r + 45);
+    return toPlayer;
+  }
+  if (z.breathCd <= 0 && dist < 300) {
+    z.act = 'breath'; z.actT = 0.7; z.breathDir = z.angle; z.breathCd = 9;   // sale hacia donde mira y luego te busca, despacio
+    Sfx.breath(z.x, z.y);
+    return toPlayer;
+  }
+  if (z.throwCd <= 0 && zombies.length < 22) {
+    z.act = 'throw'; z.actT = 0.8; z.throwCd = 7;
+    return toPlayer;
+  }
+  return null;
+};
+function updateDeudaStuff(dt) {
+  for (let i = gas.length - 1; i >= 0; i--) {
+    const g = gas[i];
+    g.x += g.vx * dt; g.y += g.vy * dt; g.vx *= 0.97; g.vy *= 0.97; g.s += dt * 14;
+    if ((g.life -= dt) <= 0) gas.splice(i, 1);
+  }
+  for (let i = quakes.length - 1; i >= 0; i--) if ((quakes[i].t -= dt) <= 0) quakes.splice(i, 1);
+  // El fuego le hace daño: dicen que Zapata quiso quemar la silla
+  for (const z of zombies.slice()) {
+    if (z.T.ai !== 'deuda' || z.rise > 0) continue;
+    for (const h of hazards) {
+      if (h.kind === 'fuego' && Math.hypot(z.x - h.x, z.y - h.y) < h.r + z.r * 0.5) {
+        z.hp -= 6 * dt;
+        if (Math.random() < dt * 1.5) addFloater('¡Arde la silla!', z.x, z.y - z.r - 10, '#ffb070');
+        if (z.hp <= 0) { killZombie(z, 1, 0); break; }
+      }
+    }
+  }
 }
 
 // ---------- comportamientos ----------
@@ -2416,6 +2890,7 @@ const AI = {
     return null;
   }
 };
+AI.deuda = aiDeuda;
 
 // El Atarantado: quedó aturdido por un cañonazo. Deambula, se queda
 // meciéndose, a ratos te sigue y de pronto se lanza (con un temblor de aviso)
@@ -2632,11 +3107,23 @@ function updateZombies(dt, f) {
     spawnTimer -= dt;
     // Respeta el máximo de zombis vivos a la vez
     if (spawnTimer <= 0 && zombies.length < currentWave.cap) {
-      const want = currentWave.event === 'asedio' ? 3 : 1;
+      let want = currentWave.event === 'asedio' ? 3 : 1;
       let spawned = 0;
-      for (const i of shuffle(doors.map((_, k) => k))) {
+      // Puertas y, si ya se cayó el techo, sus huecos (cada hueco pesa un poco menos que una puerta)
+      if (spawnQueue[0] === 'deuda') { spawnDeuda(); spawnQueue.shift(); spawned++; }
+      // Con varios jefes, cada uno da unos segundos de margen tras el anterior (mientras siga vivo):
+      // se adelanta la escolta y, si ya no queda escolta, se espera
+      if (ZTYPES[spawnQueue[0]] && ZTYPES[spawnQueue[0]].boss && survivalTime - lastBossAt < BOSS_GAP && zombies.some(z => z.T.boss)) {
+        const k = spawnQueue.findIndex(t => !ZTYPES[t].boss);
+        if (k > 0) spawnQueue.unshift(spawnQueue.splice(k, 1)[0]);
+        else want = 0;
+      }
+      const points = doors.map((_, k) => ({ door: k }));
+      for (const h of roofHoles) if (Math.random() < 0.6) points.push({ hole: h });
+      for (const pt of shuffle(points)) {
         if (spawned >= want || !spawnQueue.length || zombies.length >= currentWave.cap) break;
-        if (spawnAt(i, spawnQueue[0])) { spawnQueue.shift(); spawned++; }
+        const ok = pt.hole ? spawnFromRoof(pt.hole, spawnQueue[0]) : spawnAt(pt.door, spawnQueue[0]);
+        if (ok) { spawnQueue.shift(); spawned++; }
       }
       // Si las entradas están ocupadas se reintenta en el siguiente cuadro
       if (spawned) spawnTimer = currentWave.interval * (want > 1 ? 2.2 : 1);
@@ -2656,6 +3143,7 @@ function updateZombies(dt, f) {
   for (const z of zombies) {
     z.hitFlash = Math.max(0, z.hitFlash - dt);
     z.haste = Math.max(0, z.haste - dt);
+    if (z.fall > 0) { z.fall -= dt; if (z.fall <= 0) landFromRoof(z); continue; }
     if (z.rise > 0) { z.rise -= dt; continue; }
     let target;
     if (z.entering) {
@@ -2675,32 +3163,42 @@ function updateZombies(dt, f) {
       if (special !== null && special !== undefined) {
         target = special;
       } else if (z.attackT >= 0) {
-        // Zarpazo en curso: encara al jugador y no avanza
-        target = toPlayer;
+        // Ataque en curso: encara al jugador y no avanza.
+        // Las armas fijan la dirección al soltar el golpe: si te haces a un lado, fallan
+        // (el aviso rojo deja de girar al fijarse: desde ahí se puede esquivar de lado)
+        const m = meleeOf(z);
+        if (z.T.turn || (m.cone && z.attackT >= m.windup * LOCK_AT)) target = z.lockDir;   // los gigantes pegan hacia donde miran
+        else { target = toPlayer; z.lockDir = toPlayer; }
         const prev = z.attackT;
         z.attackT += dt;
-        if (prev < ATTACK_WINDUP && z.attackT >= ATTACK_WINDUP) Sfx.swipe(z);
-        if (prev < ATTACK_HIT && z.attackT >= ATTACK_HIT &&
-            dist <= z.r + player.radius + HIT_RANGE) {
-          hurtPlayer(z);
+        if (prev < m.windup && z.attackT >= m.windup) Sfx.swipe(z);
+        if (prev < m.hitAt && z.attackT >= m.hitAt &&
+            dist <= z.r + player.radius + m.hit &&
+            (!m.cone || Math.abs(angleDiff(toPlayer, z.lockDir)) <= m.cone)) {
+          hurtPlayer(z, m.dmg);
         }
-        if (z.attackT >= ATTACK_TOTAL) {
+        if (z.attackT >= m.total) {
           z.attackT = -1;
           if (z.T.ai === 'hitrun') z.flee = 1.1 + Math.random() * 0.5;   // golpea y huye
         }
       } else {
         // Va directo al jugador, con un ligero bamboleo
         target = toPlayer + Math.sin(gameTime * 3 + z.phase) * 0.25;
-        // Se detiene al alcanzarlo para no temblar contra él
-        if (dist > z.r + player.radius + 2) {
+        // Se detiene al alcanzarlo (el del trinche, a la distancia de su arma)
+        const m = meleeOf(z);
+        if (dist > z.r + player.radius + (m.stopGap || 2)) {
           const spd = z.speed * speedMulZ(z);
-          z.x += Math.cos(target) * spd * dt;
-          z.y += Math.sin(target) * spd * dt;
+          const mv = z.T.turn ? z.angle : target;   // los de giro lento caminan hacia donde miran
+          z.x += Math.cos(mv) * spd * dt;
+          z.y += Math.sin(mv) * spd * dt;
         }
-        // Lo bastante cerca: inicia el zarpazo
-        if (z.attackCd <= 0 && dist <= z.r + player.radius + ATTACK_RANGE) {
+        // Lo bastante cerca: inicia el ataque
+        if (z.attackCd <= 0 && dist <= z.r + player.radius + m.start && state === 'playing' &&
+            (!z.T.turn || Math.abs(angleDiff(toPlayer, z.angle)) < (m.cone || 1))) {
           z.attackT = 0;
-          z.attackCd = 1.1 + Math.random() * 0.4;
+          z.lockDir = z.T.turn ? z.angle : toPlayer;
+          z.attackCd = m.cd[0] + Math.random() * (m.cd[1] - m.cd[0]);
+          if (m.weapon) Sfx.weaponTell(z, m.weapon);
         }
       }
     }
@@ -2709,7 +3207,7 @@ function updateZombies(dt, f) {
     z.y += z.ky * dt;
     z.kx *= damp;
     z.ky *= damp;
-    z.angle = lerpAngle(z.angle, target, Math.min(1, dt * 6));
+    z.angle = lerpAngle(z.angle, target, Math.min(1, dt * (z.T.turn || 6)));
   }
 
   resolveCollisions(f);
@@ -2739,8 +3237,10 @@ function resolveCollisions(f) {
   for (let it = 0; it < 8; it++) {
     for (let i = 0; i < zombies.length; i++) {
       const a = zombies[i];
+      if (a.fall > 0) continue;              // en el aire no choca con nadie
       for (let j = i + 1; j < zombies.length; j++) {
         const b = zombies[j];
+        if (b.fall > 0) continue;
         let dx = b.x - a.x, dy = b.y - a.y;
         const min = a.r + b.r;
         const d2 = dx * dx + dy * dy;
@@ -2761,6 +3261,7 @@ function resolveCollisions(f) {
       }
     }
     for (const z of zombies) {
+      if (z.fall > 0) continue;
       // El jugador no es empujado por los zombis
       let dx = z.x - player.x, dy = z.y - player.y;
       const min = z.r + player.radius;
@@ -2777,6 +3278,7 @@ function resolveCollisions(f) {
 
   // Si un zombi quedó acorralado contra un muro, el jugador es quien cede
   for (const z of zombies) {
+    if (z.fall > 0) continue;
     let dx = player.x - z.x, dy = player.y - z.y;
     const min = z.r + player.radius;
     const d2 = dx * dx + dy * dy;
@@ -2806,7 +3308,7 @@ function segmentCircle(x0, y0, x1, y1, cx, cy, r) {
   return t >= 0 && t <= 1 ? t : -1;
 }
 
-function damageZombie(z, b, hx, hy) {
+function damageZombie(z, b, hx, hy, base = 1) {
   const sp = Math.hypot(b.vx, b.vy) || 1;
   const ux = b.vx / sp, uy = b.vy / sp;
   let dmg = 1;
@@ -2816,6 +3318,17 @@ function damageZombie(z, b, hx, hy) {
     if (Math.random() < 0.25) addFloater('Escudo', z.x, z.y - z.r - 10, '#ff9a8a');
   }
   if (z.T.ai === 'sombra') z.reveal = 1.2;                     // el Jefe Suriano se deja ver al recibir un tiro
+  if (z.T.ai === 'deuda') {
+    // De frente la cubren los cuerpos; por la espalda está la silla.
+    // El machete corta parejo por donde entre.
+    if (base > 1) dmg = 1;
+    else {
+      const back = ux * Math.cos(z.angle) + uy * Math.sin(z.angle) > 0.35;
+      dmg = back ? 1.5 : 0.25;
+      if (back && Math.random() < 0.12) addFloater('¡La silla!', z.x, z.y - z.r - 10, '#ffd27a');
+      else if (!back && Math.random() < 0.06) addFloater('Ni lo siente', z.x, z.y - z.r - 10, '#b0b8c8');
+    }
+  }
   if (z.T.ai === 'brujo' && z.act === 'raise') {               // invocando, su bastón queda expuesto
     dmg = 2;
     z.channelDmg = (z.channelDmg || 0) + 1;
@@ -2823,11 +3336,11 @@ function damageZombie(z, b, hx, hy) {
   if (z.T.ai === 'atarantado' && z.daze && z.daze.mode !== 'lunge' && Math.random() < 0.5) {
     z.daze.mode = 'tell'; z.daze.t = 0.35;                     // un tiro lo despierta... a veces
   }
-  z.hp -= dmg;
+  z.hp -= dmg * base;
   z.hitFlash = 0.12;
-  Sfx.hitFlesh(hx, hy);
-  // Un disparo durante la preparación interrumpe el zarpazo
-  if (z.attackT >= 0 && z.attackT < ATTACK_HIT) {
+  if (base === 1) Sfx.hitFlesh(hx, hy);
+  // Un golpe durante la preparación interrumpe el ataque
+  if (z.attackT >= 0 && z.attackT < meleeOf(z).hitAt) {
     z.attackT = -1;
     z.attackCd = Math.max(z.attackCd, 0.35);
   }
@@ -2866,6 +3379,18 @@ function killZombie(z, ux, uy) {
     a: Math.random() * Math.PI * 2
   });
   if (z.T.boss) shake = 0.25;
+  if (z.T.ai === 'deuda') {
+    shake = 0.7;
+    gas.length = 0;
+    addDecal({ type: 'silla', x: z.x, y: z.y, a: Math.random() * 0.6 - 0.3 });
+    for (let i = 0; i < 6; i++) {
+      const a = i * 1.05;
+      corpses.push({ x: z.x + Math.cos(a) * 40, y: z.y + Math.sin(a) * 40, type: ['federal', 'suriano', 'villista', 'colorado', 'carrancista', 'federal'][i], angle: a, t: 0 });
+    }
+    player.hp = PLAYER_HP;
+    showBanner('La deuda quedó sellada', 'La silla sigue ahí. Ninguna ancla se destruye del todo.', 4, '#ffd27a');
+    Sfx.sealed();
+  }
 }
 
 function addDecal(d) {
@@ -2929,6 +3454,27 @@ function drawGore() {
       ctx.beginPath();
       ctx.arc(d.x + b0.dx - 2, d.y + b0.dy - 2, b0.r * 0.5, 0, Math.PI * 2);
       ctx.fill();
+    } else if (d.type === 'grieta') {
+      ctx.strokeStyle = 'rgba(10,8,6,0.8)';
+      ctx.lineWidth = 2.5;
+      for (let i = 0; i < 7; i++) {
+        let a = d.seed + i * 0.9, x = d.x, y = d.y;
+        ctx.beginPath(); ctx.moveTo(x, y);
+        for (let k = 1; k <= 4; k++) { a += Math.sin(d.seed * 3 + i + k) * 0.5; x += Math.cos(a) * d.r / 4; y += Math.sin(a) * d.r / 4; ctx.lineTo(x, y); }
+        ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(10,8,6,0.55)';
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r * 0.35, 0, Math.PI * 2); ctx.fill();
+    } else if (d.type === 'silla') {
+      // La silla presidencial, sola en el piso: no se destruye, solo se sella
+      ctx.save();
+      ctx.translate(d.x, d.y); ctx.rotate(d.a);
+      ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(-20, -18, 44, 40);
+      ctx.fillStyle = '#7a1a1a'; ctx.strokeStyle = '#c9a23a'; ctx.lineWidth = 2.5;
+      ctx.fillRect(-18, -16, 36, 32); ctx.strokeRect(-18, -16, 36, 32);
+      ctx.fillStyle = '#5e1212'; ctx.fillRect(-22, -20, 44, 9); ctx.strokeRect(-22, -20, 44, 9);
+      ctx.fillStyle = '#e8c860'; ctx.beginPath(); ctx.arc(0, -15.5, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
     } else if (d.type === 'scorch') {
       const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r);
       g.addColorStop(0, 'rgba(10,8,6,0.75)');
@@ -2987,6 +3533,46 @@ function drawFallenHat(d) {
 // ------------------------------------------------------------
 // Dibujo de lo que traen las facciones
 // ------------------------------------------------------------
+// Escombro del techo: vigas rotas y piedras bajo cada hueco
+function drawRoofRubble() {
+  for (const h of roofHoles) {
+    const p = holePos(h);
+    const appear = Math.min(1, h.t / 0.6);
+    ctx.save();
+    ctx.globalAlpha = appear;
+    for (let i = 0; i < 9; i++) {
+      const a = h.seed + i * 2.4, d = p.r * (0.15 + 0.55 * ((h.seed * 7 + i * 0.37) % 1));
+      const x = p.x + Math.cos(a) * d, y = p.y + Math.sin(a) * d;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(a * 1.7);
+      if (i % 3 === 0) {
+        ctx.fillStyle = '#4a3420'; ctx.strokeStyle = '#2a1c10'; ctx.lineWidth = 1;
+        ctx.fillRect(-16, -3.5, 32, 7); ctx.strokeRect(-16, -3.5, 32, 7);
+        ctx.fillStyle = '#2a1c10'; ctx.fillRect(12, -3.5, 4, 7);
+      } else {
+        ctx.fillStyle = i % 2 ? '#6f6a62' : '#5c5750';
+        ctx.beginPath(); ctx.moveTo(-6, -4); ctx.lineTo(5, -6); ctx.lineTo(7, 3); ctx.lineTo(-3, 6); ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    }
+    // Polvo asentado
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+    g.addColorStop(0, 'rgba(160,150,135,0.18)');
+    g.addColorStop(1, 'rgba(160,150,135,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  // Sombra que crece donde va a caer un muerto: es el aviso
+  for (const z of zombies) {
+    if (!(z.fall > 0)) continue;
+    const k = 1 - z.fall / ROOF_FALL;
+    ctx.fillStyle = `rgba(0,0,0,${0.2 + 0.4 * k})`;
+    ctx.beginPath(); ctx.ellipse(z.x, z.y, z.r * (0.6 + 0.8 * k), z.r * (0.5 + 0.6 * k), 0, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
 // En el piso (queda bajo la oscuridad): alambre, brasas, banderas y dinamita
 function drawFactionGround() {
   for (const h of hazards) {
@@ -3091,6 +3677,11 @@ function factionLights() {
   for (const fl of flags) punch(fl.x, fl.y, 46, 0.3);
   for (const bl of blasts) punch(bl.x, bl.y, 240, Math.min(1, bl.t / 0.3));
   for (const o of owls) punch(o.x, o.y, 34, 0.35);
+  for (let i = 0; i < gas.length; i += 4) punch(gas[i].x, gas[i].y, 40, 0.18 * gas[i].life / gas[i].max);
+  for (const h of roofHoles) {
+    const p = holePos(h);
+    punch(p.x, p.y, p.r * 1.3, 0.62 * moonLevel * Math.min(1, h.t / 1.2));
+  }
   for (const z of zombies) if (z.act === 'raise') {
     punch(z.x, z.y, 90, 0.4);
     for (const c of z.raiseTargets || []) punch(c.x, c.y, 50, 0.45);
@@ -3164,6 +3755,26 @@ function drawFactionEmissive() {
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(z.x, z.y, z.r + 20, 0, Math.PI * 2); ctx.fill();
   }
+  // Mal aire de la Deuda
+  for (const g of gas) {
+    const a = g.life / g.max;
+    const gr = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.s);
+    gr.addColorStop(0, `rgba(140,200,100,${0.22 * a})`);
+    gr.addColorStop(1, 'rgba(90,150,70,0)');
+    ctx.fillStyle = gr;
+    ctx.beginPath(); ctx.arc(g.x, g.y, g.s, 0, Math.PI * 2); ctx.fill();
+  }
+  // Motas de polvo flotando en la luz de cada hueco
+  for (const h of roofHoles) {
+    const p = holePos(h), k = Math.min(1, h.t / 1.2) * moonLevel;
+    for (let i = 0; i < 10; i++) {
+      const ph = h.seed + i * 1.7;
+      const x = p.x + Math.sin(gameTime * 0.3 + ph) * p.r * 0.7;
+      const y = p.y + ((gameTime * 12 + i * 37) % (p.r * 2)) - p.r;
+      ctx.fillStyle = `rgba(210,220,255,${0.35 * k})`;
+      ctx.beginPath(); ctx.arc(x, y, 1.2, 0, Math.PI * 2); ctx.fill();
+    }
+  }
   // Ojos de las lechuzas y de los levantados
   for (const o of owls) {
     const c = Math.cos(o.a), sn = Math.sin(o.a);
@@ -3191,12 +3802,36 @@ function drawFactionOverlay() {
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath(); ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
     ctx.save();
-    ctx.translate(x, y - hgt);
-    ctx.rotate(p.spin + p.t * 12);
-    if (p.kind === 'dinamita') { ctx.fillStyle = '#b3261e'; ctx.fillRect(-7, -2.5, 14, 5); }
+    ctx.translate(x, y - hgt * (p.kind === 'muerto' ? 2 : 1));
+    ctx.rotate(p.spin + p.t * (p.kind === 'muerto' ? 5 : 12));
+    if (p.kind === 'muerto') {
+      const T = ZTYPES[p.type || 'federal'], spr = SKINS[T.skin];
+      if (spr.ready) ctx.drawImage(spr.img, -ZOMBIE_SIZE / 2, -ZOMBIE_SIZE / 2, ZOMBIE_SIZE, ZOMBIE_SIZE);
+    } else if (p.kind === 'dinamita') { ctx.fillStyle = '#b3261e'; ctx.fillRect(-7, -2.5, 14, 5); }
     else if (p.kind === 'antorcha') { ctx.fillStyle = '#5a3a1e'; ctx.fillRect(-8, -1.8, 16, 3.6); }
     else { ctx.strokeStyle = '#9a9ea4'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.arc(0, 0, 3.5, 0, Math.PI * 2); ctx.stroke(); }
     ctx.restore();
+  }
+  for (const d of roofDust) {
+    const a = Math.min(1, d.life / 0.6);
+    if (d.h > 0) {
+      ctx.fillStyle = `rgba(0,0,0,${0.25 * a})`;
+      ctx.beginPath(); ctx.ellipse(d.x, d.y, d.s, d.s * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.translate(d.x, d.y - d.h);
+    ctx.rotate(d.a + d.h * 0.03);
+    const sc = 1 + d.h / 200;
+    ctx.scale(sc, sc);
+    ctx.fillStyle = d.kind === 'viga' ? '#4a3420' : '#77716a';
+    if (d.kind === 'viga') ctx.fillRect(-d.s * 2, -d.s * 0.4, d.s * 4, d.s * 0.8);
+    else { ctx.beginPath(); ctx.arc(0, 0, d.s * 0.6, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+    if (d.h === 0 && d.life > 1.6) {   // nube de polvo al tocar el piso
+      ctx.fillStyle = `rgba(170,160,145,${0.12 * (d.life - 1.6)})`;
+      ctx.beginPath(); ctx.arc(d.x, d.y, 14 + (2.5 - d.life) * 30, 0, Math.PI * 2); ctx.fill();
+    }
   }
   for (const o of owls) {
     ctx.save();
@@ -3307,13 +3942,21 @@ function drawZombies() {
     const sc = z.T.scale;
     const size = ZOMBIE_SIZE * sc;
     ctx.save();
-    ctx.globalAlpha = zombieAlpha(z) * (z.rise > 0 ? 1 - z.rise / 0.7 * 0.8 : 1);
+    ctx.globalAlpha = zombieAlpha(z) * (z.rise > 0 ? Math.max(0.05, 1 - z.rise / (z.riseMax || 0.7) * 0.8) : 1);
     ctx.translate(z.x, z.y);
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.beginPath();
-    if (z.T.ai === 'jinete') ctx.ellipse(3, 5, 20 * sc, 12 * sc, z.angle, 0, Math.PI * 2);
-    else ctx.ellipse(3 * sc, 5 * sc, 17 * sc, 15 * sc, 0, 0, Math.PI * 2);
-    ctx.fill();
+    if (z.fall > 0) {
+      // Cayendo del techo: más grande (más cerca de la vista) y sin sombra propia
+      const k = z.fall / ROOF_FALL;
+      ctx.translate(-k * 10, -k * 26);
+      ctx.scale(1 + 0.7 * k, 1 + 0.7 * k);
+      ctx.rotate(Math.sin(z.fall * 9) * 0.3 * k);
+    } else {
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      if (z.T.ai === 'jinete') ctx.ellipse(3, 5, 20 * sc, 12 * sc, z.angle, 0, Math.PI * 2);
+      else ctx.ellipse(3 * sc, 5 * sc, 17 * sc, 15 * sc, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.rotate(z.angle);
     if (!z.T.noArms) drawArms(z);
     if (spr.ready) {
@@ -3373,13 +4016,70 @@ function drawBossBar() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   ctx.fillStyle = '#ffd27a';
-  ctx.fillText([...new Set(bosses.map(z => z.T.name))].join(' y '), W / 2, y - 6);
+  ctx.fillText(bosses.length > 2 ? `${bosses.length} jefes` : [...new Set(bosses.map(z => z.T.name))].join(' y '), W / 2, y - 6);
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
   ctx.fillRect(x - 2, y - 2, w + 4, 12);
   ctx.fillStyle = 'rgba(255,255,255,0.1)';
   ctx.fillRect(x, y, w, 8);
   ctx.fillStyle = '#c8402f';
   ctx.fillRect(x, y, w * hp / max, 8);
+}
+
+// Avisos de la Deuda: círculo donde caerá su golpe y resplandor al aspirar
+function drawDeudaWarnings() {
+  for (const z of zombies) {
+    if (z.T.ai !== 'deuda') continue;
+    if (z.act === 'slam' && !z.slammed) {
+      const k = 1 - z.actT / 1.0;
+      ctx.fillStyle = `rgba(220,40,30,${0.1 + 0.25 * k})`;
+      ctx.strokeStyle = `rgba(255,80,60,${0.4 + 0.4 * k})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(z.slamX, z.slamY, 110, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(z.slamX, z.slamY, 110 * k, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (z.act === 'breath' && z.actT > 0) {
+      ctx.strokeStyle = `rgba(150,220,120,${0.5 * (1 - z.actT / 0.7)})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(z.x, z.y);
+      ctx.arc(z.x, z.y, 260 + z.r, z.breathDir - 0.45, z.breathDir + 0.45);
+      ctx.closePath(); ctx.stroke();
+    }
+  }
+  for (const q of quakes) {
+    const k = 1 - q.t / 0.6;
+    ctx.strokeStyle = `rgba(190,175,150,${0.6 * (1 - k)})`;
+    ctx.lineWidth = 6 * (1 - k) + 1;
+    ctx.beginPath(); ctx.arc(q.x, q.y, q.r * (0.3 + 0.9 * k), 0, Math.PI * 2); ctx.stroke();
+  }
+}
+
+// Abanico (machete) o franja (trinche) que avisa el alcance antes del golpe
+function drawWeaponWarnings() {
+  for (const z of zombies) {
+    if (!z.T.melee || z.attackT < 0) continue;
+    const m = MELEE[z.T.melee];
+    if (z.attackT > m.hitAt) continue;
+    const k = Math.min(1, z.attackT / m.windup);
+    const reach = z.r + player.radius + m.hit;
+    const dir = z.attackT >= m.windup * LOCK_AT ? z.lockDir : z.angle;
+    ctx.save();
+    ctx.translate(z.x, z.y);
+    ctx.rotate(dir);
+    ctx.fillStyle = `rgba(220,40,30,${0.08 + 0.2 * k})`;
+    ctx.strokeStyle = `rgba(255,80,60,${0.25 + 0.4 * k})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    if (m.weapon === 'machete') {
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, reach, -m.cone, m.cone);
+      ctx.closePath();
+    } else {
+      ctx.rect(z.r * 0.6, -7, reach - z.r * 0.6, 14);
+    }
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
 }
 
 // Franja roja en el piso que avisa hacia dónde va a embestir el Coronel
@@ -3454,16 +4154,17 @@ function armPose(z) {
   if (z.charge === 'go') return { ext: 7, spread: 0, swing: 0.25 };
   const t = z.attackT;
   if (t < 0) return { ext: 0, spread: 0, swing: 0 };
-  if (t < ATTACK_WINDUP) {
-    const w = t / ATTACK_WINDUP;
-    return { ext: -5 * w, spread: w, swing: 0 };
+  const m = meleeOf(z);
+  if (t < m.windup) {
+    const w = t / m.windup;
+    return { ext: -5 * w, spread: w, swing: 0, prog: 0 };
   }
-  if (t < ATTACK_WINDUP + ATTACK_STRIKE) {
-    const u = (t - ATTACK_WINDUP) / ATTACK_STRIKE;
-    return { ext: -5 + 14 * u, spread: 1 - u, swing: u };
+  if (t < m.windup + m.strike) {
+    const u = (t - m.windup) / m.strike;
+    return { ext: -5 + 14 * u, spread: 1 - u, swing: u, prog: u };
   }
-  const v = Math.min(1, (t - ATTACK_WINDUP - ATTACK_STRIKE) / (ATTACK_TOTAL - ATTACK_WINDUP - ATTACK_STRIKE));
-  return { ext: 9 * (1 - v), spread: 0, swing: 1 - v };
+  const v = Math.min(1, (t - m.windup - m.strike) / (m.total - m.windup - m.strike));
+  return { ext: 9 * (1 - v), spread: 0, swing: 1 - v, prog: 1 };
 }
 
 function drawArms(z, g = ctx) {
@@ -3494,7 +4195,12 @@ function drawArms(z, g = ctx) {
     g.lineTo(hx, hy);
     g.stroke();
 
-    // Garras
+    // Garras (el gigante tiene manazas: a esa escala las garras parecen un trinche)
+    if (z.T.scale > 2.5) {
+      g.fillStyle = ZOMBIE_SKIN;
+      g.beginPath(); g.arc(hx + cx * 2 * k, hy + cy * 2 * k, 4.2 * k, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = '#3c4a33'; g.lineWidth = 0.8 * k; g.stroke();
+    } else {
     g.strokeStyle = '#3c4a33';
     g.lineWidth = 1.2 * k;
     for (const f of [-1, 0, 1]) {
@@ -3504,22 +4210,199 @@ function drawArms(z, g = ctx) {
       g.lineTo(fx + cx * 3 * k, fy + cy * 3 * k);
       g.stroke();
     }
+    }
 
     // Sangre en las manos
     g.fillStyle = '#7a0a0a';
     g.beginPath();
     g.arc(hx - cx * 1.5 * k, hy - cy * 1.5 * k, 1.8 * k, 0, Math.PI * 2);
     g.fill();
+
+    // Arma en la mano derecha
+    if (side === 1 && z.T.melee && MELEE[z.T.melee].weapon) drawEnemyWeapon(g, z, hx, hy, k, pose);   // el gigante pega a mano limpia
+  }
+}
+
+// Machete o trinche en la mano del zombi (marco local: +X hacia el frente)
+function drawEnemyWeapon(g, z, hx, hy, k, pose) {
+  const w = MELEE[z.T.melee].weapon;
+  g.save();
+  g.translate(hx, hy);
+  if (w === 'machete') {
+    // En reposo apunta al frente; al prepararse se echa atrás y en el tajo barre hacia dentro
+    let a = 0.35;
+    if (z.attackT >= 0) a = pose.prog === 0 ? 0.35 + 1.5 * pose.spread : 1.85 - 2.6 * pose.prog;
+    g.rotate(a);
+    g.fillStyle = '#4a2e14';
+    g.fillRect(-2 * k, -1.4 * k, 6 * k, 2.8 * k);
+    g.fillStyle = '#b9bec4';
+    g.strokeStyle = '#4d5258';
+    g.lineWidth = 0.8 * k;
+    g.beginPath();
+    g.moveTo(4 * k, -1.6 * k);
+    g.lineTo(24 * k, -2.4 * k);
+    g.quadraticCurveTo(28 * k, 0, 24 * k, 2.2 * k);
+    g.lineTo(4 * k, 1.6 * k);
+    g.closePath();
+    g.fill(); g.stroke();
+    g.fillStyle = '#7a0a0a';
+    g.fillRect(16 * k, -1.2 * k, 5 * k, 1.6 * k);
+  } else {
+    // Trinche: palo largo con tres dientes; en el picotazo avanza
+    const push = z.attackT >= 0 ? pose.ext * 1.4 : 0;
+    g.strokeStyle = '#6b4a26';
+    g.lineWidth = 2.2 * k;
+    g.beginPath(); g.moveTo((-18 + push) * k, 0); g.lineTo((22 + push) * k, 0); g.stroke();
+    g.strokeStyle = '#8d9196';
+    g.lineWidth = 1.3 * k;
+    g.beginPath();
+    g.moveTo((22 + push) * k, -4 * k); g.lineTo((22 + push) * k, 4 * k);
+    for (const o of [-4, 0, 4]) { g.moveTo((22 + push) * k, o * k); g.lineTo((31 + push) * k, o * k); }
+    g.stroke();
+  }
+  g.restore();
+}
+
+// ------------------------------------------------------------
+// Machete del jugador (clic derecho o Espacio)
+// Pega a todos los que estén en el abanico, con doble daño, los empuja
+// y les corta el golpe. Para que no sea un botón de "escapar" infinito,
+// tarda en volver a usarse y mientras se blande no se puede disparar.
+// ------------------------------------------------------------
+const PMACHETE_BASE = { cooldown: 4, swing: 0.22, range: 72, arc: 2.0, dmg: 2, knock: 120, maxTargets: 3 };
+const PMACHETE = { ...PMACHETE_BASE };
+let macheteCd = 0, macheteT = 0, macheteDir = 0, macheteReady = 0;
+
+// Cada oleada de jefe superada (5, 10, 15... ) mejora el machete un nivel: el máximo llega en la 40,
+// cuando el techo ya está roto del todo. El Tlacatecolo no cuenta: ese ya da su +2 de vida.
+// Las mejoras se alternan para que crezca parejo y no se dispare un solo número.
+const MACHETE_LEVELS = [
+  { nombre: 'Machete de campo' },
+  { nombre: 'Afilado',          mejora: '+0.5 de daño',            dmg: 0.5 },
+  { nombre: 'Bien templado',    mejora: 'alcanza a 4',             maxTargets: 1 },
+  { nombre: 'De buen acero',    mejora: 'recarga en 3.5 s',        cooldown: -0.5 },
+  { nombre: 'Curtido',          mejora: '+0.5 de daño y más largo', dmg: 0.5, range: 8 },
+  { nombre: 'Pesado',           mejora: 'alcanza a 5 y abre más',  maxTargets: 1, arc: 0.3 },
+  { nombre: 'Veterano',         mejora: 'recarga en 3 s',          cooldown: -0.5 },
+  { nombre: 'Implacable',       mejora: '+0.5 de daño',            dmg: 0.5 },
+  { nombre: 'Filo de obsidiana', mejora: 'alcanza a 6, más largo y empuja más', maxTargets: 1, range: 8, knock: 40 }
+];
+const MACHETE_MAX = MACHETE_LEVELS.length - 1;
+let macheteLevel = 0;
+function setMacheteLevel(n) {
+  macheteLevel = clamp(n, 0, MACHETE_MAX);
+  Object.assign(PMACHETE, PMACHETE_BASE);
+  for (let i = 1; i <= macheteLevel; i++) {
+    const L = MACHETE_LEVELS[i];
+    for (const k of ['dmg', 'maxTargets', 'cooldown', 'range', 'arc', 'knock']) if (L[k]) PMACHETE[k] += L[k];
+  }
+}
+function upgradeMachete() {
+  if (macheteLevel >= MACHETE_MAX) return false;
+  setMacheteLevel(macheteLevel + 1);
+  macheteCd = 0;
+  Sfx.forge();
+  return true;
+}
+
+function swingMachete() {
+  if (state !== 'playing' || macheteCd > 0) return;
+  macheteCd = PMACHETE.cooldown;
+  macheteT = PMACHETE.swing;
+  macheteDir = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+  player.angle = macheteDir;
+  fireCooldown = Math.max(fireCooldown, PMACHETE.swing);
+  Sfx.macheteSwing();
+  const inArc = (x, y, r) => {
+    const dx = x - player.x, dy = y - player.y, d = Math.hypot(dx, dy);
+    if (d - r > PMACHETE.range) return false;
+    // Lo que está pegado al cuerpo siempre recibe el tajo
+    return d < r + player.radius + 6 || Math.abs(angleDiff(Math.atan2(dy, dx), macheteDir)) <= PMACHETE.arc / 2;
+  };
+  let hits = 0;
+  // Alcanza a los 3 más cercanos dentro del abanico (no a una multitud entera)
+  const targets = zombies.filter(z => !z.intangible && !(z.rise > 0) && inArc(z.x, z.y, z.r))
+    .sort((a, b) => Math.hypot(a.x - player.x, a.y - player.y) - Math.hypot(b.x - player.x, b.y - player.y))
+    .slice(0, PMACHETE.maxTargets);
+  for (const z of targets) {
+    const dx = z.x - player.x, dy = z.y - player.y, d = Math.hypot(dx, dy) || 1;
+    const ux = dx / d, uy = dy / d;
+    damageZombie(z, { vx: ux, vy: uy }, z.x - ux * z.r * 0.6, z.y - uy * z.r * 0.6, PMACHETE.dmg);
+    if (zombies.includes(z)) {
+      z.kx += ux * PMACHETE.knock / z.mass;
+      z.ky += uy * PMACHETE.knock / z.mass;
+    }
+    hits++;
+  }
+  // Corta lechuzas, golpea banderas y suelta la reata si te tienen lazado
+  for (let i = owls.length - 1; i >= 0; i--) if (inArc(owls[i].x, owls[i].y, 8)) { owls.splice(i, 1); hits++; }
+  for (const fl of flags) if (inArc(fl.x, fl.y, 10)) { fl.hp -= PMACHETE.dmg; fl.hit = 0.12; hits++; }
+  for (let i = lassos.length - 1; i >= 0; i--) {
+    const l = lassos[i];
+    if (l.state === 'pull' || inArc(l.x, l.y, 8)) {
+      lassos.splice(i, 1);
+      l.owner.lassoOut = false;
+      if (l.state === 'pull') { player.pullT = 0; player.slowT = 0; addFloater('¡Reata cortada!', player.x, player.y - 34, '#e8c48a'); }
+    }
+  }
+  if (hits) { Sfx.macheteHit(); shake = Math.max(shake, 0.06); }
+}
+
+function updateMachete(dt) {
+  macheteT = Math.max(0, macheteT - dt);
+  if (state !== 'playing') return;
+  if (macheteCd > 0) {
+    macheteCd -= dt;
+    if (macheteCd <= 0) { macheteCd = 0; macheteReady = 0.35; }
+  }
+  macheteReady = Math.max(0, macheteReady - dt);
+}
+
+// Tajo (estela y hoja) y anillo de recarga alrededor del jugador
+function drawMachete() {
+  if (state === 'menu') return;
+  if (macheteT > 0) {
+    const p = 1 - macheteT / PMACHETE.swing;
+    const a0 = macheteDir - PMACHETE.arc / 2, a1 = a0 + PMACHETE.arc * p;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = macheteLevel >= MACHETE_MAX ? `rgba(110,230,200,${0.55 * (1 - p * 0.6)})` : `rgba(230,235,245,${0.5 * (1 - p * 0.6)})`;
+    ctx.lineWidth = 14 + macheteLevel;
+    ctx.beginPath(); ctx.arc(player.x, player.y, PMACHETE.range - 14, a0, a1); ctx.stroke();
+    ctx.restore();
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.rotate(a1);
+    const obs = macheteLevel >= MACHETE_MAX;
+    ctx.fillStyle = obs ? '#1d2a26' : macheteLevel >= 4 ? '#e2e6ea' : '#c9ced4';
+    ctx.strokeStyle = obs ? '#4fd1b0' : '#555a60'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(22, -2.5); ctx.lineTo(PMACHETE.range - 4, -3.5); ctx.quadraticCurveTo(PMACHETE.range + 2, 0, PMACHETE.range - 4, 3); ctx.lineTo(22, 2.5);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#4a2e14'; ctx.fillRect(14, -2, 9, 4);
+    ctx.restore();
+  }
+  if (state !== 'playing') return;
+  if (macheteCd > 0) {
+    const k = 1 - macheteCd / PMACHETE.cooldown;
+    ctx.strokeStyle = 'rgba(200,210,230,0.35)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(player.x, player.y, 24, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k); ctx.stroke();
+  } else if (macheteReady > 0) {
+    ctx.strokeStyle = `rgba(220,230,255,${macheteReady / 0.35 * 0.8})`;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(player.x, player.y, 24 + (1 - macheteReady / 0.35) * 8, 0, Math.PI * 2); ctx.stroke();
   }
 }
 
 // ------------------------------------------------------------
 // Vida del jugador, daño, muerte y reinicio
 // ------------------------------------------------------------
-function hurtPlayer(z) {
+function hurtPlayer(z, dmg = 1) {
   if (state !== 'playing' || player.invuln > 0) return;
 
-  player.hp = Math.max(0, player.hp - 1);
+  player.hp = Math.max(0, player.hp - dmg);
+  if (dmg > 1) addFloater(`-${dmg}`, player.x, player.y - 34, '#ff8a7a');
   waveStats.hits++;
   if (player.hp > 0) Sfx.playerHurt();
   player.invuln = INVULN_TIME;     // evita que varios zombis te golpeen en el mismo instante
@@ -3535,7 +4418,7 @@ function hurtPlayer(z) {
 
   // Empujón: si detrás del jugador hay otro zombi, se reduce mucho
   // para no lanzarlo contra la multitud ni dejarlo rebotando entre ellos
-  let force = KNOCKBACK * z.T.knock;   // tanques y jefe empujan más
+  let force = KNOCKBACK * z.T.knock * (z.T && z.T.melee ? (MELEE[z.T.melee].knock || 1) : 1);   // tanques, jefes y trinche empujan más
   for (const o of zombies) {
     if (o === z) continue;
     const ox = o.x - player.x, oy = o.y - player.y;
@@ -3577,6 +4460,8 @@ function killPlayer() {
 function resetWorld() {
   zombies.length = 0;
   clearFactionStuff();
+  macheteCd = 0; macheteT = 0; macheteReady = 0;
+  setMacheteLevel(0);
   lastFocus = null;
   bullets.length = 0;
   sparks.length = 0;
@@ -3613,7 +4498,13 @@ function startGame() {
   // Para probar: abrir el juego con ?oleada=10 empieza directo en esa oleada
   try {
     const q = parseInt(new URLSearchParams(location.search).get('oleada'), 10);
-    if (q > 1) wave = Math.min(q, 99) - 1;
+    if (q > 1) {
+      wave = Math.min(q, 99) - 1;
+      // y con el machete mejorado como si hubiera superado las oleadas de jefe anteriores
+      let jefes = 0;
+      for (let w = 1; w <= wave; w++) if (w % DIFF.bossEvery === 0) jefes++;
+      setMacheteLevel(Math.min(MACHETE_MAX, jefes));
+    }
   } catch (e) { /* sin parámetros */ }
   startWave();
 }
@@ -3785,6 +4676,7 @@ addEventListener('keydown', e => {
     return;
   }
   if (state === 'paused') return;
+  if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) swingMachete(); return; }
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
     keys.add(e.code);
     e.preventDefault();
@@ -3799,7 +4691,14 @@ canvas.addEventListener('mousemove', e => {
   mouse.x = e.clientX;
   mouse.y = e.clientY;
 });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('mousedown', e => {
+  if (e.button === 2 && state === 'playing') {
+    mouse.x = e.clientX; mouse.y = e.clientY;
+    mouse.right = true;
+    swingMachete();
+    return;
+  }
   if (e.button !== 0 || state !== 'playing') return;
   mouse.x = e.clientX;
   mouse.y = e.clientY;
@@ -3810,7 +4709,7 @@ canvas.addEventListener('mousedown', e => {
     fireCooldown = FIRE_RATE;
   }
 });
-addEventListener('mouseup', e => { if (e.button === 0) mouse.down = false; });
+addEventListener('mouseup', e => { if (e.button === 0) mouse.down = false; if (e.button === 2) mouse.right = false; });
 
 // ------------------------------------------------------------
 // Disparos y partículas
@@ -3921,6 +4820,9 @@ function update(dt) {
   // Zombis (aparición, persecución, ataques y colisiones)
   updateZombies(dt, f);
   updateFactionStuff(dt, f);
+  updateMachete(dt);
+  updateRoof(dt);
+  updateDeudaStuff(dt);
   Sfx.update(dt, zombies);
 
   // Apuntar al cursor
@@ -4055,6 +4957,7 @@ function draw(t) {
   // Sangre en el piso y zombis (también quedan bajo la oscuridad)
   drawGore();
   drawCorpses();
+  drawRoofRubble();
   drawFactionGround();
   drawZombies();
 
@@ -4140,6 +5043,16 @@ function draw(t) {
   ctx.arc(moon.x, moon.y, moon.r * breathe, 0, Math.PI * 2);
   ctx.fill();
 
+  // Tinte azulado bajo los huecos del techo
+  for (const h of roofHoles) {
+    const p = holePos(h), k = Math.min(1, h.t / 1.2) * ml;
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 1.3);
+    g.addColorStop(0, `rgba(165,190,255,${0.14 * k})`);
+    g.addColorStop(1, 'rgba(165,190,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 1.3, 0, Math.PI * 2); ctx.fill();
+  }
+
   // Tinte azulado de la luz de las puertas
   for (const d of doors) {
     doorFan(ctx, d, 0.35, c => {
@@ -4152,6 +5065,8 @@ function draw(t) {
 
   ctx.globalCompositeOperation = 'source-over';
   drawChargeWarnings();
+  drawWeaponWarnings();
+  drawDeudaWarnings();
   drawZombieHealth();
   if (state === 'playing') drawPlayerHealth();
 
@@ -4179,7 +5094,7 @@ function draw(t) {
 
   for (const s of sparks) {
     const a = s.life / s.max;
-    ctx.strokeStyle = s.mist ? `rgba(110,230,200,${a * 0.8})` : `rgba(255,200,110,${a})`;
+    ctx.strokeStyle = s.mist ? `rgba(110,230,200,${a * 0.8})` : s.dust ? `rgba(170,160,145,${a * 0.7})` : `rgba(255,200,110,${a})`;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(s.x, s.y);
@@ -4200,6 +5115,7 @@ function draw(t) {
   }
 
   ctx.globalCompositeOperation = 'source-over';
+  drawMachete();
   drawFactionOverlay();
   drawVignette();
 
@@ -4212,6 +5128,8 @@ function draw(t) {
 // ------------------------------------------------------------
 const hudKeys = [...document.querySelectorAll('#hud kbd[data-k]')];
 const hudMouse = document.getElementById('hud-raton');
+const hudRight = hudMouse.querySelector('.der');
+const hudMacheteTxt = document.getElementById('hud-machete-txt');
 
 const stWave = document.getElementById('st-wave');
 const stLeft = document.getElementById('st-left');
@@ -4347,6 +5265,7 @@ const FACTION_NOTES = {
 // Desde cuándo aparece cada tipo (se calcula de ROSTER y BOSS_ORDER para no desfasarse)
 function apareceDe(tipo) {
   if (tipo === 'brujo') return `Oleada ${BRUJO_FIRST}, luego cada ${BRUJO_EVERY}`;
+  if (tipo === 'deuda') return `Oleada ${DEUDA_FIRST}, luego cada ${DEUDA_EVERY}`;
   const bi = BOSS_ORDER.indexOf(tipo);
   if (bi >= 0) return `Oleada ${(bi + 1) * DIFF.bossEvery}`;
   const r = ROSTER.find(x => x.t === tipo);
@@ -4415,6 +5334,13 @@ const REGISTRO = [
                 'Llega corriendo, tira un zarpazo y huye a la oscuridad antes de que uno reaccione. Luego vuelve.'],
         tactica: 'Golpea y huye',
         consejo: 'Tres tiros. Dispárele cuando dé la vuelta para huir: todavía está cerca y no se cuida.' },
+      { id: 'machetero', tipo: 'machetero', faccion: 'zapatistas',
+        nombre: 'El Machetero', volanta: 'Campesino suriano',
+        titular: 'Llegó con el machete de la zafra',
+        texto: ['A falta de fusiles, muchos surianos se fueron a la bola con lo que tenían a la mano. En Morelos se vivía de la caña, y el machete era herramienta de todos los días.',
+                'Su machete llega al doble que un zarpazo y corta hondo: un tajo suyo quita dos de vida. Antes de tirarlo levanta el brazo y se oye el filo.'],
+        tactica: 'Tajo de doble alcance que quita 2 de vida',
+        consejo: 'Cuando levante el machete y aparezca el abanico rojo, salga de su alcance: el tajo va hacia donde usted estaba. Cinco tiros.' },
       { id: 'jefesuriano', tipo: 'jefe', faccion: 'zapatistas', jefe: true,
         nombre: 'El Jefe Suriano', volanta: 'Jefe de los caídos del sur',
         titular: 'Nadie lo ve llegar',
@@ -4488,6 +5414,13 @@ const REGISTRO = [
                 'Lanza antorchas que dejan el piso ardiendo unos segundos. Pisar las brasas quema.'],
         tactica: 'Deja fuego en el piso',
         consejo: 'No cruce las llamas. Su antorcha lo delata en la oscuridad: aproveche para tirarle de lejos.' },
+      { id: 'jornalero', tipo: 'jornalero', faccion: 'colorados',
+        nombre: 'El Jornalero', volanta: 'Peón de las haciendas de La Laguna',
+        titular: 'Un trinche para mantener a raya',
+        texto: ['Muchos colorados salieron de las haciendas de La Laguna, tierra de algodón. Éste se trajo el trinche con que trabajaba el campo.',
+                'Pica desde lejos: su trinche llega tres veces más lejos que un zarpazo, y prefiere quedarse a esa distancia. Pero solo pica en línea recta.'],
+        tactica: 'Picotazo de triple alcance, solo en línea recta',
+        consejo: 'Hágase a un lado cuando apunte el trinche: fuera de la franja roja no lo alcanza. Cinco tiros.' },
       { id: 'cabecilla', tipo: 'cabecilla', faccion: 'colorados', jefe: true,
         nombre: 'El Cabecilla Colorado', volanta: 'Jefe de los caídos de la bandera roja',
         titular: 'Mientras ondee su bandera, no cae',
@@ -4502,16 +5435,31 @@ const REGISTRO = [
         texto: ['Nadie sabe de qué bando es, porque no es de ninguno. Viste capa de plumas, máscara de búho y un bastón de obsidiana que brilla cuando canta.',
                 'Huye si uno se le acerca. Canta sobre los cuerpos tirados y los levanta, de tres en tres, más débiles pero de pie otra vez; los que levanta ya no vuelven a pararse. Sus lechuzas persiguen a los vivos.'],
         tactica: 'Levanta cadáveres, suelta lechuzas y huye',
-        consejo: 'Mientras canta recibe el doble de daño, y cuatro tiros le rompen el conjuro. Derribe las lechuzas de un tiro. Cincuenta tiros.' }
+        consejo: 'Mientras canta recibe el doble de daño, y cuatro tiros le rompen el conjuro. Derribe las lechuzas de un tiro. Cincuenta tiros.' },
+      { id: 'deuda', tipo: 'deuda', faccion: 'culto', jefe: true,
+        nombre: 'La Deuda de la Silla', volanta: 'El ancla que camina', cargo: 'lo que cobra el ancla',
+        aguanta: '280 en la silla',
+        titular: 'La deuda se llenó y se levantó a cobrar',
+        texto: ['Cuando la deuda de un ancla se llena, los muertos regresan a cobrarla. Tras tantas oleadas, los de la silla presidencial ya no caben en el Palacio: se fundieron en un solo cuerpo que sube desde los sótanos, por donde el Palacio da al Mictlán.',
+                'Trae encima a muertos de todos los bandos, una banda presidencial deshilachada y la silla incrustada en la espalda: un siglo de gobernantes que llegaron a ella pasando sobre muertos. Golpea el piso, exhala mal aire y arranca muertos de su cuerpo para lanzarlos. No se destruye: se sella.'],
+        tactica: 'Golpe en área, mal aire, lanza muertos; blindada de frente, lenta para girar',
+        consejo: 'De frente las balas apenas la rozan: ahí aguanta seis veces más. Es lenta para voltearse: rodéela y tírele a la silla, en la espalda. Pero no se le quede pegado: el golpe al piso alcanza a todo el que esté cerca, por donde sea. El machete corta parejo, la dinamita la sacude y el fuego la quema: dicen que Zapata quiso quemar esa silla.' }
     ]
   },
   {
-    id: 'armas', titulo: 'Armas', indice: 'El armamento del cuartel', proximamente: true,
+    id: 'armas', titulo: 'Armas', indice: 'El armamento del cuartel',
     aviso: 'El cuartel está haciendo inventario. En la próxima edición se publicará la lista completa del armamento disponible.',
     entradas: [
-      { id: 'mauser', nombre: 'Fusil Mauser' },
-      { id: 'carabina', nombre: 'Carabina 30-30' },
-      { id: 'hotchkiss', nombre: 'Ametralladora Hotchkiss' }
+      { id: 'machete', arma: true, nombre: 'El machete', volanta: 'Arma del jugador',
+        titular: 'Para cuando se acercan demasiado',
+        datos: [['Daño', `${PMACHETE.dmg} por tajo`], ['Alcanza', `Hasta ${PMACHETE.maxTargets} a la vez`], ['Recarga', `${PMACHETE.cooldown} segundos`], ['Uso', 'Clic derecho o Espacio']],
+        texto: ['En el campo no había casa sin machete: servía para la caña y para el monte. Esta noche sirve para abrirse paso entre los muertos.',
+                `Pega a los ${PMACHETE.maxTargets} más cercanos en el abanico frente a usted con el doble de daño que una bala, los empuja y les corta el golpe que preparaban. También corta reatas y derriba lechuzas.`,
+                `Cada oleada de jefe que supera (la 5, la 10, la 15…) lo mejora un nivel: más daño, más alcance, recarga más corta y más enemigos por tajo, hasta el ${MACHETE_LEVELS[MACHETE_MAX].nombre.toLowerCase()}: dicen que la obsidiana hiere hasta a los nahuales.`],
+        consejo: `Úselo cuando lo rodeen, no como arma principal: tarda ${PMACHETE.cooldown} segundos en estar listo otra vez y, mientras lo blande, no puede disparar. Contra machetes y trinches es ideal: les corta el golpe mientras se preparan.` },
+      { id: 'mauser', nombre: 'Fusil Mauser', proximamente: true },
+      { id: 'carabina', nombre: 'Carabina 30-30', proximamente: true },
+      { id: 'hotchkiss', nombre: 'Ametralladora Hotchkiss', proximamente: true }
     ]
   },
   {
@@ -4567,6 +5515,8 @@ const notice = document.getElementById('aviso');
 let noticeTimer = null;
 function showNotice(html) {
   notice.innerHTML = html;
+  // Si hay barra de jefe arriba, el aviso baja para no taparla
+  notice.style.top = zombies.some(z => z.T.boss) ? '74px' : '';
   notice.classList.add('visible');
   clearTimeout(noticeTimer);
   noticeTimer = setTimeout(() => notice.classList.remove('visible'), 3200);
@@ -4583,7 +5533,8 @@ function drawEnemyPortrait(cv, entry, locked) {
   g.setTransform(r, 0, 0, r, 0, 0);
   g.clearRect(0, 0, px, px);
   // Escala fija: se nota quién es más grande. El jinete se achica un poco para que quepa el caballo
-  const k = T.ai === 'jinete' ? 1.55 : 2.25;
+  // (los gigantes se reducen lo necesario para caber en el grabado)
+  const k = T.scale > 2.5 ? 128 / (ZOMBIE_SIZE * T.scale) : T.ai === 'jinete' ? 1.55 : 2.25;
   g.translate(px / 2, px / 2 + 16);
   g.scale(k, k);
   g.fillStyle = 'rgba(40,28,15,0.22)';
@@ -4634,14 +5585,15 @@ function renderTabs() {
 function renderIndex(sec) {
   const items = [el('li', {}, el('p', { class: 'indice-titulo', text: sec.indice }))];
   const entryButton = (entry, i) => {
-    const open = !sec.proximamente && isUnlocked(entry);
-    const label = open || sec.proximamente ? entry.nombre : '¿ ? ?';
+    const pronto = sec.proximamente || entry.proximamente;
+    const open = !pronto && (entry.arma || isUnlocked(entry));
+    const label = open || pronto ? entry.nombre : '¿ ? ?';
     return el('li', {}, el('button', {
       'aria-current': String(entry.id === regEntry),
       onclick: () => { regEntry = entry.id; renderRegistry(); }
     },
       el('span', { class: 'num', text: String(i + 1).padStart(2, '0') }),
-      el('span', { class: open || sec.proximamente ? '' : 'bloqueado', text: label }),
+      el('span', { class: open ? '' : pronto ? 'bloqueado' : 'bloqueado', text: label }),
       open && entry.jefe ? el('span', { class: 'marca-jefe', text: 'Jefe' }) : null
     ));
   };
@@ -4659,6 +5611,34 @@ function renderIndex(sec) {
     sec.entradas.forEach((entry, i) => items.push(entryButton(entry, i)));
   }
   regIndex.replaceChildren(...items);
+}
+
+// Nota de un arma del jugador
+function renderWeaponNote(entry) {
+  const cv = el('canvas', { 'aria-hidden': 'true' });
+  regNote.replaceChildren(
+    el('p', { class: 'nota-volanta', text: entry.volanta }),
+    el('h2', { text: entry.titular }),
+    el('p', { class: 'nota-bajada', text: entry.nombre }),
+    el('div', { class: 'nota-grid' },
+      el('figure', { class: 'grabado' }, cv, el('figcaption', { text: 'Machete de campo, de los que se usaban para la caña.' })),
+      el('div', {},
+        el('div', { class: 'ficha' }, ...entry.datos.map(([k, v]) => el('div', {}, el('span', { text: k }), el('b', { text: v })))),
+        el('div', { class: 'nota-texto' }, ...entry.texto.map(t => el('p', { text: t }))),
+        el('p', { class: 'consejo' }, el('strong', { text: 'Consejo del cuartel. ' }), entry.consejo)))
+  );
+  const px = 180, r = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = cv.height = px * r;
+  const g = cv.getContext('2d');
+  g.setTransform(r, 0, 0, r, 0, 0);
+  g.translate(px / 2, px / 2);
+  g.rotate(-0.7);
+  g.fillStyle = '#4a2e14'; g.fillRect(-70, -7, 42, 14);
+  g.fillStyle = '#2a1a0a'; for (const x of [-62, -50, -38]) { g.beginPath(); g.arc(x, 0, 2, 0, Math.PI * 2); g.fill(); }
+  g.fillStyle = '#b9bec4'; g.strokeStyle = '#3d4248'; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(-28, -8); g.lineTo(55, -13); g.quadraticCurveTo(78, -2, 60, 10); g.lineTo(-28, 8); g.closePath(); g.fill(); g.stroke();
+  g.strokeStyle = 'rgba(255,255,255,0.6)'; g.lineWidth = 1.2;
+  g.beginPath(); g.moveTo(-24, -5); g.lineTo(54, -10); g.stroke();
 }
 
 function renderFactionNote(f) {
@@ -4691,7 +5671,8 @@ function renderFactionNote(f) {
 function renderNote(sec) {
   if (sec.id === 'enemigos' && String(regEntry).startsWith('f:')) { renderFactionNote(regEntry.slice(2)); return; }
   const entry = sec.entradas.find(e => e.id === regEntry) || sec.entradas[0];
-  if (sec.proximamente) {
+  if (entry.arma) { renderWeaponNote(entry); return; }
+  if (sec.proximamente || entry.proximamente) {
     regNote.replaceChildren(
       el('p', { class: 'nota-volanta', text: 'Próxima edición' }),
       el('h2', { text: entry.nombre }),
@@ -4723,11 +5704,11 @@ function renderNote(sec) {
   regNote.replaceChildren(
     el('p', { class: 'nota-volanta', text: `${FACTIONS[entry.faccion].nombre} · ${entry.volanta}` }),
     el('h2', { text: entry.titular }),
-    el('p', { class: 'nota-bajada', text: entry.jefe ? `${entry.nombre}, ${FACTIONS[entry.faccion].jefeDe || 'jefe de los ' + FACTIONS[entry.faccion].nombre.toLowerCase()}` : entry.nombre }),
+    el('p', { class: 'nota-bajada', text: entry.cargo ? `${entry.nombre}, ${entry.cargo}` : entry.jefe ? `${entry.nombre}, ${FACTIONS[entry.faccion].jefeDe || 'jefe de los ' + FACTIONS[entry.faccion].nombre.toLowerCase()}` : entry.nombre }),
     el('div', { class: 'nota-grid' }, fig,
       el('div', {},
         el('div', { class: 'ficha' },
-          el('div', {}, el('span', { text: 'Aguanta' }), el('b', { text: `${T.hp} tiros` })),
+          el('div', {}, el('span', { text: 'Aguanta' }), el('b', { text: entry.aguanta || `${T.hp} tiros` })),
           el('div', {}, el('span', { text: 'Paso' }), el('b', { text: speedLabel(T) })),
           el('div', {}, el('span', { text: 'Aparece' }), el('b', { text: apareceDe(entry.tipo) })),
           el('div', {}, el('span', { text: 'Bajas registradas' }), el('b', { text: String(kills) }))),
@@ -4800,12 +5781,19 @@ function togglePause() {
 function syncHud() {
   for (const k of hudKeys) k.classList.toggle('on', keys.has(k.dataset.k));
   hudMouse.classList.toggle('on', mouse.down);
+  const pct = Math.round(100 * (1 - macheteCd / PMACHETE.cooldown));
+  hudRight.style.background = macheteCd > 0
+    ? `linear-gradient(to top, rgba(201,214,255,.45) ${pct}%, transparent ${pct}%)`
+    : 'rgba(201,214,255,.18)';
+  hudRight.classList.toggle('listo', macheteCd <= 0 && state === 'playing');
+  hudRight.classList.toggle('usando', macheteT > 0);
+  setText(hudMacheteTxt, macheteLevel ? `Disparo · Machete Nv ${macheteLevel}` : 'Disparo · Machete');
   hudPause.classList.toggle('on', state === 'paused');
   setText(stWave, wave);
   setText(stLeft, zombies.length + spawnQueue.length);
   setText(stKills, kills);
   const ev = currentWave && currentWave.event;
-  setText(stEvent, ev ? '· ' + (ev === 'jefe' ? currentWave.bosses.map(b => ZTYPES[b].name).join(' y ') : EVENT_INFO[ev].title) : '');
+  setText(stEvent, ev ? '· ' + (ev === 'jefe' ? bossTitle(currentWave.bosses) : EVENT_INFO[ev].title) : '');
   stEvent.style.color = ev ? EVENT_INFO[ev].color : '';
 }
 
