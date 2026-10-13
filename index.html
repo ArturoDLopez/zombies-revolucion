@@ -706,6 +706,89 @@ const SVG_DEUDA = `<svg ${SVG_HEAD}>
   <path d="M29 24 q6 -2 6 3 q-3 3 -6 0z M33 40 q5 2 3 6 q-4 0 -3 -6z M18 38 q3 -1 3 2 q-2 2 -3 -2z" fill="#7a0a0a"/>
 </svg>`;
 
+// Nahual en forma de coyote: todavía lleva el paliacate del hombre que fue
+const SVG_COYOTE = `<svg ${SVG_HEAD}>
+  <path d="M4 29 Q10 25 17 29 Q11 34 4 35 Z" fill="#8a7458" stroke="#3a2e20" stroke-width="1"/>
+  <path d="M3 30.5 L7.5 29.5 L7 33.5Z" fill="#2a2018"/>
+  <ellipse cx="22" cy="23" rx="4" ry="2.3" fill="#6f5c44"/><ellipse cx="22" cy="41" rx="4" ry="2.3" fill="#6f5c44"/>
+  <ellipse cx="39" cy="23.5" rx="4" ry="2.3" fill="#6f5c44"/><ellipse cx="39" cy="40.5" rx="4" ry="2.3" fill="#6f5c44"/>
+  <ellipse cx="30" cy="32" rx="17" ry="9" fill="#a08a68" stroke="#3a2e20" stroke-width="1.6"/>
+  <ellipse cx="29" cy="32" rx="13" ry="3.8" fill="#76624a" opacity=".85"/>
+  <path d="M42.5 24.5 Q46.5 32 42.5 39.5" stroke="#b3201a" stroke-width="3.2" fill="none"/>
+  <path d="M43 31 l-4 -1.5 l0.5 3.5z" fill="#b3201a"/>
+  <path d="M44 26.5 L46.5 20.5 L49.5 27Z M44 37.5 L46.5 43.5 L49.5 37Z" fill="#8a7458" stroke="#3a2e20" stroke-width="1"/>
+  <ellipse cx="48" cy="32" rx="7" ry="6.4" fill="#a89070" stroke="#3a2e20" stroke-width="1.4"/>
+  <path d="M53 28.8 L61 31.2 Q62.2 32 61 32.8 L53 35.2Z" fill="#c2ab88" stroke="#3a2e20" stroke-width="1.2"/>
+  <circle cx="61" cy="32" r="1.2" fill="#1a1410"/>
+  <circle cx="51.5" cy="29.3" r="1.2" fill="#f0c040"/><circle cx="51.5" cy="34.7" r="1.2" fill="#f0c040"/>
+  <circle cx="56" cy="34.3" r="1.4" fill="#7a0a0a"/><circle cx="33" cy="27" r="1.6" fill="#7a0a0a"/>
+</svg>`;
+
+// Tzitzimitl: mujer esqueleto con falda de huesos cruzados y estrellas, garras al frente
+const SVG_TZITZIMITL = `<svg ${SVG_HEAD}>
+  <path d="M40 26 Q22 16 4 23 Q15 32 4 41 Q22 48 40 38Z" fill="#120e18" opacity=".92"/>
+  <circle cx="26" cy="32" r="17" fill="#1c1624" stroke="#0a080e" stroke-width="2"/>
+  <g stroke="#e8e2d0" stroke-width="1.3" stroke-linecap="round">
+    <path d="M17 21 l4 4 m0 -4 l-4 4 M13 33 l4 4 m0 -4 l-4 4 M21 42 l4 4 m0 -4 l-4 4 M28 17 l3.5 3.5 m0 -3.5 l-3.5 3.5 M27 38 l3 3 m0 -3 l-3 3"/>
+  </g>
+  <g fill="#f4f0ff"><circle cx="20" cy="30" r="1.2"/><circle cx="30" cy="26" r="1"/><circle cx="16" cy="43" r="1"/><circle cx="32" cy="45" r="1.1"/><circle cx="12" cy="27" r=".9"/></g>
+  <path d="M36 25 L48 15 L58 17 M36 39 L48 49 L58 47" stroke="#d8cfb8" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M58 17 l4 -3 M58 17 l5 0 M58 17 l4 3 M58 47 l4 -3 M58 47 l5 0 M58 47 l4 3" stroke="#d8cfb8" stroke-width="1.3" stroke-linecap="round"/>
+  <ellipse cx="36" cy="32" rx="7" ry="9.5" fill="#cfc6ae" stroke="#2a2420" stroke-width="1.3"/>
+  <path d="M32 26 q4 1 8 0 M31.5 29.5 q4.5 1 9 0 M31.5 33 q4.5 1 9 0 M32 36.5 q4 1 8 0" stroke="#5a5040" stroke-width="1" fill="none"/>
+  <circle cx="40" cy="25.5" r="1.5" fill="#9a1010"/><circle cx="40" cy="38.5" r="1.5" fill="#9a1010"/>
+  <circle cx="45" cy="32" r="6.8" fill="#ece6d4" stroke="#2a2420" stroke-width="1.3"/>
+  <circle cx="47.5" cy="29.4" r="1.9" fill="#0a0808"/><circle cx="47.5" cy="34.6" r="1.9" fill="#0a0808"/>
+  <path d="M50.6 29.8 L51.4 34.2" stroke="#2a2420" stroke-width="1.7" stroke-dasharray=".8 .6"/>
+</svg>`;
+
+// Protegidos de las rondas de rescate
+const SVG_CURANDERA = `<svg ${SVG_HEAD}>
+  <path d="M24 28 Q13 26 8 21 M24 36 Q13 38 8 43" stroke="#1a1410" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+  <ellipse cx="28" cy="32" rx="13" ry="17" fill="#3d4f6a" stroke="#1b2230" stroke-width="2"/>
+  <path d="M19.5 17 Q27 32 19.5 47 M23.5 16 Q31 32 23.5 48" stroke="#8b9dbc" stroke-width="1" fill="none" stroke-dasharray="2 2"/>
+  <path d="M33 25 L44 29 M33 39 L44 35" stroke="#a87a5a" stroke-width="3.2" stroke-linecap="round"/>
+  <circle cx="31" cy="32" r="7.5" fill="#1f1812" stroke="#0e0a08" stroke-width="1"/>
+  <path d="M24.5 32 L37 32" stroke="#4a3a2a" stroke-width=".9"/>
+  <path d="M37.6 28.8 Q39.8 32 37.6 35.2" fill="#a87a5a"/>
+  <circle cx="48" cy="32" r="5.2" fill="#8a4a2a" stroke="#3a1a0a" stroke-width="1.2"/>
+  <circle cx="48" cy="32" r="3" fill="#ff8a30"/><circle cx="48" cy="32" r="1.4" fill="#ffd27a"/>
+  <path d="M50 28 q4 -4 2 -9 q-2 -4 2 -8" stroke="#c8c4bc" stroke-width="1.5" fill="none" opacity=".7"/>
+</svg>`;
+const SVG_OFRENDA = `<svg ${SVG_HEAD}>
+  <rect x="9" y="11" width="46" height="42" rx="2" fill="#5a3a22" stroke="#2a1a0e" stroke-width="2"/>
+  <rect x="12" y="14" width="40" height="36" fill="#efe6d2"/>
+  <rect x="12" y="14" width="40" height="36" fill="none" stroke="#c0281f" stroke-width="1.4" stroke-dasharray="3 2"/>
+  <g fill="#f08a10">
+    <circle cx="15" cy="27" r="2"/><circle cx="15" cy="33" r="2"/><circle cx="15" cy="39" r="2"/>
+    <circle cx="49" cy="27" r="2"/><circle cx="49" cy="33" r="2"/><circle cx="49" cy="39" r="2"/>
+    <circle cx="26" cy="47" r="2"/><circle cx="32" cy="47" r="2"/><circle cx="38" cy="47" r="2"/>
+  </g>
+  <rect x="25" y="20" width="14" height="18" fill="#c9a23a" stroke="#7a5a1a" stroke-width="1"/>
+  <rect x="27" y="22" width="10" height="14" fill="#3a3530"/>
+  <circle cx="32" cy="27" r="2.6" fill="#8a8070"/><path d="M28.5 35 Q32 29.5 35.5 35Z" fill="#8a8070"/>
+  <circle cx="20" cy="41" r="3.4" fill="#f8f4ea" stroke="#9a9080" stroke-width=".8"/>
+  <circle cx="18.8" cy="40.4" r=".9" fill="#2a8ad0"/><circle cx="21.2" cy="40.4" r=".9" fill="#d02a6a"/>
+  <circle cx="44" cy="41" r="3.6" fill="#c08040" stroke="#7a4a1a" stroke-width=".8"/>
+  <path d="M42 41 h4 M44 39 v4" stroke="#e0b070" stroke-width=".9"/>
+  <g fill="#f8f4ea" stroke="#b0a890" stroke-width=".6">
+    <circle cx="17" cy="18" r="2.4"/><circle cx="47" cy="18" r="2.4"/><circle cx="23" cy="17" r="2"/><circle cx="41" cy="17" r="2"/>
+  </g>
+  <g fill="#ffcf5a"><circle cx="17" cy="18" r="1"/><circle cx="47" cy="18" r="1"/><circle cx="23" cy="17" r=".9"/><circle cx="41" cy="17" r=".9"/></g>
+</svg>`;
+const SVG_FOTOGRAFO = `<svg ${SVG_HEAD}>
+  <path d="M50 32 L43 21 M50 32 L43 43 M50 32 L59 33" stroke="#4a3a28" stroke-width="1.7" stroke-linecap="round"/>
+  <rect x="44" y="26" width="10" height="12" rx="1" fill="#6a4a2a" stroke="#2a1a0a" stroke-width="1.2"/>
+  <rect x="53.5" y="28" width="3.5" height="8" fill="#1a1410"/>
+  <circle cx="59" cy="32" r="2.6" fill="#2a3a4a" stroke="#0a0a0a" stroke-width="1"/>
+  <ellipse cx="28" cy="32" rx="11" ry="15" fill="#4a4a50" stroke="#1a1a20" stroke-width="2"/>
+  <path d="M30 21 L38 13" stroke="#4a4a50" stroke-width="4" stroke-linecap="round"/>
+  <path d="M35.5 9.5 L42.5 16.5" stroke="#8a8a90" stroke-width="2"/>
+  <path d="M30 43 L44 37" stroke="#4a4a50" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="29" cy="32" r="9" fill="#1a1612" stroke="#0a0806" stroke-width="1"/>
+  <circle cx="29" cy="32" r="6" fill="#262019" stroke="#3a3028" stroke-width="1"/>
+</svg>`;
+
 // Pieles: svg + color de manga (brazos animados) + sombrero que cae al morir
 const SKINS = {
   suriano:     { svg: SVG_SURIANO, sleeve: '#d6c9a8', hat: { shape: 'palma', c1: '#b8955a', c2: '#a07c45' } },
@@ -727,6 +810,11 @@ const SKINS = {
   jornalero:   { sleeve: '#a99a7c', o: { body: '#a99a7c', sash: '#b3201a', hat: { shape: 'palma', c1: '#c4a86e', c2: '#a88e58' } } },
   atarantado:  { sleeve: '#47536e', dropHat: { shape: 'kepi', c1: '#3d4a5c' }, o: { body: '#47536e', edge: '#1e252f', strap: '#c8b48a', hat: { shape: 'vendaje' } } },
   deuda:       { svg: SVG_DEUDA, sleeve: '#4a5340', hat: { shape: 'kepi', c1: '#3d4a5c' } },
+  coyote:      { svg: SVG_COYOTE, sleeve: '#8a7458' },
+  tzitzimitl:  { svg: SVG_TZITZIMITL, sleeve: '#d8cfb8' },
+  curandera:   { svg: SVG_CURANDERA, sleeve: '#3d4f6a' },
+  ofrenda:     { svg: SVG_OFRENDA, sleeve: '#5a3a22' },
+  fotografo:   { svg: SVG_FOTOGRAFO, sleeve: '#4a4a50' },
   brujo:       { svg: SVG_BRUJO, sleeve: '#2a2233', hat: { shape: 'palma', c1: '#3a2f45', c2: '#2a2233' } },
   cabecilla:   { sleeve: '#9b8c72', o: { body: '#9b8c72', sash: '#b3201a', cananas: true, bandana: '#c0281f', pack: 'bandera', hat: { shape: 'charro', c1: '#6a553b', c2: '#5a472f', trim: '#c0281f', band: '#c0281f' } } }
 };
@@ -813,6 +901,9 @@ const ZTYPES = {
   general:   { reg: 'general',     faction: 'carrancistas', skin: 'general',  r: 23, hp: 55, speed: [42, 46], scale: 1.55, knock: 1.6, boss: true, ai: 'general', name: 'El General Constitucionalista', pace: 'Lenta' },
   deuda:     { reg: 'deuda',       faction: 'culto',        skin: 'deuda',    r: 44, hp: 420, speed: [30, 34], scale: 3.2, knock: 2.6, boss: true, ai: 'deuda', melee: 'gigante', turn: 1.5, name: 'La Deuda de la Silla', pace: 'Lenta, imparable',
                bossSub: 'La deuda de la silla está llena: el ancla se levanta a cobrar' },
+  // --- fuerzas antiguas ---
+  coyote:     { reg: 'coyote',      faction: 'antiguas',     skin: 'coyote',   r: 13, hp: 3, speed: [175, 195], scale: 0.95, cost: 1.5, knock: 0.8, ai: 'coyote', noArms: true, fast: true, nahual: true, maxSm: 1.12, corpse: 'suriano', pace: 'Muy rápido; en manada' },
+  tzitzimitl: { reg: 'tzitzimitl',  faction: 'antiguas',     skin: 'tzitzimitl', r: 20, hp: 45, speed: [105, 112], scale: 1.45, knock: 1.6, boss: true, ai: 'tzitzimitl', noArms: true, name: 'La Tzitzimitl', pace: 'Acecha y se lanza' },
   brujo:     { reg: 'brujo',       faction: 'culto',        skin: 'brujo',    r: 22, hp: 50, speed: [58, 64], scale: 1.5,  knock: 1.4, boss: true, ai: 'brujo',   name: 'El Tlacatecolo', pace: 'Huye de usted',
                bossSub: 'Un brujo del Culto ronda el Palacio: los caídos no descansan' },
   cabecilla: { reg: 'cabecilla',   faction: 'colorados',    skin: 'cabecilla', r: 23, hp: 50, speed: [55, 60], scale: 1.55, knock: 1.7, boss: true, ai: 'bandera', name: 'El Cabecilla Colorado', pace: 'Normal' }
@@ -825,7 +916,8 @@ const FACTIONS = {
   villistas:    { nombre: 'Villistas',    grito: 'Retumban cascos del norte: los villistas' },
   carrancistas: { nombre: 'Carrancistas', grito: 'Marchan en orden: los carrancistas' },
   colorados:    { nombre: 'Colorados',    grito: 'Ondea la bandera roja: los colorados' },
-  culto:        { nombre: 'El Culto',     grito: 'Algo más camina entre los muertos', jefeDe: 'brujo del Culto' }
+  culto:        { nombre: 'El Culto',     grito: 'Algo más camina entre los muertos', jefeDe: 'brujo del Culto' },
+  antiguas:     { nombre: 'Fuerzas antiguas', grito: 'Algo más viejo que la Revolución anda suelto', jefeDe: 'señora del cielo' }
 };
 
 // Desde qué oleada aparece cada tipo y con qué peso relativo
@@ -838,7 +930,8 @@ const ROSTER = [
   { t: 'dorado',      from: 6, w: 0.5 }, { t: 'ametrallador', from: 7, w: 0.6 },
   { t: 'alambrista',  from: 8, w: 0.6 }, { t: 'incendiario', from: 9, w: 0.7 },
   { t: 'atarantado',  from: 3, w: 0.8 },
-  { t: 'machetero',   from: 5, w: 0.8 }, { t: 'jornalero',   from: 7, w: 0.7 }
+  { t: 'machetero',   from: 5, w: 0.8 }, { t: 'jornalero',   from: 7, w: 0.7 },
+  { t: 'coyote',      from: 23, w: 0.45 }   // tras su primera noche, algún nahual suelto
 ];
 // Un jefe cada 5 oleadas, rotando facciones
 const BOSS_ORDER = ['coronel', 'capitan', 'jefe', 'general', 'cabecilla'];
@@ -856,6 +949,49 @@ function bossCountFor(w) { return w < 20 ? 1 : Math.min(8, 3 + Math.floor((w - 2
 // La Deuda de la Silla: oleada 80 y luego cada 20
 const DEUDA_FIRST = 80, DEUDA_EVERY = 20;
 function isDeudaWave(w) { return w >= DEUDA_FIRST && (w - DEUDA_FIRST) % DEUDA_EVERY === 0; }
+// Noche de nahuales: oleada 12 y luego cada 10 (solo coyotes, en manada)
+const NAHUAL_FIRST = 12, NAHUAL_EVERY = 10;
+function isNahualWave(w) { return w >= NAHUAL_FIRST && (w - NAHUAL_FIRST) % NAHUAL_EVERY === 0; }
+// Rescate: oleada 6 y luego cada 10 (hay que cuidar a alguien o algo)
+const RESCATE_FIRST = 6, RESCATE_EVERY = 10;
+function isRescateWave(w) { return w >= RESCATE_FIRST && (w - RESCATE_FIRST) % RESCATE_EVERY === 0; }
+// Tzitzimitl: baja en todo eclipse desde la oleada 15; además hay un eclipse seguro en la 24 y luego cada 20
+const TZITZI_FROM = 15, ECLIPSE_FIRST = 24, ECLIPSE_EVERY = 20;
+function isEclipseWave(w) { return w >= ECLIPSE_FIRST && (w - ECLIPSE_FIRST) % ECLIPSE_EVERY === 0; }
+const TZITZI_DELAY = 7;      // segundos tras apagarse la luna antes de que baje
+const TZITZI_TIME = 85;      // si nadie la espanta, se va sola cuando pasa el eclipse
+const TZITZI_BURN = 9;       // daño por segundo mientras la toca la luz del brasero
+const TZITZI_DIVE_RANGE = 330, TZITZI_DIVE_SPEED = 420, TZITZI_DIVE_TIME = 0.6;   // salto: ~250 px en línea recta
+// Braseros del Fuego Nuevo (solo en eclipses con tzitzimitl)
+const BRASERO_REACH = 44;    // qué tan cerca hay que pararse para encenderlo
+const BRASERO_LIGHT_T = 1.1; // segundos para encenderlo
+const BRASERO_LIT = 14;      // segundos que dura encendido
+const BRASERO_ZONE = 95;     // radio de la luz que quema
+// Golpes: de vez en cuando salen de todas las entradas a la vez, más seguido en oleadas altas
+function burstChance(w) { return w < 4 ? 0 : Math.min(0.55, 0.08 + 0.012 * (w - 4)); }
+// Máximo de vivos a la vez: 18 hasta la 30, luego sube de a uno cada 6 oleadas hasta 24
+function capFor(w) { return Math.min(24, DIFF.maxCap + Math.max(0, Math.floor((w - 30) / 6))); }
+
+// Protegidos de las rondas de rescate. Cada uno ayuda a su manera mientras siga en pie.
+const PROTEGIDOS = {
+  ofrenda:   { nombre: 'La ofrenda', skin: 'ofrenda', r: 18, hp: 16, light: 105, persona: false, ayuda: 'calma',
+               titulo: 'Rescate: la ofrenda', sub: 'Alguien dejó una ofrenda a los caídos. Que no la tiren: cerca de ella los muertos se aquietan' },
+  curandera: { nombre: 'La curandera', skin: 'curandera', r: 15, hp: 10, light: 95, persona: true, ayuda: 'cura',
+               titulo: 'Rescate: la curandera', sub: 'Una curandera hace una limpia en el patio. Cuídala: junto a su copal sanas más rápido' },
+  fotografo: { nombre: 'El fotógrafo', skin: 'fotografo', r: 15, hp: 10, light: 70, persona: true, ayuda: 'flash',
+               titulo: 'Rescate: el fotógrafo', sub: 'El fotógrafo de la silla sigue aquí con su cámara. Cuídalo: su magnesio deslumbra a los muertos' }
+};
+const PROTEGIDO_ORDER = ['ofrenda', 'curandera', 'fotografo'];
+const RESCATE_CASTIGO = 3;   // vida que se pierde si cae el protegido (nunca mata: deja al menos 1)
+const RESCATE_DEUDA = 0.3;   // y la siguiente oleada trae 30 % más muertos
+
+let prot = null;             // el protegido de la oleada, si hay
+let debtPenalty = 0;         // presupuesto extra de la siguiente oleada (la deuda creció)
+let tzitziPending = 0;       // segundos para que baje la tzitzimitl (0 = no viene)
+let nahualSeen = false;      // primera vez que muere un coyote en la partida: se avisa que era un hombre
+const braseros = [];
+const starFx = [];           // estelas de estrella (llega o se va la tzitzimitl)
+
 
 // Embestida del Coronel
 const CHARGE_PREP = 0.7;      // aviso antes de embestir
@@ -887,7 +1023,9 @@ const EVENT_INFO = {
   eclipse:   { title: 'Eclipse',    color: '#ff8a7a' },
   estampida: { title: 'Estampida',  color: '#ff8a7a' },
   asedio:    { title: 'Asedio',     color: '#ff8a7a' },
-  respiro:   { title: 'Respiro',    color: '#9fe0a8' }
+  respiro:   { title: 'Respiro',    color: '#9fe0a8' },
+  nahuales:  { title: 'Noche de nahuales', color: '#e8a860' },
+  rescate:   { title: 'Rescate',    color: '#9fd0ff' }
 };
 let heat = 0.5;               // qué tan cómodo va el jugador: 0 sufriendo, 1 sobrado
 let streak = 0;               // oleadas cómodas seguidas
@@ -998,12 +1136,14 @@ const Sfx = (() => {
                   balaEnemiga: 4, mecha: 2, explosion: 2, lanzar: 2, lazo: 2, fuego: 2, chispa: 2, alambre: 2, raspa: 1, bandera: 2, madera: 3, galope: 2, relincho: 1, corneta: 1, sombra: 1, cerrojo: 2,
                   gruñido: 2, conjuro: 1, lechuza: 2, levantar: 1, roto: 1,
                   tajo: 1, tajoGolpe: 1, filo: 2, derrumbe: 1, caida: 2,
-                  forja: 1, azote: 1, malaire: 1, bramido: 1, emerger: 1, sello: 1 };
+                  forja: 1, azote: 1, malaire: 1, bramido: 1, emerger: 1, sello: 1,
+                  aullido: 2, silbido: 1, arder: 1, cielo: 1, brasero: 2, magnesio: 1, protegido: 1, rescate: 1, portazo: 1 };
   const GAP   = { disparo: 0.05, impacto: 0.025, pared: 0.06, paso: 0.1, arrastre: 0.2, gemido: 0.6, muerte: 0.12, zarpazo: 0.1, golpe: 0.2, rugido: 0.4, toque: 0,
                   balaEnemiga: 0.06, mecha: 0.2, explosion: 0.05, lanzar: 0.15, lazo: 0.3, fuego: 0.3, chispa: 0.08, alambre: 0.2, raspa: 0.6, bandera: 0.3, madera: 0.04, galope: 0.06, relincho: 1, corneta: 1, sombra: 0.5, cerrojo: 0.3,
                   gruñido: 0.3, conjuro: 1, lechuza: 0.2, levantar: 0.5, roto: 0.5,
                   tajo: 0.1, tajoGolpe: 0.1, filo: 0.15, derrumbe: 1, caida: 0.12,
-                  forja: 0.5, azote: 0.3, malaire: 1, bramido: 1, emerger: 2, sello: 2 };
+                  forja: 0.5, azote: 0.3, malaire: 1, bramido: 1, emerger: 2, sello: 2,
+                  aullido: 0.4, silbido: 0.4, arder: 0.6, cielo: 1, brasero: 0.2, magnesio: 0.5, protegido: 0.25, rescate: 1, portazo: 1.2 };
   const active = {}, lastAt = {};
   const stats = { played: 0, dropped: 0, peak: {} };
 
@@ -1031,7 +1171,9 @@ const Sfx = (() => {
     brujo:          { f0: 66,  f1: 340, f2: 620, dist: true },
     machetero:      { f0: 94,  f1: 540, f2: 900 },
     jornalero:      { f0: 108, f1: 620, f2: 1100 },
-    deuda:          { f0: 38,  f1: 300, f2: 560, dist: true }
+    deuda:          { f0: 38,  f1: 300, f2: 560, dist: true },
+    tzitzimitl:     { f0: 196, f1: 820, f2: 2300 },
+    coyote:         { f0: 300, f1: 900, f2: 1800 }
   };
 
   function init() {
@@ -1294,6 +1436,7 @@ const Sfx = (() => {
   }
 
   function groan(z) {
+    if (z.T.ai === 'coyote') return snarl(z);
     if (!can('gemido')) return;
     const v = VOICES[z.reg] || VOICES.revolucionario;
     const dur = (z.T.fast ? 0.45 : 0.75 + Math.random() * 0.5) * (z.T.scale > 1.2 ? 1.3 : 1);
@@ -1303,6 +1446,7 @@ const Sfx = (() => {
   }
 
   function zombieDeath(z) {
+    if (z.T.ai === 'coyote') return yelp(z);
     if (!can('muerte')) return;
     claim('muerte', 0.7);
     const t = ac.currentTime, dest = spot(place(z.x, z.y), zombieBus);
@@ -1397,6 +1541,11 @@ const Sfx = (() => {
     claim('toque', 2.5);
     const t = ac.currentTime + 0.05;
     if (event === 'respiro') { bell(t, 330, 0.25, 3); return; }
+    if (event === 'nahuales') {   // coro de aullidos desde varios lados
+      [-0.7, 0.5, -0.1].forEach((pan, i) => howlVoice(t + i * 0.5, { g: 0.8, pan, cutoff: 5000 }, 0.75));
+      drum(t + 1.4, 0.5);
+      return;
+    }
     if (event === 'jefe') {
       for (let i = 0; i < 6; i++) drum(t + i * (0.22 - i * 0.02), 0.5 + i * 0.1);
       bugle(t + 1.1, CALLS.jefe, 0.3);
@@ -1917,6 +2066,170 @@ const Sfx = (() => {
     if (ac) out.gain.setTargetAtTime(m ? 0 : VOLUME, ac.currentTime, 0.05);
   }
 
+
+  // ---------- nahuales, tzitzimitl y rescates ----------
+  // Aullido de coyote: sube, se sostiene y cae
+  function howlVoice(t, pos, peak) {
+    const dest = spot(pos);
+    const f = 380 + Math.random() * 120;
+    const o = osc('triangle', f * 0.7, t, 1.5);
+    o.frequency.linearRampToValueAtTime(f * 1.5, t + 0.35);
+    o.frequency.linearRampToValueAtTime(f * 1.35, t + 1.0);
+    o.frequency.exponentialRampToValueAtTime(f * 0.6, t + 1.5);
+    const vib = osc('sine', 6, t, 1.5), vd = ac.createGain();
+    vd.gain.value = f * 0.03;
+    vib.connect(vd).connect(o.frequency);
+    const bp = filt('bandpass', 900, 1.2), g = ac.createGain();
+    env(g, t, 0.15, peak, 1.35);
+    o.connect(bp).connect(g).connect(dest);
+  }
+  function howl(x, y) {
+    if (!can('aullido')) return;
+    claim('aullido', 1.6);
+    howlVoice(ac.currentTime, place(x, y), 0.9);
+  }
+  function snarl(z) {   // gruñido del coyote antes de lanzarse
+    if (!can('gruñido')) return;
+    claim('gruñido', 0.35);
+    const t = ac.currentTime, dest = spot(place(z.x, z.y), zombieBus);
+    const n = noiseSrc(t, 0.35, 0.8), bp = filt('bandpass', 520, 3), g = ac.createGain();
+    env(g, t, 0.03, 2.4, 0.3);
+    const am = osc('square', 28, t, 0.35), ag = ac.createGain();
+    ag.gain.value = 0.9;
+    am.connect(ag).connect(g.gain);
+    n.connect(bp).connect(g).connect(dest);
+  }
+  function yelp(z) {    // chillido del coyote al morir
+    if (!can('muerte')) return;
+    claim('muerte', 0.4);
+    const t = ac.currentTime, dest = spot(place(z.x, z.y), zombieBus);
+    [[0, 1150, 0.18], [0.16, 950, 0.14]].forEach(([d, f, len]) => {
+      const o = osc('triangle', f, t + d, len);
+      o.frequency.exponentialRampToValueAtTime(f * 0.45, t + d + len);
+      const g = ac.createGain();
+      env(g, t + d, 0.005, 0.5, len);
+      o.connect(g).connect(dest);
+    });
+  }
+  // Silbato de la muerte: la tzitzimitl a punto de lanzarse
+  function whistle(x, y) {
+    if (!can('silbido')) return;
+    claim('silbido', 0.9);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.9, 1), bp = filt('bandpass', 900, 9), g = ac.createGain();
+    bp.frequency.linearRampToValueAtTime(2600, t + 0.45);
+    bp.frequency.linearRampToValueAtTime(1500, t + 0.9);
+    env(g, t, 0.12, 2.6, 0.75);
+    n.connect(bp).connect(g).connect(dest);
+    const o = osc('sawtooth', 700, t, 0.9);
+    o.frequency.linearRampToValueAtTime(1300, t + 0.45);
+    o.frequency.linearRampToValueAtTime(800, t + 0.9);
+    const ws = ac.createWaveShaper(); ws.curve = distCurve;
+    const og = ac.createGain();
+    env(og, t, 0.1, 0.05, 0.75);
+    o.connect(ws).connect(og).connect(dest);
+  }
+  function tzitziArrive(x, y) {   // cae del cielo: silbido que baja y campana grave
+    if (!can('cielo')) return;
+    claim('cielo', 1.5);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const o = osc('sine', 2400, t, 0.9);
+    o.frequency.exponentialRampToValueAtTime(300, t + 0.85);
+    const g = ac.createGain();
+    env(g, t, 0.05, 0.22, 0.85);
+    o.connect(g).connect(dest);
+    bell(t + 0.85, 82, 0.22, 3);
+  }
+  function tzitziLeave(x, y) {    // regresa al cielo: notas que suben
+    if (!can('cielo')) return;
+    claim('cielo', 1.5);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    [600, 800, 1070, 1430, 1900].forEach((f, i) => {
+      const o = osc('triangle', f, t + i * 0.12, 0.6);
+      const g = ac.createGain();
+      env(g, t + i * 0.12, 0.01, 0.3, 0.55);
+      o.connect(g).connect(dest);
+    });
+  }
+  function burn(x, y) {   // la luz la quema: chisporroteo
+    if (!can('arder')) return;
+    claim('arder', 0.7);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.7, 1.3), hp = filt('highpass', 2500), g = ac.createGain();
+    env(g, t, 0.02, 0.4, 0.65);
+    n.connect(hp).connect(g).connect(dest);
+    const r = noiseSrc(t, 0.7, 0.4), lp = filt('lowpass', 300), rg = ac.createGain();
+    env(rg, t, 0.05, 0.35, 0.6);
+    r.connect(lp).connect(rg).connect(dest);
+  }
+  function ignite(x, y) {   // se enciende un brasero
+    if (!can('brasero')) return;
+    claim('brasero', 0.6);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.6, 0.8), lp = filt('lowpass', 300, 0.8), g = ac.createGain();
+    lp.frequency.exponentialRampToValueAtTime(3200, t + 0.35);
+    env(g, t, 0.08, 0.7, 0.5);
+    n.connect(lp).connect(g).connect(dest);
+    for (let i = 0; i < 5; i++) {
+      const tt = t + 0.1 + i * 0.08 + Math.random() * 0.04;
+      const c = noiseSrc(tt, 0.03, 1.5), cg = ac.createGain();
+      env(cg, tt, 0.001, 0.35, 0.025);
+      c.connect(cg).connect(dest);
+    }
+  }
+  function magnesio(x, y) {   // el flash del fotógrafo
+    if (!can('magnesio')) return;
+    claim('magnesio', 0.4);
+    const t = ac.currentTime, dest = spot(place(x, y));
+    const n = noiseSrc(t, 0.3, 1.2), hp = filt('highpass', 1500), g = ac.createGain();
+    env(g, t, 0.002, 0.8, 0.28);
+    n.connect(hp).connect(g).connect(dest);
+    const o = osc('sine', 95, t, 0.2), og = ac.createGain();
+    env(og, t, 0.002, 0.5, 0.18);
+    o.connect(og).connect(dest);
+  }
+  function protHurt(p) {
+    if (!can('protegido')) return;
+    claim('protegido', 0.3);
+    const t = ac.currentTime, dest = spot(place(p.x, p.y));
+    if (p.P.persona) voice(t, p.kind === 'curandera' ? { f0: 230, f1: 820, f2: 1400 } : { f0: 140, f1: 620, f2: 1050 }, 0.25, 1, 0.8, 0.6, dest);
+    else {
+      const n = noiseSrc(t, 0.12, 1), bp = filt('bandpass', 1300, 2), g = ac.createGain();
+      env(g, t, 0.002, 0.6, 0.1);
+      n.connect(bp).connect(g).connect(dest);
+    }
+  }
+  function rescueOk() {
+    if (!can('rescate')) return;
+    claim('rescate', 2);
+    const t = ac.currentTime + 0.05;
+    bell(t, 523, 0.18, 2.2); bell(t + 0.18, 659, 0.16, 2.2); bell(t + 0.36, 784, 0.16, 2.6);
+  }
+  function rescueFail() {
+    if (!can('rescate')) return;
+    claim('rescate', 2);
+    const t = ac.currentTime + 0.05;
+    bell(t, 110, 0.3, 3);
+    [233, 220].forEach(f => {
+      const o = osc('triangle', f, t, 1.4), g = ac.createGain();
+      env(g, t, 0.02, 0.08, 1.3);
+      o.connect(g).connect(stingBus);
+    });
+  }
+  function burst() {   // entran de golpe por todas partes
+    if (!can('portazo')) return;
+    claim('portazo', 0.4);
+    const t = ac.currentTime, dest = spot(null);
+    const o = osc('sine', 70, t, 0.32);
+    o.frequency.exponentialRampToValueAtTime(38, t + 0.3);
+    const og = ac.createGain();
+    env(og, t, 0.004, 0.32, 0.28);
+    o.connect(og).connect(dest);
+    const n = noiseSrc(t, 0.2, 0.5), lp = filt('lowpass', 320), g = ac.createGain();
+    env(g, t, 0.004, 0.25, 0.18);
+    n.connect(lp).connect(g).connect(dest);
+  }
+
   return {
     init, update, silenceCrowd, suspend, resume, setMuted,
     isMuted: () => muted,
@@ -1924,6 +2237,7 @@ const Sfx = (() => {
     enemyShot, cock, toss, fuse, explosion, dud, fireStart, crackle, wire, snag, lasso, lassoHit,
     flagPlant, flagBreak, hitWood, gallop, neigh, bugleWorld, vanish,
     grunt, chant, rise, hoot, owlDown, interrupt, macheteSwing, macheteHit, weaponTell, roofCollapse, land, forge, slam, breath, deudaRoar, emerge, sealed,
+    howl, snarl, whistle, tzitziArrive, tzitziLeave, burn, ignite, magnesio, protHurt, rescueOk, rescueFail, burst,
     _debug: () => ({ ac, out, stats })
   };
 })();
@@ -2092,8 +2406,9 @@ function planWave(w) {
   const plan = { event: null, sub: '', queue: [], bosses: [] };
   const pressure = Math.min(DIFF.maxPressure, 1 + streak * DIFF.streakBonus);
   let budget = (DIFF.baseBudget + DIFF.budgetGrowth * Math.pow(w - 1, DIFF.budgetCurve)) * pressure;
+  if (debtPenalty) budget *= 1 + debtPenalty;   // cayó el protegido de la oleada anterior: la deuda creció
   plan.interval = Math.max(DIFF.minInterval, DIFF.baseInterval * Math.pow(DIFF.intervalDecay, w - 1));
-  plan.cap = Math.min(DIFF.maxCap, DIFF.baseCap + w);
+  plan.cap = Math.min(capFor(w), DIFF.baseCap + w);
   plan.speedMult = Math.min(DIFF.maxSpeedMult, 1 + DIFF.speedStep * (w - 1));
   // Cuántos especiales: ninguno al principio y luego cada vez más, con tope
   let pSpecial = w < 3 ? 0 : Math.min(0.45, 0.12 + 0.035 * (w - 3));
@@ -2129,6 +2444,29 @@ function planWave(w) {
     plan.sub = n > 1 ? `${n} jefes se levantaron de sus tumbas` : 'Se levantó de su tumba con todo y escolta';
     // Con más jefes, menos escolta: si no, la oleada sería una pared
     budget *= 0.55 / (1 + 0.25 * (n - 1));
+  } else if (isNahualWave(w)) {
+    // Solo coyotes, en manadas que entran de golpe
+    const n = (w - NAHUAL_FIRST) / NAHUAL_EVERY;
+    plan.event = 'nahuales';
+    plan.sub = 'Aúllan en los patios: esta noche hay hombres que andan en cuatro patas';
+    plan.queue = Array(Math.min(32, 8 + 3 * n)).fill('coyote');
+    plan.interval = Math.max(0.9, 2.2 - 0.12 * n);
+    plan.cap = Math.min(16, 6 + 2 * n);
+    plan.pack = true;
+    budget = 0;
+  } else if (isRescateWave(w)) {
+    const kind = PROTEGIDO_ORDER[((w - RESCATE_FIRST) / RESCATE_EVERY) % PROTEGIDO_ORDER.length];
+    plan.event = 'rescate';
+    plan.prot = kind;
+    plan.sub = PROTEGIDOS[kind].sub;
+    budget *= 0.9;
+  } else if (isEclipseWave(w)) {
+    plan.event = 'eclipse';
+    plan.tzitzi = true;
+    plan.sub = 'Se apaga la luna y algo baja del cielo. Busca los braseros';
+    budget *= 0.75;
+    lastEvent = 'eclipse';
+    lastEventWave = w;
   } else if (heat < DIFF.reliefHeat) {
     plan.event = 'respiro';
     plan.sub = 'Los muertos dan tregua… por ahora';
@@ -2144,6 +2482,11 @@ function planWave(w) {
     if (plan.event === 'eclipse') {
       plan.sub = 'La luna se oculta. Busca sus ojos en la oscuridad';
       budget *= 0.9;
+      if (w >= TZITZI_FROM) {
+        plan.tzitzi = true;
+        plan.sub = 'Se apaga la luna y algo baja del cielo. Busca los braseros';
+        budget *= 0.85;
+      }
     } else if (plan.event === 'estampida') {
       plan.sub = '¡Vienen corriendo!';
       pSpecial = 0.75;
@@ -2191,10 +2534,12 @@ function startWave() {
   waveCleared = false;
   lastBossAt = -99;
   currentWave = planWave(wave);
+  debtPenalty = 0;
   spawnQueue = currentWave.queue.slice();
   spawnTimer = wave === 1 ? 3 : 1.5;
   waveStats = { hits: 0, minHp: player.hp, start: survivalTime, spawnEnd: null };
-  moonTarget = currentWave.event === 'eclipse' ? 0.38 : 1;
+  moonTarget = currentWave.event === 'eclipse' ? 0.38 : currentWave.event === 'nahuales' ? 0.62 : 1;
+  setupWaveExtras();
   const holesNow = holesFor(wave);
   let roofBroke = false;
   while (roofHoles.length < holesNow) {
@@ -2204,7 +2549,8 @@ function startWave() {
   }
   if (roofBroke) currentWave.sub = 'Se vino abajo un pedazo del techo: también caerán desde arriba';
   const ev = currentWave.event && EVENT_INFO[currentWave.event];
-  const evTitle = currentWave.event === 'jefe' ? bossTitle(currentWave.bosses) : ev && ev.title;
+  const evTitle = currentWave.event === 'jefe' ? bossTitle(currentWave.bosses)
+                : currentWave.event === 'rescate' ? PROTEGIDOS[currentWave.prot].titulo : ev && ev.title;
   showBanner(ev ? `Oleada ${wave} · ${evTitle}` : `Oleada ${wave}`,
              currentWave.sub, ev ? 3.4 : 2.5, ev ? ev.color : '#c9d6ff');
   Sfx.waveStart(currentWave.event);
@@ -2231,7 +2577,12 @@ function evaluateWave() {
     addFloater(`Machete: ${L.nombre} (${L.mejora})`, player.x, player.y - 52, '#c9d6ff');
   }
   // Superar un evento o un jefe da recompensa
-  if (ev && ev !== 'respiro') {
+  if (ev === 'rescate') finishRescue();
+  else if (ev === 'nahuales') {
+    player.hp = PLAYER_HP;
+    macheteCd = 0;
+    showBanner('Se fueron los nahuales', 'Vida completa y machete listo', 2.4, '#e8a860');
+  } else if (ev && ev !== 'respiro') {
     const before = player.hp;
     player.hp = Math.min(PLAYER_HP, player.hp + 2);
     showBanner('¡Superada!', before < PLAYER_HP - 0.01 ? '+2 de vida' : 'Ni un rasguño… nada mal', 2, '#9fe0a8');
@@ -2248,7 +2599,7 @@ function makeZombie(typeName, x, y, extra) {
     mass: (T.r / 15) * (T.r / 15),
     door: 0, entering: false,
     angle: 0,
-    speed: (T.speed[0] + Math.random() * (T.speed[1] - T.speed[0])) * (T.boss ? 1 : sm),
+    speed: (T.speed[0] + Math.random() * (T.speed[1] - T.speed[0])) * (T.boss ? 1 : Math.min(sm, T.maxSm || 9)),
     phase: Math.random() * Math.PI * 2,
     hitFlash: 0, kx: 0, ky: 0,
     attackT: -1, attackCd: 0,
@@ -2259,6 +2610,8 @@ function makeZombie(typeName, x, y, extra) {
   };
   zombies.push(z);
   if (T.boss) lastBossAt = survivalTime;
+  // En el rescate, parte de los muertos comunes va por el protegido
+  if (prot && currentWave && currentWave.event === 'rescate' && !T.ai && !T.boss && !z.raised && Math.random() < 0.45) z.prot = true;
   noteSighting(z.reg);
   return z;
 }
@@ -2332,6 +2685,7 @@ const FLAG_RADIUS = 150;
 
 function clearFactionStuff() {
   for (const a of [eShots, thrown, bombs, hazards, flags, lassos, floaters, blasts, corpses, owls, roofHoles, roofDust, gas, quakes]) a.length = 0;
+  clearEventStuff();
 }
 function nearFlag(z) {
   for (const fl of flags) if (Math.hypot(fl.x - z.x, fl.y - z.y) < FLAG_RADIUS) return true;
@@ -2339,7 +2693,8 @@ function nearFlag(z) {
 }
 // Velocidad extra: corneta del General (haste) y banderas rojas cercanas
 function speedMulZ(z) {
-  return (z.haste > 0 ? 1.35 : 1) * (flags.length && !z.T.boss && nearFlag(z) ? 1.3 : 1);
+  return (z.haste > 0 ? 1.35 : 1) * (flags.length && !z.T.boss && nearFlag(z) ? 1.3 : 1) *
+         (prot && prot.P.ayuda === 'calma' && prot.hp > 0 && !z.T.boss && Math.hypot(z.x - prot.x, z.y - prot.y) < prot.P.light ? 0.65 : 1);
 }
 function moveZ(z, ang, mul, dt) {
   const sp = z.speed * speedMulZ(z) * mul;
@@ -2891,6 +3246,467 @@ const AI = {
   }
 };
 AI.deuda = aiDeuda;
+AI.coyote = aiCoyote;
+AI.tzitzimitl = aiTzitzi;
+
+// ------------------------------------------------------------
+// Nahuales, tzitzimitl y rescates
+// ------------------------------------------------------------
+
+// Nahual coyote: rodea por un costado, se agacha (aviso) y se lanza; luego se repliega
+function aiCoyote(z, dt, dist, toPlayer) {
+  if (z.side === undefined) z.side = Math.random() < 0.5 ? -1 : 1;
+  z.lungeCd = (z.lungeCd ?? 0.8 + Math.random() * 1.2) - dt;
+  if (z.act === 'crouch') {
+    z.actT -= dt;
+    if (z.actT <= 0) { z.act = 'lunge'; z.actT = 0.28; z.bit = false; Sfx.swipe(z); }
+    return z.lockDir;
+  }
+  if (z.act === 'lunge') {
+    z.actT -= dt;
+    z.x += Math.cos(z.lockDir) * 430 * dt;
+    z.y += Math.sin(z.lockDir) * 430 * dt;
+    if (!z.bit && state === 'playing' && dist <= z.r + player.radius + 4) { z.bit = true; hurtPlayer(z, 1); }
+    if (z.actT <= 0) { z.act = 'back'; z.actT = 0.5; }
+    return z.lockDir;
+  }
+  if (z.act === 'back') {
+    z.actT -= dt;
+    const a = toPlayer + Math.PI + z.side * 0.9;
+    moveZ(z, a, 0.8, dt);
+    if (z.actT <= 0) { z.act = null; z.side = -z.side; }
+    return toPlayer;
+  }
+  if (state === 'playing' && z.lungeCd <= 0 && dist < 150 && dist > 55) {
+    z.act = 'crouch'; z.actT = 0.32; z.lockDir = toPlayer;
+    z.lungeCd = 1.6 + Math.random() * 0.8;
+    Sfx.snarl(z);
+    return toPlayer;
+  }
+  // De lejos se acerca en espiral por un costado (la manada te rodea); de cerca, muerde normal
+  if (dist > 90) {
+    const a = toPlayer + z.side * Math.min(0.9, (dist - 90) / 250);
+    moveZ(z, a, 1, dt);
+    return a;
+  }
+  return null;
+}
+
+// Braseros del Fuego Nuevo
+function placeBraseros() {
+  braseros.length = 0;
+  const f = inner();
+  for (const [a, b] of [[0.3, 0.3], [0.7, 0.3], [0.5, 0.76]]) {
+    braseros.push({ x: f.x + f.w * a, y: f.y + f.h * b, lit: 0, prog: 0, seed: Math.random() * 10 });
+  }
+}
+function updateBraseros(dt) {
+  for (const b of braseros) {
+    if (b.lit > 0) { b.lit = Math.max(0, b.lit - dt); continue; }
+    const near = state === 'playing' && Math.hypot(player.x - b.x, player.y - b.y) < BRASERO_REACH;
+    b.prog = near ? b.prog + dt : Math.max(0, b.prog - dt * 2);
+    if (b.prog >= BRASERO_LIGHT_T) {
+      b.lit = BRASERO_LIT; b.prog = 0;
+      Sfx.ignite(b.x, b.y);
+      addFloater('¡Fuego Nuevo!', b.x, b.y - 30, '#ffb060');
+    }
+  }
+}
+function litBraseroAt(x, y, pad = 0) {
+  for (const b of braseros) if (b.lit > 0 && Math.hypot(x - b.x, y - b.y) < BRASERO_ZONE + pad) return b;
+  return null;
+}
+
+// La tzitzimitl baja del cielo lejos del jugador y de la luz
+function spawnTzitzi() {
+  const f = inner();
+  let best = null, bd = -Infinity;
+  for (let i = 0; i < 14; i++) {
+    const x = f.x + f.w * (0.15 + 0.7 * Math.random()), y = f.y + f.h * (0.15 + 0.7 * Math.random());
+    const d = Math.hypot(x - player.x, y - player.y) - (litBraseroAt(x, y, 40) ? 999 : 0);
+    if (d > bd) { bd = d; best = { x, y }; }
+  }
+  makeZombie('tzitzimitl', best.x, best.y, { rise: 1.4, riseMax: 1.4, angle: Math.atan2(player.y - best.y, player.x - best.x), lifeT: 0, diveCd: 2.5, clawCd: 0 });
+  starFx.push({ x: best.x, y: best.y, t: 0.9, max: 0.9, up: false });
+  shake = Math.max(shake, 0.3);
+  Sfx.tzitziArrive(best.x, best.y);
+  showBanner('Bajó una tzitzimitl', 'Las balas la atraviesan. Enciende los braseros y hazla pasar por el fuego', 3.6, '#ff8a7a');
+}
+
+function aiTzitzi(z, dt, dist, toPlayer) {
+  if (z.act === 'leave') {
+    z.leaveT -= dt;
+    if (z.leaveT <= 0) z.gone = true;
+    return z.angle;
+  }
+  z.lifeT += dt;
+  z.clawCd = Math.max(0, z.clawCd - dt);
+  if (z.lifeT > TZITZI_TIME && z.act !== 'caught') { tzitziLeave(z, false); return z.angle; }
+
+  // La luz del Fuego Nuevo la quema; si la agarra en pleno vuelo, queda atrapada
+  const lit = litBraseroAt(z.x, z.y, z.r * 0.4);
+  z.inLight = !!lit || z.act === 'caught';
+  if (z.inLight) {
+    z.hp -= TZITZI_BURN * dt;
+    z.hitFlash = Math.max(z.hitFlash, 0.06);
+    z.burnFx = (z.burnFx || 0) - dt;
+    if (z.burnFx <= 0) { z.burnFx = 0.05; spawnSparks(z.x + (Math.random() - 0.5) * z.r, z.y + (Math.random() - 0.5) * z.r, 0, -1); }
+    Sfx.burn(z.x, z.y);
+    if (z.hp <= 0) { z.hp = 0.01; tzitziLeave(z, true); return z.angle; }
+    if (z.act === 'dive' || z.act === 'prep') {
+      z.act = 'caught'; z.actT = 1.6;
+      addFloater('¡La agarró el fuego!', z.x, z.y - z.r - 16, '#ffb060');
+    } else if (z.act !== 'caught' && lit) {
+      z.flee = 0.7; z.fleeFrom = lit;
+    }
+  }
+  if (z.act === 'caught') {
+    z.actT -= dt;
+    if (z.actT <= 0) { z.act = null; z.flee = 1.0; z.fleeFrom = lit || braseros[0]; z.diveCd = 2.5; }
+    return z.angle + Math.sin(gameTime * 30) * 0.4;   // se retuerce en la luz
+  }
+  if (z.act === 'prep') {
+    z.actT -= dt;
+    if (z.actT > 0.25) z.lockDir = lerpAngle(z.lockDir, toPlayer, Math.min(1, dt * 4));
+    if (z.actT <= 0) { z.act = 'dive'; z.actT = TZITZI_DIVE_TIME; z.hit = false; }
+    return z.lockDir;
+  }
+  if (z.act === 'dive') {
+    z.actT -= dt;
+    z.x += Math.cos(z.lockDir) * TZITZI_DIVE_SPEED * dt;
+    z.y += Math.sin(z.lockDir) * TZITZI_DIVE_SPEED * dt;
+    if (!z.hit && state === 'playing' && dist <= z.r + player.radius + 4) { z.hit = true; hurtPlayer(z, 2); }
+    if (z.actT <= 0) { z.act = null; z.diveCd = 2.2 + Math.random(); }
+    return z.lockDir;
+  }
+  if (z.flee > 0 && z.fleeFrom) {
+    z.flee -= dt;
+    const a = Math.atan2(z.y - z.fleeFrom.y, z.x - z.fleeFrom.x);
+    moveZ(z, a, 1.3, dt);
+    return a;
+  }
+  z.diveCd -= dt;
+  const playerLit = litBraseroAt(player.x, player.y, 6);
+  // No se lanza contra quien está en la luz: ahí está el engaño
+  if (state === 'playing' && z.diveCd <= 0 && dist < TZITZI_DIVE_RANGE && dist > 70 && !playerLit) {
+    z.act = 'prep'; z.actT = 0.7; z.lockDir = toPlayer;
+    Sfx.whistle(z.x, z.y);
+    return toPlayer;
+  }
+  // Acecha esquivando la luz de los braseros
+  let vx = Math.cos(toPlayer), vy = Math.sin(toPlayer);
+  for (const b of braseros) {
+    if (b.lit <= 0) continue;
+    const ox = z.x - b.x, oy = z.y - b.y, d = Math.hypot(ox, oy) || 1;
+    const R = BRASERO_ZONE + z.r + 12;
+    if (d < R) { const k = (R - d) / 20 * 1.6; vx += ox / d * k; vy += oy / d * k; }
+  }
+  const a = Math.atan2(vy, vx);
+  const near = dist <= z.r + player.radius + 6;
+  if (!near) moveZ(z, a, playerLit && dist < BRASERO_ZONE + 90 ? 0.5 : 1, dt);
+  if (near && z.clawCd <= 0 && state === 'playing') { z.clawCd = 1.1; Sfx.swipe(z); hurtPlayer(z, 1); }
+  return near ? toPlayer : a;
+}
+
+// Se va al cielo: con el fuego (ganó el jugador) o porque pasó el eclipse
+function tzitziLeave(z, won) {
+  if (z.act === 'leave') return;
+  z.act = 'leave'; z.leaveT = 1.4; z.intangible = true; z.inLight = false;
+  moonTarget = 1;   // vuelve la luna
+  starFx.push({ x: z.x, y: z.y, t: 1.1, max: 1.1, up: true });
+  Sfx.tzitziLeave(z.x, z.y);
+  if (won) {
+    kills++;
+    noteKill(z.reg);
+    player.hp = PLAYER_HP;
+    showBanner('La tzitzimitl regresó al cielo', 'El Fuego Nuevo la espantó. Vida completa', 3.2, '#ffd27a');
+  } else {
+    showBanner('Pasó el eclipse', 'Se fue sin un rasguño: volverá en el próximo', 3, '#b0b8c8');
+  }
+}
+
+// Rondas de rescate
+function spawnProtegido(kind) {
+  const P = PROTEGIDOS[kind], f = inner();
+  const spots = [[0.5, 0.5], [0.42, 0.44], [0.58, 0.56], [0.5, 0.4], [0.5, 0.6]].map(([a, b]) => ({ x: f.x + f.w * a, y: f.y + f.h * b }));
+  const s = spots.find(p => Math.hypot(p.x - player.x, p.y - player.y) > 90) || spots[0];
+  prot = { kind, P, x: s.x, y: s.y, r: P.r, hp: P.hp, maxHp: P.hp, invuln: 0, hitFlash: 0, alarm: 0,
+           flashCd: 4, flashT: 0, leaving: 0, angle: Math.atan2(f.y + f.h / 2 - s.y + 0.01, f.x + f.w / 2 - s.x + 40) };
+}
+function updateProtegido(dt) {
+  if (!prot) return;
+  prot.invuln = Math.max(0, prot.invuln - dt);
+  prot.hitFlash = Math.max(0, prot.hitFlash - dt);
+  prot.alarm = Math.max(0, prot.alarm - dt);
+  prot.flashT = Math.max(0, prot.flashT - dt);
+  if (prot.leaving > 0) { prot.leaving -= dt; if (prot.leaving <= 0) prot = null; return; }
+  if (state !== 'playing') return;
+  const dp = Math.hypot(player.x - prot.x, player.y - prot.y);
+  if (prot.P.ayuda === 'cura' && dp < prot.P.light) {
+    player.hp = Math.min(PLAYER_HP, player.hp + 0.25 * dt);   // sana aun sin esperar la regeneración
+  }
+  if (prot.P.ayuda === 'flash') {
+    prot.flashCd -= dt;
+    if (prot.flashCd <= 0) {
+      prot.flashCd = 6 + Math.random() * 2;
+      prot.flashT = 0.35;
+      Sfx.magnesio(prot.x, prot.y);
+      for (const z of zombies) {
+        if (Math.hypot(z.x - prot.x, z.y - prot.y) > 180) continue;
+        z.reveal = 1.2;
+        if (!z.T.boss) { z.dazzle = 1.0; z.attackT = -1; }
+      }
+    }
+  }
+}
+function hurtProt(z, dmg) {
+  if (!prot || prot.leaving > 0 || prot.invuln > 0 || prot.hp <= 0) return;
+  prot.hp -= dmg;
+  prot.invuln = 0.3; prot.hitFlash = 0.15; prot.alarm = 1.5;
+  Sfx.protHurt(prot);
+  const a = Math.atan2(prot.y - z.y, prot.x - z.x);
+  if (prot.P.persona) spawnBlood(prot.x, prot.y, Math.cos(a), Math.sin(a), 8);
+  else { spawnSparks(prot.x, prot.y, Math.cos(a), Math.sin(a)); Sfx.hitWood(prot.x, prot.y); }
+  if (prot.hp <= 0) failRescue();
+}
+// Cae el protegido: duele, pero no mata, y la deuda crece
+function failRescue() {
+  const P = prot.P, before = player.hp;
+  if (state === 'playing' && player.hp > 1) player.hp = Math.max(1, player.hp - RESCATE_CASTIGO);
+  player.regenDelay = REGEN_DELAY * 2;
+  hurtVignette = 0.8; shake = Math.max(shake, 0.35);
+  debtPenalty = RESCATE_DEUDA;
+  if (before - player.hp > 0.01) addFloater(`-${Math.round(before - player.hp)}`, player.x, player.y - 34, '#ff8a7a');
+  addDecal({ type: 'protcaido', skin: P.skin, x: prot.x, y: prot.y, a: prot.angle + (P.persona ? 0.5 : 0.2), persona: P.persona });
+  showBanner(P.persona ? `Cayó ${P.nombre.toLowerCase()}` : `Tiraron ${P.nombre.toLowerCase()}`,
+             'La deuda crece: perdiste vida y la próxima oleada trae más muertos', 3.4, '#ff8a7a');
+  Sfx.rescueFail();
+  prot = null;
+}
+// Al terminar la oleada de rescate
+function finishRescue() {
+  if (prot && prot.hp > 0) {
+    player.hp = PLAYER_HP;
+    macheteCd = 0;
+    prot.leaving = 1.2;
+    showBanner('¡A salvo!', `${prot.P.nombre} sobrevivió la noche. Vida completa y machete listo`, 2.8, '#9fe0a8');
+    Sfx.rescueOk();
+  } else {
+    showBanner('Oleada superada', 'Pero la deuda creció…', 2.2, '#b0b8c8');
+  }
+}
+
+// Al empezar cada oleada: protegido, braseros y tzitzimitl
+function setupWaveExtras() {
+  braseros.length = 0;
+  tzitziPending = 0;
+  if (prot && prot.leaving <= 0) prot = null;
+  if (!currentWave) return;
+  if (currentWave.prot) spawnProtegido(currentWave.prot);
+  if (currentWave.tzitzi) { placeBraseros(); tzitziPending = TZITZI_DELAY; }
+}
+function clearEventStuff() {
+  braseros.length = 0; starFx.length = 0;
+  prot = null; debtPenalty = 0; tzitziPending = 0; nahualSeen = false;
+}
+function updateEventStuff(dt) {
+  for (let i = starFx.length - 1; i >= 0; i--) if ((starFx[i].t -= dt) <= 0) starFx.splice(i, 1);
+  if (tzitziPending > 0 && state === 'playing') {
+    tzitziPending -= dt;
+    if (tzitziPending <= 0) { tzitziPending = 0; spawnTzitzi(); }
+  }
+  for (let i = zombies.length - 1; i >= 0; i--) if (zombies[i].gone) zombies.splice(i, 1);
+  updateBraseros(dt);
+  updateProtegido(dt);
+}
+
+// ---------- dibujo ----------
+function drawEventGround() {
+  for (const b of braseros) {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath(); ctx.ellipse(3, 4, 16, 13, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#4a4038'; ctx.strokeStyle = '#1e1a16'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#6a5a4a';
+    for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.4; ctx.beginPath(); ctx.arc(Math.cos(a) * 14, Math.sin(a) * 14, 3, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = b.lit > 0 ? '#ff7a20' : '#2a1a12';
+    ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
+    if (b.lit > 0) {
+      const fade = Math.min(1, b.lit / 2.5);
+      for (let i = 0; i < 5; i++) {
+        const a = i * 1.26 + b.seed, h = (10 + 6 * Math.sin(gameTime * 13 + i * 2 + b.seed)) * (0.5 + 0.5 * fade);
+        ctx.fillStyle = i % 2 ? '#ffb040' : '#ffe08a';
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * 6 - 3, Math.sin(a) * 4);
+        ctx.lineTo(Math.cos(a) * 3, Math.sin(a) * 3 - h);
+        ctx.lineTo(Math.cos(a) * 6 + 3, Math.sin(a) * 4);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+  if (prot) {
+    const spr = SKINS[prot.P.skin];
+    if (spr.ready) {
+      const size = ZOMBIE_SIZE * (prot.kind === 'ofrenda' ? 1.15 : 1);
+      ctx.save();
+      ctx.translate(prot.x, prot.y);
+      ctx.globalAlpha = prot.leaving > 0 ? prot.leaving / 1.2 : 1;
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath(); ctx.ellipse(3, 5, size * 0.3, size * 0.26, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.rotate(prot.angle);
+      ctx.drawImage(spr.img, -size / 2, -size / 2, size, size);
+      if (prot.hitFlash > 0) {
+        ctx.globalAlpha *= prot.hitFlash / 0.15;
+        ctx.drawImage(spr.flash, -size / 2, -size / 2, size, size);
+      }
+      ctx.restore();
+    }
+  }
+}
+// Luz que recortan de la oscuridad
+function eventLights() {
+  for (const b of braseros) {
+    if (b.lit > 0) {
+      const fl = 0.88 + Math.sin(gameTime * 21 + b.seed) * 0.07 + Math.sin(gameTime * 8.3 + b.seed) * 0.05;
+      const fade = b.lit < 2.5 ? (0.55 + 0.45 * Math.abs(Math.sin(gameTime * 9))) * (b.lit / 2.5) + 0.2 : 1;
+      punch(b.x, b.y, (BRASERO_ZONE + 45) * fl, 0.9 * Math.min(1, fade));
+    } else {
+      punch(b.x, b.y, 26 + 30 * (b.prog / BRASERO_LIGHT_T), 0.35 + 0.4 * (b.prog / BRASERO_LIGHT_T));
+    }
+  }
+  if (prot) {
+    const k = prot.leaving > 0 ? prot.leaving / 1.2 : 1;
+    punch(prot.x, prot.y, prot.P.light * (0.95 + Math.sin(gameTime * 7) * 0.04), 0.55 * k);
+    if (prot.flashT > 0) punch(prot.x, prot.y, 280, 0.95 * prot.flashT / 0.35);
+  }
+  for (const s of starFx) {
+    const k = s.t / s.max, h = s.up ? (1 - k) * 260 : k * 260;
+    punch(s.x + h * 0.25, s.y - h, 60, 0.6 * k);
+  }
+  for (const z of zombies) if (z.T.ai === 'tzitzimitl' && z.inLight) punch(z.x, z.y, 70, 0.5);
+}
+// Avisos: coyote agachado, tzitzimitl a punto de lanzarse, alcance de los braseros
+function drawEventWarnings() {
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (const z of zombies) {
+    if (z.T.ai === 'coyote' && z.act === 'crouch') {
+      const k = 1 - z.actT / 0.32;
+      ctx.strokeStyle = `rgba(255,70,50,${0.35 + 0.45 * k})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(z.x, z.y);
+      ctx.lineTo(z.x + Math.cos(z.lockDir) * 120, z.y + Math.sin(z.lockDir) * 120);
+      ctx.stroke();
+    }
+    if (z.T.ai === 'tzitzimitl' && z.act === 'prep') {
+      const k = 1 - z.actT / 0.7, L = TZITZI_DIVE_SPEED * TZITZI_DIVE_TIME + z.r;
+      ctx.strokeStyle = `rgba(255,60,60,${0.3 + 0.5 * k})`;
+      ctx.lineWidth = 2 + 4 * k;
+      ctx.setLineDash([10, 8]);
+      ctx.beginPath();
+      ctx.moveTo(z.x, z.y);
+      ctx.lineTo(z.x + Math.cos(z.lockDir) * L, z.y + Math.sin(z.lockDir) * L);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+  const tz = zombies.some(z => z.T.ai === 'tzitzimitl' && z.act !== 'leave') || tzitziPending > 0;
+  for (const b of braseros) {
+    if (b.lit > 0) {
+      ctx.strokeStyle = `rgba(255,170,80,${0.18 + 0.08 * Math.sin(gameTime * 6)})`;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 10]);
+      ctx.beginPath(); ctx.arc(b.x, b.y, BRASERO_ZONE, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+    } else if (tz) {
+      ctx.strokeStyle = `rgba(255,190,110,${0.25 + 0.2 * Math.sin(gameTime * 4 + b.seed)})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(b.x, b.y, BRASERO_REACH, 0, Math.PI * 2); ctx.stroke();
+      if (b.prog > 0) {
+        ctx.strokeStyle = '#ffb060'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(b.x, b.y, 22, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * b.prog / BRASERO_LIGHT_T); ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+}
+// Vida del protegido: siempre visible, con su nombre
+function drawProtHealth() {
+  if (!prot || prot.leaving > 0) return;
+  const w = 46, x = prot.x - w / 2, y = prot.y - prot.r - 22;
+  if (prot.alarm > 0) {
+    ctx.strokeStyle = `rgba(255,80,60,${0.6 * prot.alarm / 1.5})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(prot.x, prot.y, prot.r + 10 + 6 * Math.sin(gameTime * 14), 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.font = '600 11px system-ui, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillStyle = '#9fd0ff';
+  ctx.fillText(prot.P.nombre, prot.x, y - 3);
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(x - 1, y - 1, w + 2, 6);
+  ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(x, y, w, 4);
+  const r = prot.hp / prot.maxHp;
+  ctx.fillStyle = r > 0.5 ? '#7fd08a' : r > 0.25 ? '#e8c060' : '#e05a4a';
+  ctx.fillRect(x, y, w * Math.max(0, r), 4);
+}
+// Lo que brilla: estrellas y ojos de la tzitzimitl, brasas, velas, estela de estrella
+function drawEventEmissive() {
+  for (const z of zombies) {
+    if (z.T.ai !== 'tzitzimitl' || z.rise > 0.7) continue;
+    const k = ZOMBIE_SIZE * z.T.scale / 64, a0 = z.act === 'leave' ? z.leaveT / 1.4 : 1;
+    const c = Math.cos(z.angle), s = Math.sin(z.angle);
+    const pts = [[-12, -2, 1], [-2, -6, 0.8], [-16, 11, 0.8], [0, 13, 1], [-20, -5, 0.7], [15.5, -2.6, 2], [15.5, 2.6, 2]];
+    pts.forEach(([lx, ly, w], i) => {
+      const x = z.x + (lx * c - ly * s) * k, y = z.y + (lx * s + ly * c) * k;
+      const eye = w > 1.5;
+      const tw = eye ? (z.act === 'prep' ? 1 : 0.75) : 0.5 + 0.5 * Math.sin(gameTime * 5 + i * 1.7);
+      const r = (eye ? 4 : 3.5) * k;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, eye ? `rgba(255,70,60,${0.95 * tw * a0})` : `rgba(230,235,255,${0.9 * tw * a0})`);
+      g.addColorStop(1, eye ? 'rgba(255,0,0,0)' : 'rgba(150,170,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    });
+  }
+  for (const b of braseros) {
+    const lit = b.lit > 0;
+    const r = lit ? 30 : 10, al = lit ? 0.5 : 0.22 + 0.1 * Math.sin(gameTime * 3 + b.seed);
+    const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, r);
+    g.addColorStop(0, `rgba(255,150,50,${al})`);
+    g.addColorStop(1, 'rgba(255,90,20,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.fill();
+  }
+  if (prot) {
+    const k = prot.leaving > 0 ? prot.leaving / 1.2 : 1;
+    const g = ctx.createRadialGradient(prot.x, prot.y, 0, prot.x, prot.y, 26);
+    g.addColorStop(0, `rgba(255,190,90,${0.22 * k})`);
+    g.addColorStop(1, 'rgba(255,140,40,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(prot.x, prot.y, 26, 0, Math.PI * 2); ctx.fill();
+    if (prot.flashT > 0) {
+      ctx.fillStyle = `rgba(255,255,240,${0.35 * prot.flashT / 0.35})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+  for (const s of starFx) {
+    const k = s.t / s.max, h = s.up ? (1 - k) * 260 : k * 260;
+    const x = s.x + h * 0.25, y = s.y - h;
+    ctx.strokeStyle = `rgba(230,235,255,${0.8 * k})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 30, y - 110); ctx.stroke();
+    const g = ctx.createRadialGradient(x, y, 0, x, y, 18);
+    g.addColorStop(0, `rgba(255,255,255,${0.9 * k})`);
+    g.addColorStop(1, 'rgba(160,180,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
 
 // El Atarantado: quedó aturdido por un cañonazo. Deambula, se queda
 // meciéndose, a ratos te sigue y de pronto se lanza (con un temblor de aviso)
@@ -3109,6 +3925,9 @@ function updateZombies(dt, f) {
     if (spawnTimer <= 0 && zombies.length < currentWave.cap) {
       let want = currentWave.event === 'asedio' ? 3 : 1;
       let spawned = 0;
+      // Golpe: uno por cada entrada a la vez (las manadas de nahuales siempre entran así)
+      const burst = !!currentWave.pack || Math.random() < burstChance(wave);
+      if (burst) want = 99;
       // Puertas y, si ya se cayó el techo, sus huecos (cada hueco pesa un poco menos que una puerta)
       if (spawnQueue[0] === 'deuda') { spawnDeuda(); spawnQueue.shift(); spawned++; }
       // Con varios jefes, cada uno da unos segundos de margen tras el anterior (mientras siga vivo):
@@ -3119,17 +3938,25 @@ function updateZombies(dt, f) {
         else want = 0;
       }
       const points = doors.map((_, k) => ({ door: k }));
-      for (const h of roofHoles) if (Math.random() < 0.6) points.push({ hole: h });
+      for (const h of roofHoles) if (burst || Math.random() < 0.6) points.push({ hole: h });
       for (const pt of shuffle(points)) {
         if (spawned >= want || !spawnQueue.length || zombies.length >= currentWave.cap) break;
+        if (spawnQueue[0] === 'deuda') break;
+        // Un jefe nunca sale encimado con otro, ni siquiera en un golpe
+        if (ZTYPES[spawnQueue[0]].boss && survivalTime - lastBossAt < BOSS_GAP && zombies.some(z => z.T.boss)) {
+          const k = spawnQueue.findIndex(t => !ZTYPES[t].boss);
+          if (k > 0) spawnQueue.unshift(spawnQueue.splice(k, 1)[0]); else break;
+        }
         const ok = pt.hole ? spawnFromRoof(pt.hole, spawnQueue[0]) : spawnAt(pt.door, spawnQueue[0]);
         if (ok) { spawnQueue.shift(); spawned++; }
       }
       // Si las entradas están ocupadas se reintenta en el siguiente cuadro
-      if (spawned) spawnTimer = currentWave.interval * (want > 1 ? 2.2 : 1);
+      if (spawned) spawnTimer = currentWave.interval * (burst ? 1 + 0.45 * spawned : want > 1 ? 2.2 : 1);
+      if (burst && spawned >= 3 && !currentWave.pack) Sfx.burst();
+      if (currentWave.pack && spawned && Math.random() < 0.5) Sfx.howl(player.x + (Math.random() - 0.5) * 600, player.y + (Math.random() - 0.5) * 400);
       if (!spawnQueue.length) waveStats.spawnEnd = survivalTime;
     }
-  } else if (zombies.length === 0) {
+  } else if (zombies.length === 0 && !(tzitziPending > 0)) {
     if (!waveCleared) { waveCleared = true; evaluateWave(); }
     wavePause += dt;
     if (wavePause >= WAVE_PAUSE) startWave();
@@ -3145,6 +3972,7 @@ function updateZombies(dt, f) {
     z.haste = Math.max(0, z.haste - dt);
     if (z.fall > 0) { z.fall -= dt; if (z.fall <= 0) landFromRoof(z); continue; }
     if (z.rise > 0) { z.rise -= dt; continue; }
+    if (z.dazzle > 0) { z.dazzle -= dt; continue; }   // deslumbrado por el magnesio
     let target;
     if (z.entering) {
       // Cruza el vano en línea recta hacia dentro
@@ -3153,7 +3981,10 @@ function updateZombies(dt, f) {
       z.x += d.nx * z.speed * dt;
       z.y += d.ny * z.speed * dt;
     } else {
-      const dx = player.x - z.x, dy = player.y - z.y;
+      // Blanco: el jugador, o el protegido si este muerto va por él (salvo que el jugador se le atraviese)
+      const tgt = z.prot && prot && prot.hp > 0 && prot.leaving <= 0 && Math.hypot(player.x - z.x, player.y - z.y) > 70 ? prot : player;
+      const tR = tgt === player ? player.radius : prot.r;
+      const dx = tgt.x - z.x, dy = tgt.y - z.y;
       const dist = Math.hypot(dx, dy);
       const toPlayer = Math.atan2(dy, dx);
       z.attackCd = Math.max(0, z.attackCd - dt);
@@ -3173,9 +4004,9 @@ function updateZombies(dt, f) {
         z.attackT += dt;
         if (prev < m.windup && z.attackT >= m.windup) Sfx.swipe(z);
         if (prev < m.hitAt && z.attackT >= m.hitAt &&
-            dist <= z.r + player.radius + m.hit &&
+            dist <= z.r + tR + m.hit &&
             (!m.cone || Math.abs(angleDiff(toPlayer, z.lockDir)) <= m.cone)) {
-          hurtPlayer(z, m.dmg);
+          if (tgt === player) hurtPlayer(z, m.dmg); else hurtProt(z, m.dmg);
         }
         if (z.attackT >= m.total) {
           z.attackT = -1;
@@ -3186,14 +4017,14 @@ function updateZombies(dt, f) {
         target = toPlayer + Math.sin(gameTime * 3 + z.phase) * 0.25;
         // Se detiene al alcanzarlo (el del trinche, a la distancia de su arma)
         const m = meleeOf(z);
-        if (dist > z.r + player.radius + (m.stopGap || 2)) {
+        if (dist > z.r + tR + (m.stopGap || 2)) {
           const spd = z.speed * speedMulZ(z);
           const mv = z.T.turn ? z.angle : target;   // los de giro lento caminan hacia donde miran
           z.x += Math.cos(mv) * spd * dt;
           z.y += Math.sin(mv) * spd * dt;
         }
         // Lo bastante cerca: inicia el ataque
-        if (z.attackCd <= 0 && dist <= z.r + player.radius + m.start && state === 'playing' &&
+        if (z.attackCd <= 0 && dist <= z.r + tR + m.start && state === 'playing' &&
             (!z.T.turn || Math.abs(angleDiff(toPlayer, z.angle)) < (m.cone || 1))) {
           z.attackT = 0;
           z.lockDir = z.T.turn ? z.angle : toPlayer;
@@ -3262,6 +4093,11 @@ function resolveCollisions(f) {
     }
     for (const z of zombies) {
       if (z.fall > 0) continue;
+      // Nadie se le encima al protegido
+      if (prot && prot.leaving <= 0) {
+        const qx = z.x - prot.x, qy = z.y - prot.y, qm = z.r + prot.r, q2 = qx * qx + qy * qy;
+        if (q2 < qm * qm) { const q = Math.sqrt(q2) || 1; z.x = prot.x + qx / q * qm; z.y = prot.y + qy / q * qm; }
+      }
       // El jugador no es empujado por los zombis
       let dx = z.x - player.x, dy = z.y - player.y;
       const min = z.r + player.radius;
@@ -3318,6 +4154,14 @@ function damageZombie(z, b, hx, hy, base = 1) {
     if (Math.random() < 0.25) addFloater('Escudo', z.x, z.y - z.r - 10, '#ff9a8a');
   }
   if (z.T.ai === 'sombra') z.reveal = 1.2;                     // el Jefe Suriano se deja ver al recibir un tiro
+  if (z.T.ai === 'tzitzimitl') {
+    // Fuera de la luz del brasero nada le hace daño
+    if (!z.inLight || z.act === 'leave') {
+      if (Math.random() < 0.1) addFloater('La atraviesa', z.x, z.y - z.r - 10, '#b0b8c8');
+      return;
+    }
+  }
+  if (z.T.nahual && base > 1) dmg = macheteLevel >= MACHETE_MAX ? 3 : 2;   // el metal hiere al nahual (la obsidiana, más)
   if (z.T.ai === 'deuda') {
     // De frente la cubren los cuerpos; por la espalda está la silla.
     // El machete corta parejo por donde entre.
@@ -3338,6 +4182,7 @@ function damageZombie(z, b, hx, hy, base = 1) {
   }
   z.hp -= dmg * base;
   z.hitFlash = 0.12;
+  if (z.T.ai === 'tzitzimitl' && z.hp <= 0) { z.hp = 0.01; tzitziLeave(z, true); return; }
   if (base === 1) Sfx.hitFlesh(hx, hy);
   // Un golpe durante la preparación interrumpe el ataque
   if (z.attackT >= 0 && z.attackT < meleeOf(z).hitAt) {
@@ -3356,7 +4201,8 @@ function killZombie(z, ux, uy) {
   zombies.splice(idx, 1);
   kills++;
   if (!z.T.boss && !z.raised) {
-    corpses.push({ x: z.x, y: z.y, type: z.type, angle: Math.atan2(uy, ux) + (Math.random() - 0.5) * 0.6, t: 0 });
+    corpses.push({ x: z.x, y: z.y, type: z.T.corpse || z.type, angle: Math.atan2(uy, ux) + (Math.random() - 0.5) * 0.6, t: 0 });
+    if (z.T.nahual && !nahualSeen) { nahualSeen = true; addFloater('Queda el cuerpo de un hombre', z.x, z.y - 30, '#e8a860'); }
     if (corpses.length > MAX_CORPSES) corpses.shift();
   }
   noteKill(z.reg);
@@ -3372,7 +4218,7 @@ function killZombie(z, ux, uy) {
     });
   }
   addDecal({ type: 'pool', x: z.x, y: z.y, blobs });
-  addDecal({
+  if (SKINS[z.T.skin].hat) addDecal({
     type: 'hat2', hat: SKINS[z.T.skin].hat, s,
     x: z.x + ux * 14 * s + (Math.random() - 0.5) * 10,
     y: z.y + uy * 14 * s + (Math.random() - 0.5) * 10,
@@ -3465,6 +4311,15 @@ function drawGore() {
       }
       ctx.fillStyle = 'rgba(10,8,6,0.55)';
       ctx.beginPath(); ctx.arc(d.x, d.y, d.r * 0.35, 0, Math.PI * 2); ctx.fill();
+    } else if (d.type === 'protcaido') {
+      const spr = SKINS[d.skin];
+      if (spr.ready) {
+        ctx.save();
+        ctx.translate(d.x, d.y); ctx.rotate(d.a);
+        ctx.globalAlpha = 0.9;
+        ctx.drawImage(tintedSprite(spr, d.persona ? 'rgba(25,18,12,0.55)' : 'rgba(20,14,10,0.65)'), -30, -30, 60, 60);
+        ctx.restore();
+      }
     } else if (d.type === 'silla') {
       // La silla presidencial, sola en el piso: no se destruye, solo se sella
       ctx.save();
@@ -3919,6 +4774,7 @@ function drawFactionOverlay() {
 
 // Qué tan visible es un zombi (el Jefe Suriano es casi una sombra)
 function zombieAlpha(z) {
+  if (z.T.ai === 'tzitzimitl') return z.act === 'leave' ? Math.max(0, z.leaveT / 1.4) : z.inLight ? 1 : 0.6;
   if (z.T.ai !== 'sombra') return 1;
   let v = 0.16;
   if (z.reveal > 0) v = Math.max(v, Math.min(1, z.reveal / 0.4));
@@ -3957,7 +4813,13 @@ function drawZombies() {
       else ctx.ellipse(3 * sc, 5 * sc, 17 * sc, 15 * sc, 0, 0, Math.PI * 2);
       ctx.fill();
     }
+    if (z.act === 'leave') { const k = 1 - z.leaveT / 1.4; ctx.translate(k * 12, -k * 60); ctx.scale(1 + k * 0.7, 1 + k * 0.7); }
     ctx.rotate(z.angle);
+    if (z.T.ai === 'coyote') {   // trote, agachada y salto
+      if (z.act === 'crouch') ctx.scale(0.86, 1.1);
+      else if (z.act === 'lunge') ctx.scale(1.28, 0.9);
+      else ctx.scale(1 + 0.05 * Math.sin(gameTime * 20 + z.phase), 1);
+    }
     if (!z.T.noArms) drawArms(z);
     if (spr.ready) {
       const h = size / 2;
@@ -4321,7 +5183,7 @@ function swingMachete() {
   };
   let hits = 0;
   // Alcanza a los 3 más cercanos dentro del abanico (no a una multitud entera)
-  const targets = zombies.filter(z => !z.intangible && !(z.rise > 0) && inArc(z.x, z.y, z.r))
+  const targets = zombies.filter(z => !z.intangible && !(z.rise > 0) && !(z.T.ai === 'tzitzimitl' && !z.inLight) && inArc(z.x, z.y, z.r))
     .sort((a, b) => Math.hypot(a.x - player.x, a.y - player.y) - Math.hypot(b.x - player.x, b.y - player.y))
     .slice(0, PMACHETE.maxTargets);
   for (const z of targets) {
@@ -4823,6 +5685,7 @@ function update(dt) {
   updateMachete(dt);
   updateRoof(dt);
   updateDeudaStuff(dt);
+  updateEventStuff(dt);
   Sfx.update(dt, zombies);
 
   // Apuntar al cursor
@@ -4849,6 +5712,10 @@ function update(dt) {
     for (const z of zombies) {
       if (z.intangible) continue;
       const t = segmentCircle(px, py, b.x, b.y, z.x, z.y, z.r);
+      if (z.T.ai === 'tzitzimitl' && !z.inLight) {   // la atraviesan
+        if (t >= 0 && Math.random() < 0.04) addFloater('La atraviesa', z.x, z.y - z.r - 10, '#b0b8c8');
+        continue;
+      }
       if (t >= 0 && t < hitT) { hitT = t; hitZ = z; }
     }
     for (const fl of flags) {
@@ -4959,6 +5826,7 @@ function draw(t) {
   drawCorpses();
   drawRoofRubble();
   drawFactionGround();
+  drawEventGround();
   drawZombies();
 
   // 2) Personaje (queda bajo la oscuridad; en el menú el cuarto está vacío)
@@ -5011,6 +5879,7 @@ function draw(t) {
   }
   if (showPlayer) punch(player.x, player.y, 75, 0.3);
   factionLights();
+  eventLights();
   for (const b of bullets) punch(b.x, b.y, 45, 0.45);
   for (const s of sparks) punch(s.x, s.y, 30, 0.3 * (s.life / s.max));
   if (flash > 0) {
@@ -5067,13 +5936,16 @@ function draw(t) {
   drawChargeWarnings();
   drawWeaponWarnings();
   drawDeudaWarnings();
+  drawEventWarnings();
   drawZombieHealth();
+  drawProtHealth();
   if (state === 'playing') drawPlayerHealth();
 
   // 5) Elementos que emiten luz: ojos en el eclipse, balas, chispas, fogonazo
   ctx.globalCompositeOperation = 'lighter';
   drawEyes();
   drawFactionEmissive();
+  drawEventEmissive();
   for (const b of bullets) {
     const glow = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 12);
     glow.addColorStop(0, 'rgba(255,210,120,0.9)');
@@ -5204,7 +6076,7 @@ function speedLabel(T) {
 }
 
 // Notas de cada facción (resumen de la investigación histórica)
-const FACTION_ORDER = ['federales', 'zapatistas', 'villistas', 'carrancistas', 'colorados', 'culto'];
+const FACTION_ORDER = ['federales', 'zapatistas', 'villistas', 'carrancistas', 'colorados', 'culto', 'antiguas'];
 const FACTION_NOTES = {
   federales: {
     titulo: 'El Ejército Federal', bajada: 'Huertistas · disuelto el 13 de agosto de 1914',
@@ -5259,11 +6131,22 @@ const FACTION_NOTES = {
     ],
     vestian: 'Capas de plumas y máscaras de búho. Llevan siempre consigo un objeto de poder.',
     peleaban: 'No pelean: invocan y controlan a los de abajo. Dicen que se les debilita rompiendo su objeto de poder.'
+  },
+  antiguas: {
+    titulo: 'Fuerzas antiguas', bajada: 'Más viejas que la Revolución y que la Colonia',
+    texto: [
+      'No son de ningún bando ni vinieron a cobrar la deuda de la silla. Son cosas que siempre han estado aquí: nahuales que toman la forma de su animal y las tzitzimime, que viven entre las estrellas.',
+      'Desde que la ceremonia del Fuego Nuevo de 1559 quedó interrumpida, la puerta entre mundos está entreabierta. Una noche como esta, con tantos muertos, se cuelan por ella.'
+    ],
+    vestian: 'Los nahuales andan en cuatro patas, pero a veces todavía llevan algo del hombre: un paliacate, un sombrero tirado cerca. Las tzitzimime, faldas de huesos cruzados y estrellas.',
+    peleaban: 'Contra los nahuales sirven las protecciones de siempre: metal, obsidiana, herirlos dos veces. A las tzitzimime no se les gana a la fuerza: con engaño y con fuego.'
   }
 };
 
 // Desde cuándo aparece cada tipo (se calcula de ROSTER y BOSS_ORDER para no desfasarse)
 function apareceDe(tipo) {
+  if (tipo === 'coyote') return `Oleada ${NAHUAL_FIRST}, luego cada ${NAHUAL_EVERY}`;
+  if (tipo === 'tzitzimitl') return `En los eclipses desde la ${TZITZI_FROM}`;
   if (tipo === 'brujo') return `Oleada ${BRUJO_FIRST}, luego cada ${BRUJO_EVERY}`;
   if (tipo === 'deuda') return `Oleada ${DEUDA_FIRST}, luego cada ${DEUDA_EVERY}`;
   const bi = BOSS_ORDER.indexOf(tipo);
@@ -5443,7 +6326,24 @@ const REGISTRO = [
         texto: ['Cuando la deuda de un ancla se llena, los muertos regresan a cobrarla. Tras tantas oleadas, los de la silla presidencial ya no caben en el Palacio: se fundieron en un solo cuerpo que sube desde los sótanos, por donde el Palacio da al Mictlán.',
                 'Trae encima a muertos de todos los bandos, una banda presidencial deshilachada y la silla incrustada en la espalda: un siglo de gobernantes que llegaron a ella pasando sobre muertos. Golpea el piso, exhala mal aire y arranca muertos de su cuerpo para lanzarlos. No se destruye: se sella.'],
         tactica: 'Golpe en área, mal aire, lanza muertos; blindada de frente, lenta para girar',
-        consejo: 'De frente las balas apenas la rozan: ahí aguanta seis veces más. Es lenta para voltearse: rodéela y tírele a la silla, en la espalda. Pero no se le quede pegado: el golpe al piso alcanza a todo el que esté cerca, por donde sea. El machete corta parejo, la dinamita la sacude y el fuego la quema: dicen que Zapata quiso quemar esa silla.' }
+        consejo: 'De frente las balas apenas la rozan: ahí aguanta seis veces más. Es lenta para voltearse: rodéela y tírele a la silla, en la espalda. Pero no se le quede pegado: el golpe al piso alcanza a todo el que esté cerca, por donde sea. El machete corta parejo, la dinamita la sacude y el fuego la quema: dicen que Zapata quiso quemar esa silla.' },
+      // ---------- Fuerzas antiguas ----------
+      { id: 'coyote', tipo: 'coyote', faccion: 'antiguas',
+        nombre: 'El Nahual Coyote', volanta: 'Hombre en cuatro patas',
+        titular: 'Aúllan en los patios del Palacio',
+        texto: ['No son perros ni coyotes: son nahuales, hombres que saben tomar la forma de su animal. La noche que la deuda se cobra, algunos dejan de ser hombres y bajan en manada.',
+                'Rodean por los costados, se agachan y se lanzan de un salto. Lo que le pasa al animal le pasa a la persona: cuando uno cae, en el piso queda el cuerpo de un hombre, todavía con su paliacate.'],
+        tactica: 'Rodean en manada, se agachan y se lanzan',
+        consejo: 'Tres tiros. Cuando se agache, hágase a un lado: el salto va derecho. El machete les hace el doble, porque el metal siempre ha sido protección contra los nahuales; con filo de obsidiana, el triple.' },
+      { id: 'tzitzimitl', tipo: 'tzitzimitl', faccion: 'antiguas', jefe: true,
+        nombre: 'La Tzitzimitl', volanta: 'La que baja en los eclipses', cargo: 'demonio de las estrellas',
+        aguanta: 'Solo el fuego',
+        titular: 'Se apagó la luna y algo bajó del cielo',
+        texto: ['Los antiguos mexicanos temían a las tzitzimime: mujeres esqueleto, con faldas de huesos cruzados y garras, que viven entre las estrellas y bajan a devorar a la gente cuando el cielo se oscurece. Por eso cada 52 años se encendía el Fuego Nuevo: si se apagaba, bajarían todas.',
+                'Desde que la ceremonia de 1559 quedó interrumpida, cada eclipse les deja la puerta entreabierta. Las balas la atraviesan; acecha en lo oscuro y se lanza silbando como el silbato de la muerte.'],
+        tactica: 'Inmune en la oscuridad; se lanza en línea recta',
+        consejo: 'No se le gana a la fuerza, sino con engaño. Párese junto a un brasero para encender el Fuego Nuevo. No se lanza contra quien está en la luz: quédese cerca, con el fuego entre ella y usted, y cuando se lance la luz la atrapa. Ahí sí le entran las balas. No se muere: se regresa al cielo.' }
+
     ]
   },
   {
